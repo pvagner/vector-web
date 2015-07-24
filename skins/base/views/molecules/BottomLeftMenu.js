@@ -38,25 +38,40 @@ module.exports = React.createClass({
         dis.dispatch({action: 'view_create_room'});
     },
 
+    onButtonsKeydown: function(event) {
+        var KEY_ENTER = 13;
+        var KEY_SPACE = 32;
+
+        switch (event.which) {
+            case KEY_ENTER:
+            case KEY_SPACE: {
+                event.target.click();
+                event.stopPropagation();
+                return false;
+            }
+        }
+        return true;
+    },
+
     render: function() {
         return (
             <div className="mx_BottomLeftMenu">
                 <div className="mx_BottomLeftMenu_options">
-                    <div className="mx_RoomTile" onClick={this.onCreateRoomClick}>
+                    <div className="mx_RoomTile" role="button" tabIndex="0" onClick={this.onCreateRoomClick} onKeyDown={this.onButtonsKeydown}>
                         <div className="mx_RoomTile_avatar">
-                            <img src="img/create-big.png" alt="Create new room" title="Create new room" width="42" height="42"/>
+                            <img src="img/create-big.png" width="42" height="42"/>
                         </div>
                         <div className="mx_RoomTile_name">Create new room</div>
                     </div>
-                    <div className="mx_RoomTile" onClick={this.onRoomDirectoryClick}>
+                    <div className="mx_RoomTile" role="button" tabIndex="0" onClick={this.onRoomDirectoryClick} onKeyDown={this.onButtonsKeydown}>
                         <div className="mx_RoomTile_avatar">
-                            <img src="img/directory-big.png" alt="Directory" title="Directory" width="42" height="42"/>
+                            <img src="img/directory-big.png" width="42" height="42"/>
                         </div>
                         <div className="mx_RoomTile_name">Directory</div>
                     </div>
-                    <div className="mx_RoomTile" onClick={this.onSettingsClick}>
+                    <div className="mx_RoomTile" role="button" tabIndex="0" onClick={this.onSettingsClick} onKeyDown={this.onButtonsKeydown}>
                         <div className="mx_RoomTile_avatar">
-                            <img src="img/settings-big.png" alt="Settings" title="Settings" width="42" height="42"/>
+                            <img src="img/settings-big.png" width="42" height="42"/>
                         </div>
                         <div className="mx_RoomTile_name">Settings</div>
                     </div>
