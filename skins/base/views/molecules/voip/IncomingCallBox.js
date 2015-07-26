@@ -30,7 +30,24 @@ module.exports = React.createClass({
         return this.refs.ringAudio.getDOMNode();
     },
 
+    onButtonsKeydown: function(event) {
+        var KEY_ENTER = 13;
+        var KEY_SPACE = 32;
+
+        switch (event.which) {
+            case KEY_ENTER:
+            case KEY_SPACE: {
+                event.target.click();
+                event.stopPropagation();
+                return false;
+            }
+        }
+        return true;
+    },
+
     render: function() {
+        var rand = Math.floor((Math.random() * 8));
+        var contentID ="mx_IncomingCallBox_title" + rand;
         if (!this.state.incomingCall || !this.state.incomingCall.roomId) {
             return (
                 <div>
@@ -43,23 +60,23 @@ module.exports = React.createClass({
         }
         var caller = MatrixClientPeg.get().getRoom(this.state.incomingCall.roomId).name;
         return (
-            <div className="mx_IncomingCallBox">
+            <div className="mx_IncomingCallBox" role="alertdialog" aria-describedby={contentID}>
                 <img className="mx_IncomingCallBox_chevron" src="img/chevron-left.png" width="9" height="16" />
                 <audio ref="ringAudio" loop>
                     <source src="media/ring.ogg" type="audio/ogg" />
                     <source src="media/ring.mp3" type="audio/mpeg" />
                 </audio>
-                <div className="mx_IncomingCallBox_title">
+                <div id={contentID} className="mx_IncomingCallBox_title">
                     Incoming { this.state.incomingCall ? this.state.incomingCall.type : '' } call from { caller }
                 </div>
                 <div className="mx_IncomingCallBox_buttons">
                     <div className="mx_IncomingCallBox_buttons_cell">
-                        <div className="mx_IncomingCallBox_buttons_decline" onClick={this.onRejectClick}>
+                        <div className="mx_IncomingCallBox_buttons_decline" role="button" tabIndex="0" onClick={this.onRejectClick} onKeyDown={this.onButtonsKeydown}>
                             Decline
                         </div>
                     </div>
                     <div className="mx_IncomingCallBox_buttons_cell">
-                        <div className="mx_IncomingCallBox_buttons_accept" onClick={this.onAnswerClick}>
+                        <div className="mx_IncomingCallBox_buttons_accept" role="button" tabIndex="0" onClick={this.onAnswerClick} onKeyDown={this.onButtonsKeydown}>
                             Accept
                         </div>
                     </div>
