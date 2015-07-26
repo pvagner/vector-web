@@ -40,11 +40,9 @@ module.exports = React.createClass({
     onMemberListButtonClick: function() {
         if (this.state.phase == this.Phase.None) {
             this.setState({ phase: this.Phase.MemberList });            
-            React.findDOMNode(this.refs.membersButton).setAttribute("aria-expanded", true);
         }
         else {
             this.setState({ phase: this.Phase.None });
-            React.findDOMNode(this.refs.membersButton).setAttribute("aria-expanded", false);
         }
     },
 
@@ -64,6 +62,8 @@ module.exports = React.createClass({
     },
 
     render: function() {
+        var memberListExpandedState =false;
+if (this.state.phase == this.Phase.MemberList) memberListExpandedState =true;
         var buttonGroup;
         var panel;
         if (this.props.roomId) {
@@ -72,7 +72,7 @@ module.exports = React.createClass({
                         <div className="mx_RightPanel_headerButton mx_RightPanel_filebutton">
                             <img src="img/file.png" width="32" height="32" title="Files" alt="Files"/>
                         </div>
-                        <div className="mx_RightPanel_headerButton" role="button" tabIndex="0" aria-expanded="true" ref="membersButton" onClick={this.onMemberListButtonClick} onKeyDown={this.onButtonsKeydown}>
+                        <div className="mx_RightPanel_headerButton" role="button" tabIndex="0" aria-expanded={memberListExpandedState} onClick={this.onMemberListButtonClick} onKeyDown={this.onButtonsKeydown}>
                             <img src="img/members.png" width="32" height="32" title="Members" alt="Members"/>
                         </div>
                     </div>;
