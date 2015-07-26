@@ -57,6 +57,21 @@ module.exports = React.createClass({
         this.logoutModal.closeDialog();
     },
 
+    onButtonsKeydown: function(event) {
+        var KEY_ENTER = 13;
+        var KEY_SPACE = 32;
+
+        switch (event.which) {
+            case KEY_ENTER:
+            case KEY_SPACE: {
+                event.target.click();
+                event.stopPropagation();
+                return false;
+            }
+        }
+        return true;
+    },
+
     render: function() {
         switch (this.state.phase) {
             case this.Phases.Loading:
@@ -92,7 +107,7 @@ module.exports = React.createClass({
                             <h1>Global Settings</h1>
                             <hr/>
                             <div className="mx_UserSettings_Global_Inner">
-                                <div className="mx_UserSettings_ChangePassword" onClick={this.changePassword}>
+                                <div className="mx_UserSettings_ChangePassword" role="button" tabIndex="0" onClick={this.changePassword} onKeyDown={this.onButtonsKeydown}>
                                     Change Password
                                 </div>
                                 <div className="mx_UserSettings_ClientVersion">
