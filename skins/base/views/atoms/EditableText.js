@@ -51,14 +51,30 @@ module.exports = React.createClass({
         }
     },
 
+    onButtonsKeydown: function(event) {
+        var KEY_ENTER = 13;
+        var KEY_SPACE = 32;
+
+        switch (event.which) {
+            case KEY_ENTER:
+            case KEY_SPACE: {
+                event.target.click();
+                event.stopPropagation();
+                return false;
+            }
+        }
+        return true;
+    },
+
     render: function() {
+        var displayTextExpandedState =(this.state.phase == this.Phases.Edit);
         var editable_el;
 
         if (this.state.phase == this.Phases.Display) {
             if (this.state.value) {
-                editable_el = <div ref="display_div" onClick={this.onClickDiv}>{this.state.value}</div>;
+                editable_el = <div ref="display_div" role="button" aria-expanded={displayTextExpandedState} tabIndex="0" onClick={this.onClickDiv} onKeyDown={this.onButtonsKeydown}>{this.state.value}</div>;
             } else {
-                editable_el = <div ref="display_div" onClick={this.onClickDiv}>{this.props.label}</div>;
+                editable_el = <div ref="display_div" role="button" aria-expanded={displayTextExpandedState} tabIndex="0" onClick={this.onClickDiv} onKeyDown={this.onButtonsKeydown}>{this.props.label}</div>;
             }
         } else if (this.state.phase == this.Phases.Edit) {
             editable_el = (

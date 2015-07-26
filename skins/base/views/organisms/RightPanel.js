@@ -62,8 +62,7 @@ module.exports = React.createClass({
     },
 
     render: function() {
-        var memberListExpandedState =false;
-if (this.state.phase == this.Phase.MemberList) memberListExpandedState =true;
+        var memberListExpandedState =(this.state.phase == this.Phase.MemberList);
         var buttonGroup;
         var panel;
         if (this.props.roomId) {
