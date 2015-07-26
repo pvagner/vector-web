@@ -56,7 +56,6 @@ module.exports = React.createClass({
         var KEY_SPACE = 32;
 
         switch (event.which) {
-            case KEY_ENTER:
             case KEY_SPACE: {
                 event.target.click();
                 event.stopPropagation();
