@@ -40,10 +40,27 @@ module.exports = React.createClass({
     onMemberListButtonClick: function() {
         if (this.state.phase == this.Phase.None) {
             this.setState({ phase: this.Phase.MemberList });            
+            React.findDOMNode(this.refs.membersButton).setAttribute("aria-expanded", true);
         }
         else {
             this.setState({ phase: this.Phase.None });
+            React.findDOMNode(this.refs.membersButton).setAttribute("aria-expanded", false);
         }
+    },
+
+    onButtonsKeydown: function(event) {
+        var KEY_ENTER = 13;
+        var KEY_SPACE = 32;
+
+        switch (event.which) {
+            case KEY_ENTER:
+            case KEY_SPACE: {
+                event.target.click();
+                event.stopPropagation();
+                return false;
+            }
+        }
+        return true;
     },
 
     render: function() {
@@ -55,7 +72,7 @@ module.exports = React.createClass({
                         <div className="mx_RightPanel_headerButton mx_RightPanel_filebutton">
                             <img src="img/file.png" width="32" height="32" title="Files" alt="Files"/>
                         </div>
-                        <div className="mx_RightPanel_headerButton" onClick={ this.onMemberListButtonClick }>
+                        <div className="mx_RightPanel_headerButton" role="button" tabIndex="0" aria-expanded="true" ref="membersButton" onClick={this.onMemberListButtonClick} onKeyDown={this.onButtonsKeydown}>
                             <img src="img/members.png" width="32" height="32" title="Members" alt="Members"/>
                         </div>
                     </div>;

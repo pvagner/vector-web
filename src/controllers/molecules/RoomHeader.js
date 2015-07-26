@@ -31,6 +31,7 @@ module.exports = {
         editing: React.PropTypes.bool,
         onSettingsClick: React.PropTypes.func,
         onSaveClick: React.PropTypes.func,
+        onButtonsKeydown: React.PropTypes.func,
     },
 
     getDefaultProps: function() {
@@ -38,6 +39,7 @@ module.exports = {
             editing: false,
             onSettingsClick: function() {},
             onSaveClick: function() {},
+            onButtonsKeydown: function(event) {},
         };
     },
 

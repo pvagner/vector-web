@@ -71,6 +71,21 @@ module.exports = React.createClass({
         return this.state.numUnreadMessages + " unread messages";
     },
 
+    onButtonsKeydown: function(event) {
+        var KEY_ENTER = 13;
+        var KEY_SPACE = 32;
+
+        switch (event.which) {
+            case KEY_ENTER:
+            case KEY_SPACE: {
+                event.target.click();
+                event.stopPropagation();
+                return false;
+            }
+        }
+        return true;
+    },
+
     render: function() {
         if (!this.state.room) {
             return (
@@ -153,7 +168,7 @@ module.exports = React.createClass({
             var roomEdit = null;
 
             if (this.state.editingRoomSettings) {
-                roomEdit = <RoomSettings ref="room_settings" onSaveClick={this.onSaveClick} room={this.state.room} />;
+                roomEdit = <RoomSettings ref="room_settings" onSaveClick={this.onSaveClick} onButtonsKeydown={this.onButtonsKeydown} room={this.state.room} />;
             }
 
             if (this.state.uploadingRoomSettings) {
@@ -163,7 +178,7 @@ module.exports = React.createClass({
             return (
                 <div className="mx_RoomView">
                     <RoomHeader ref="header" room={this.state.room} editing={this.state.editingRoomSettings}
-                        onSettingsClick={this.onSettingsClick}/>
+                        onSettingsClick={this.onSettingsClick} onButtonsKeydown={this.onButtonsKeydown}/>
                     <div className="mx_RoomView_auxPanel">
                         <CallView room={this.state.room}/>
                         { roomEdit }

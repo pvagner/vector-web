@@ -57,7 +57,7 @@ module.exports = React.createClass({
                     case "ringback":
                     case "connected":
                         callButtons = (
-                            <div className="mx_RoomHeader_textButton" onClick={this.onHangupClick}>
+                            <div className="mx_RoomHeader_textButton" role="button" tabIndex="0" onClick={this.onHangupClick} onKeyDown={this.props.onButtonsKeydown}>
                                 End call
                             </div>
                         );
@@ -84,8 +84,8 @@ module.exports = React.createClass({
                     </div>
                 if (topic) topic_el = <div className="mx_RoomHeader_topic">{ topic.getContent().topic }</div>;
                 settings_button = (
-                    <div className="mx_RoomHeader_button" onClick={this.props.onSettingsClick}>
-                        <img src="img/settings.png" width="32" height="32"/>
+                    <div className="mx_RoomHeader_button" role="button" tabIndex="0" onClick={this.props.onSettingsClick} onKeyDown={this.props.onButtonsKeydown}>
+                        <img src="img/settings.png" title="Room settings" alt="Room settings" width="32" height="32"/>
                     </div>
                 );
             }
@@ -107,10 +107,10 @@ module.exports = React.createClass({
                         <div className="mx_RoomHeader_button mx_RoomHeader_search">
                             <img src="img/search.png" title="Search" alt="Search" width="32" height="32"/>
                         </div>
-                        <div className="mx_RoomHeader_button mx_RoomHeader_video" onClick={this.onVideoClick}>
+                        <div className="mx_RoomHeader_button mx_RoomHeader_video" role="button" tabIndex="0" onClick={this.onVideoClick} onKeyDown={this.props.onButtonsKeydown}>
                             <img src="img/video.png" title="Video call" alt="Video call" width="32" height="32"/>
                         </div>
-                        <div className="mx_RoomHeader_button mx_RoomHeader_voice" onClick={this.onVoiceClick}>
+                        <div className="mx_RoomHeader_button mx_RoomHeader_voice" role="button" tabIndex="0" onClick={this.onVoiceClick} onKeyDown={this.props.onButtonsKeydown}>
                             <img src="img/voip.png" title="VoIP call" alt="VoIP call" width="32" height="32"/>
                         </div>
                     </div>
