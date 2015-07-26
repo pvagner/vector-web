@@ -35,12 +35,14 @@ module.exports = React.createClass({
     mixins: [ErrorDialogController],
 
     render: function() {
+        var rand = Math.floor((Math.random() * 8));
+        var contentID ="mx_Dialog_content" + rand;
         return (
-            <div className="mx_ErrorDialog">
+            <div className="mx_ErrorDialog" role="alertdialog" aria-describedby={contentID}>
                 <div className="mx_ErrorDialogTitle">
                     {this.props.title}
                 </div>
-                <div className="mx_Dialog_content">
+                <div id={contentID} className="mx_Dialog_content">
                     {this.props.description}
                 </div>
                 <div className="mx_Dialog_buttons">
