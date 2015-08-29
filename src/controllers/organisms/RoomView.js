@@ -36,11 +36,11 @@ var Notifier = ComponentBroker.get('organisms/Notifier');
 
 var tileTypes = {
     'm.room.message': ComponentBroker.get('molecules/MessageTile'),
-    'm.room.member': ComponentBroker.get('molecules/MRoomMemberTile'),
-    'm.call.invite': ComponentBroker.get('molecules/voip/MCallInviteTile'),
-    'm.call.answer': ComponentBroker.get('molecules/voip/MCallAnswerTile'),
-    'm.call.hangup': ComponentBroker.get('molecules/voip/MCallHangupTile'),
-    'm.room.topic': ComponentBroker.get('molecules/EventAsTextTile'),
+    'm.room.member' : ComponentBroker.get('molecules/EventAsTextTile'),
+    'm.call.invite' : ComponentBroker.get('molecules/EventAsTextTile'),
+    'm.call.answer' : ComponentBroker.get('molecules/EventAsTextTile'),
+    'm.call.hangup' : ComponentBroker.get('molecules/EventAsTextTile'),
+    'm.room.topic'  : ComponentBroker.get('molecules/EventAsTextTile'),
 };
 
 var DateSeparator = ComponentBroker.get('molecules/DateSeparator');
@@ -52,7 +52,8 @@ module.exports = {
             messageCap: INITIAL_SIZE,
             editingRoomSettings: false,
             uploadingRoomSettings: false,
-            numUnreadMessages: 0
+            numUnreadMessages: 0,
+            draggingFile: false,
         }
     },
 
@@ -69,6 +70,8 @@ module.exports = {
             var messageWrapper = this.refs.messageWrapper.getDOMNode();
             messageWrapper.removeEventListener('drop', this.onDrop);
             messageWrapper.removeEventListener('dragover', this.onDragOver);
+            messageWrapper.removeEventListener('dragleave', this.onDragLeaveOrEnd);
+            messageWrapper.removeEventListener('dragend', this.onDragLeaveOrEnd);
         }
         dis.unregister(this.dispatcherRef);
         if (MatrixClientPeg.get()) {
@@ -173,6 +176,8 @@ module.exports = {
 
             messageWrapper.addEventListener('drop', this.onDrop);
             messageWrapper.addEventListener('dragover', this.onDragOver);
+            messageWrapper.addEventListener('dragleave', this.onDragLeaveOrEnd);
+            messageWrapper.addEventListener('dragend', this.onDragLeaveOrEnd);
 
             messageWrapper.scrollTop = messageWrapper.scrollHeight;
 
@@ -201,8 +206,8 @@ module.exports = {
     },
 
     fillSpace: function() {
+        if (!this.refs.messageWrapper) return;
         var messageWrapper = this.refs.messageWrapper.getDOMNode();
-        if (!messageWrapper) return;
         if (messageWrapper.scrollTop < messageWrapper.clientHeight && this.state.room.oldState.paginationToken) {
             this.setState({paginating: true});
 
@@ -272,6 +277,7 @@ module.exports = {
         var items = ev.dataTransfer.items;
         if (items.length == 1) {
             if (items[0].kind == 'file') {
+                this.setState({ draggingFile : true });
                 ev.dataTransfer.dropEffect = 'copy';
             }
         }
@@ -280,10 +286,17 @@ module.exports = {
     onDrop: function(ev) {
         ev.stopPropagation();
         ev.preventDefault();
+        this.setState({ draggingFile : false });
         var files = ev.dataTransfer.files;
         if (files.length == 1) {
             this.uploadFile(files[0]);
         }
+    },
+
+    onDragLeaveOrEnd: function(ev) {
+        ev.stopPropagation();
+        ev.preventDefault();
+        this.setState({ draggingFile : false });
     },
 
     uploadFile: function(file) {
@@ -353,7 +366,8 @@ module.exports = {
             }
             if (!TileType) continue;
             ret.unshift(
-                <TileType key={mxEv.getId()} mxEvent={mxEv} continuation={continuation} last={last}/>
+                // XXX: don't wrap everything in a needless li - make the TileType a li if we must :(
+                <li key={mxEv.getId()}><TileType mxEvent={mxEv} continuation={continuation} last={last}/></li>
             );
             if (dateSeparator) {
                 ret.unshift(dateSeparator);

@@ -16,5 +16,19 @@ limitations under the License.
 
 'use strict';
 
-module.exports = {
-};
+var React = require('react');
+
+var MemberAvatarController = require("../../../../src/controllers/atoms/MemberAvatar");
+
+module.exports = React.createClass({
+    displayName: 'MemberAvatar',
+    mixins: [MemberAvatarController],
+
+    render: function() {
+        return (
+            <img className="mx_MemberAvatar" src={this.state.imageUrl}
+                onError={this.onError}
+                width={this.props.width} height={this.props.height} />
+        );
+    }
+});

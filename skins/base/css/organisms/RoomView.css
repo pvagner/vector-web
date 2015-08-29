@@ -40,6 +40,42 @@ limitations under the License.
     flex: 0 0 88px;
 }
 
+.mx_RoomView_fileDropTarget {
+    min-width: 0px;
+    max-width: 720px;
+    width: 100%;
+    font-size: 20px;
+    text-align: center;
+
+    pointer-events: none;
+
+    padding-left: 12px;
+    padding-right: 12px;
+    margin-left: -12px;
+
+    -webkit-border-top-left-radius: 10px;
+    -webkit-border-top-right-radius: 10px;
+    -moz-border-radius-topleft: 10px;
+    -moz-border-radius-topright: 10px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 2px dashed #80cef4;
+    border-bottom: none;
+    position: absolute;
+    top: 88px;
+    bottom: 0px;
+    z-index: 3000;
+}
+
+.mx_RoomView_fileDropTargetLabel {
+    top: 50%;
+    width: 100%;
+    margin-top: -50px;
+    position: absolute;
+}
+
 .mx_RoomView_auxPanel {
     -webkit-box-ordinal-group: 2;
     -moz-box-ordinal-group: 2;
@@ -52,6 +88,7 @@ limitations under the License.
     width: 100%;
     margin: auto;
 
+    overflow: auto;
     border-bottom: 1px solid #a8dbf3;
 
     -webkit-flex: 0 0 auto;
@@ -82,6 +119,8 @@ limitations under the License.
 
 .mx_RoomView_MessageList {
     width: 100%;
+    list-style-type: none;
+    padding: 0px;
 }
 
 .mx_RoomView_MessageList h2 {
@@ -124,6 +163,22 @@ limitations under the License.
     max-width: 720px;
     margin: auto;
     border-top: 1px solid #a8dbf3;
+}
+
+.mx_RoomView_unreadMessagesBar {
+    margin-top: 13px;
+    color: #fff;
+    font-weight: bold;
+    background-color: #ff0064;
+    border-radius: 30px;
+    height: 30px;
+    line-height: 30px;
+    cursor: pointer;
+}
+
+.mx_RoomView_unreadMessagesBar img {
+    padding-left: 22px;
+    padding-right: 22px;
 }
 
 .mx_RoomView_typingBar {

@@ -75,15 +75,15 @@ module.exports = React.createClass({
                     break;
             }
 
-            if (Notifier.supportsDesktopNotifications() && !Notifier.isEnabled()) {
+            if (Notifier.supportsDesktopNotifications() && !Notifier.isEnabled() && !Notifier.isToolbarHidden()) {
                 return (
                         <div className="mx_MatrixChat_wrapper">
                             <MatrixToolbar />
                             <div className="mx_MatrixChat mx_MatrixChat_toolbarShowing">
                                 <LeftPanel selectedRoom={this.state.currentRoom} />
-                                <div className="mx_MatrixChat_middlePanel">
+                                <main className="mx_MatrixChat_middlePanel">
                                     {page_element}
-                                </div>
+                                </main>
                                 {right_panel}
                             </div>
                         </div>
@@ -93,9 +93,9 @@ module.exports = React.createClass({
                 return (
                         <div className="mx_MatrixChat">
                             <LeftPanel selectedRoom={this.state.currentRoom} />
-                            <div className="mx_MatrixChat_middlePanel">
+                            <main className="mx_MatrixChat_middlePanel">
                                 {page_element}
-                            </div>
+                            </main>
                             {right_panel}
                         </div>
                 );

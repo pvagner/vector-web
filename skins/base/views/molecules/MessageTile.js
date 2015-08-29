@@ -25,6 +25,7 @@ var ComponentBroker = require('../../../../src/ComponentBroker');
 
 var MessageTimestamp = ComponentBroker.get('atoms/MessageTimestamp');
 var SenderProfile = ComponentBroker.get('molecules/SenderProfile');
+var MemberAvatar = ComponentBroker.get('atoms/MemberAvatar');
 
 var UnknownMessageTile = ComponentBroker.get('molecules/UnknownMessageTile');
 
@@ -60,14 +61,22 @@ module.exports = React.createClass({
             mx_MessageTile_last: this.props.last,
         });
         var timestamp = <MessageTimestamp ts={this.props.mxEvent.getTs()} />
+
+        var aux = null;
+        if (msgtype === 'm.image') aux = "sent an image";
+        else if (msgtype === 'm.video') aux = "sent a video";
+        else if (msgtype === 'm.file') aux = "uploaded a file";
+
         var avatar, sender, resend;
         if (!this.props.continuation) {
-            avatar = (
-                <div className="mx_MessageTile_avatar">
-                    <img src={ this.props.mxEvent.sender ? MatrixClientPeg.get().getAvatarUrlForMember(this.props.mxEvent.sender, 40, 40, "crop") : null } width="40" height="40" alt=""/>
-                </div>
-            );
-            sender = <SenderProfile mxEvent={this.props.mxEvent} />;
+            if (this.props.mxEvent.sender) {
+                avatar = (
+                    <div className="mx_MessageTile_avatar">
+                        <MemberAvatar member={this.props.mxEvent.sender} />
+                    </div>
+                );
+            }
+            sender = <SenderProfile mxEvent={this.props.mxEvent} aux={aux} />;
         }
         if (this.props.mxEvent.status === "not_sent" && !this.state.resending) {
             resend = <button className="mx_MessageTile_msgOption" onClick={this.onResend}>

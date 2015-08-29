@@ -22,6 +22,7 @@ var ComponentBroker = require('../../../../src/ComponentBroker');
 var MatrixClientPeg = require("../../../../src/MatrixClientPeg");
 var RoomHeaderController = require("../../../../src/controllers/molecules/RoomHeader");
 var EditableText = ComponentBroker.get("atoms/EditableText");
+var RoomAvatar = ComponentBroker.get('atoms/RoomAvatar');
 
 module.exports = React.createClass({
     displayName: 'RoomHeader',
@@ -67,6 +68,7 @@ module.exports = React.createClass({
 
             var name = null;
             var topic_el = null;
+            var cancel_button = null;
             var save_button = null;
             var settings_button = null;
             var actual_name = this.props.room.currentState.getStateEvents('m.room.name', '');
@@ -77,6 +79,8 @@ module.exports = React.createClass({
                         <input className="mx_RoomHeader_nameInput" type="text" defaultValue={actual_name} placeholder="Name" ref="name_edit"/>
                     </div>
                 // if (topic) topic_el = <div className="mx_RoomHeader_topic"><textarea>{ topic.getContent().topic }</textarea></div>
+                cancel_button = <div className="mx_RoomHeader_textButton" role="button" tabIndex="0" onClick={this.props.onCancelClick} onKeyDown={this.props.onButtonsKeydown}>Cancel</div>
+                save_button = <div className="mx_RoomHeader_textButton" role="button" tabIndex=0" onClick={this.props.onSaveClick} onKeyDown={this.props.onButtonsKeydown}>Save Changes</div>
             } else {
                 name =
                     <div className="mx_RoomHeader_name">
@@ -90,11 +94,18 @@ module.exports = React.createClass({
                 );
             }
 
+            var roomAvatar = null;
+            if (this.props.room) {
+                roomAvatar = (
+                    <RoomAvatar room={this.props.room} />
+                );
+            }
+
             header =
                 <div className="mx_RoomHeader_wrapper">
                     <div className="mx_RoomHeader_leftRow">
                         <div className="mx_RoomHeader_avatar">
-                            <img src={ MatrixClientPeg.get().getAvatarUrlForRoom(this.props.room, 48, 48, "crop") } width="48" height="48" alt=""/>
+                            { roomAvatar }
                         </div>
                         <div className="mx_RoomHeader_info">
                             { name }
@@ -102,6 +113,8 @@ module.exports = React.createClass({
                         </div>
                     </div>
                     {callButtons}
+                    {cancel_button}
+                    {save_button}
                     <div className="mx_RoomHeader_rightRow">
                         { settings_button }
                         <div className="mx_RoomHeader_button mx_RoomHeader_search">

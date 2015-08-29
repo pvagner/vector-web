@@ -14,7 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-'use strict';
+.mx_MemberAvatar {
+    z-index: 20;
+    border-radius: 20px;
+    background-color: #dbdbdb;
+}
 
-module.exports = {
-};

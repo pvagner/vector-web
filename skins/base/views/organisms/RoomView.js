@@ -64,11 +64,21 @@ module.exports = React.createClass({
         );
     },
 
+    onCancelClick: function() {
+        this.setState(this.getInitialState());
+    },
+
     getUnreadMessagesString: function() {
         if (!this.state.numUnreadMessages) {
             return "";
         }
-        return this.state.numUnreadMessages + " unread messages";
+        return this.state.numUnreadMessages + " new messages";
+    },
+
+    scrollToBottom: function() {
+        if (!this.refs.messageWrapper) return;
+        var messageWrapper = this.refs.messageWrapper.getDOMNode();
+        messageWrapper.scrollTop = messageWrapper.scrollHeight;
     },
 
     onButtonsKeydown: function(event) {
@@ -88,9 +98,17 @@ module.exports = React.createClass({
 
     render: function() {
         if (!this.state.room) {
-            return (
-                <div />
-            );
+            if (this.props.roomId) {
+                return (
+                    <div>
+                    <button onClick={this.onJoinButtonClicked}>Join Room</button>
+                    </div>
+                );
+            } else {
+                return (
+                    <div />
+                );
+            }
         }
 
         var myUserId = MatrixClientPeg.get().credentials.userId;
@@ -149,8 +167,8 @@ module.exports = React.createClass({
                 // set when you've scrolled up
                 if (unreadMsgs) {
                     statusBar = (
-                        <div className="mx_RoomView_typingBar">
-                            <img src="img/typing.png" width="40" height="40" alt=""/>
+                        <div className="mx_RoomView_unreadMessagesBar" onClick={ this.scrollToBottom }>
+                            <img src="img/newmessages.png" width="10" height="12" alt=""/>
                             {unreadMsgs}
                         </div>
                     );
@@ -166,30 +184,39 @@ module.exports = React.createClass({
             }
 
             var roomEdit = null;
-
             if (this.state.editingRoomSettings) {
                 roomEdit = <RoomSettings ref="room_settings" onSaveClick={this.onSaveClick} onButtonsKeydown={this.onButtonsKeydown} room={this.state.room} />;
             }
-
             if (this.state.uploadingRoomSettings) {
                 roomEdit = <Loader/>;
+            }
+
+            var fileDropTarget = null;
+            if (this.state.draggingFile) {
+                fileDropTarget = <div className="mx_RoomView_fileDropTarget">
+                                    <div className="mx_RoomView_fileDropTargetLabel">
+                                        <img src="img/upload-big.png" width="46" height="61" alt="Drop File Here"/><br/>
+                                        Drop File Here
+                                    </div>
+                                 </div>;
             }
 
             return (
                 <div className="mx_RoomView">
                     <RoomHeader ref="header" room={this.state.room} editing={this.state.editingRoomSettings}
-                        onSettingsClick={this.onSettingsClick} onButtonsKeydown={this.onButtonsKeydown}/>
+                        onSettingsClick={this.onSettingsClick} onSaveClick={this.onSaveClick} onCancelClick={this.onCancelClick} onButtonsKeydown={this.onButtonsKeydown} />
                     <div className="mx_RoomView_auxPanel">
                         <CallView room={this.state.room}/>
                         { roomEdit }
                     </div>
                     <div ref="messageWrapper" className="mx_RoomView_messagePanel" onScroll={ this.onMessageListScroll }>
                         <div className="mx_RoomView_messageListWrapper">
-                            <div className="mx_RoomView_MessageList" aria-live="polite">
-                                <div className={scrollheader_classes}>
-                                </div>
+                            { fileDropTarget }    
+                            <ol className="mx_RoomView_MessageList" aria-live="polite">
+                                <li className={scrollheader_classes}>
+                                </li>
                                 {this.getEventTiles()}
-                            </div>
+                            </ol>
                         </div>
                     </div>
                     <div className="mx_RoomView_statusArea">

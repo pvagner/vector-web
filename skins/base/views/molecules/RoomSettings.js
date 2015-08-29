@@ -207,12 +207,6 @@ module.exports = React.createClass({
                         );
                     })}
                 </div>
-
-                <div className="mx_RoomSettings_buttons">
-                    <div className="mx_RoomSettings_button" role="button" tabIndex="0" onClick={this.props.onSaveClick} onKeyDown={this.props.onButtonsKeydown}>
-                        Save this room
-                    </div>
-                </div>
             </div>
         );
     }

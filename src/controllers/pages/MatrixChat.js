@@ -138,13 +138,20 @@ module.exports = {
                     currentRoom: payload.room_id,
                     page_type: this.PageTypes.RoomView,
                 });
-                var presentedId = payload.room_id;
-                var room = MatrixClientPeg.get().getRoom(payload.room_id);
-                if (room) {
-                    var theAlias = MatrixTools.getCanonicalAliasForRoom(room);
-                    if (theAlias) presentedId = theAlias;
+                if (this.sdkReady) {
+                    // if the SDK is not ready yet, remember what room
+                    // we're supposed to be on but don't notify about
+                    // the new screen yet (we won't be showing it yet)
+                    // The normal case where this happens is navigating
+                    // to the room in the URL bar on page load.
+                    var presentedId = payload.room_id;
+                    var room = MatrixClientPeg.get().getRoom(payload.room_id);
+                    if (room) {
+                        var theAlias = MatrixTools.getCanonicalAliasForRoom(room);
+                        if (theAlias) presentedId = theAlias;
+                    }
+                    this.notifyNewScreen('room/'+presentedId);
                 }
-                this.notifyNewScreen('room/'+presentedId);
                 break;
             case 'view_prev_room':
                 roomIndexDelta = -1;
@@ -160,10 +167,25 @@ module.exports = {
                     }
                 }
                 roomIndex = (roomIndex + roomIndexDelta) % allRooms.length;
+                if (roomIndex < 0) roomIndex = allRooms.length - 1;
+                this.focusComposer = true;
                 this.setState({
                     currentRoom: allRooms[roomIndex].roomId
                 });
                 this.notifyNewScreen('room/'+allRooms[roomIndex].roomId);
+                break;
+            case 'view_indexed_room':
+                var allRooms = RoomListSorter.mostRecentActivityFirst(
+                    MatrixClientPeg.get().getRooms()
+                );
+                var roomIndex = payload.roomIndex;
+                if (allRooms[roomIndex]) {
+                    this.focusComposer = true;
+                    this.setState({
+                        currentRoom: allRooms[roomIndex].roomId
+                    });
+                    this.notifyNewScreen('room/'+allRooms[roomIndex].roomId);
+                }
                 break;
             case 'view_user_settings':
                 this.setState({
@@ -199,20 +221,30 @@ module.exports = {
         var cli = MatrixClientPeg.get();
         var self = this;
         cli.on('syncComplete', function() {
+            self.sdkReady = true;
             if (!self.state.currentRoom) {
                 var firstRoom = null;
                 if (cli.getRooms() && cli.getRooms().length) {
                     firstRoom = RoomListSorter.mostRecentActivityFirst(
                         cli.getRooms()
                     )[0].roomId;
-                    self.setState({ready: true, currentRoom: firstRoom});
-                    self.notifyNewScreen('room/'+firstRoom);
+                    self.setState({ready: true, currentRoom: firstRoom, page_type: self.PageTypes.RoomView});
                 } else {
-                    self.setState({ready: true});
+                    self.setState({ready: true, page_type: self.PageTypes.RoomDirectory});
                 }
             } else {
-                self.setState({ready: true});
+                self.setState({ready: true, currentRoom: self.state.currentRoom});
             }
+
+            // we notifyNewScreen now because now the room will actually be displayed,
+            // and (mostly) now we can get the correct alias.
+            var presentedId = self.state.currentRoom;
+            var room = MatrixClientPeg.get().getRoom(self.state.currentRoom);
+            if (room) {
+                var theAlias = MatrixTools.getCanonicalAliasForRoom(room);
+                if (theAlias) presentedId = theAlias;
+            }
+            self.notifyNewScreen('room/'+presentedId);
             dis.dispatch({action: 'focus_composer'});
         });
         cli.on('Call.incoming', function(call) {
@@ -228,14 +260,25 @@ module.exports = {
 
     onKeyDown: function(ev) {
         if (ev.altKey) {
+            if (ev.ctrlKey && ev.keyCode > 48 && ev.keyCode < 58) {
+                dis.dispatch({
+                    action: 'view_indexed_room',
+                    roomIndex: ev.keyCode - 49,
+                });
+                ev.stopPropagation();
+                ev.preventDefault();
+                return;                
+            }
             switch (ev.keyCode) {
                 case 38:
                     dis.dispatch({action: 'view_prev_room'});
                     ev.stopPropagation();
+                    ev.preventDefault();
                     break;
                 case 40:
                     dis.dispatch({action: 'view_next_room'});
                     ev.stopPropagation();
+                    ev.preventDefault();
                     break;
             }
         }
@@ -262,10 +305,10 @@ module.exports = {
             if (roomString[0] == '#') {
                 var self = this;
                 MatrixClientPeg.get().getRoomIdForAlias(roomString).done(function(result) {
-                    self.setState({ready: true});
+                    if (self.sdkReady) self.setState({ready: true});
                     defer.resolve(result.room_id);
                 }, function() {
-                    self.setState({ready: true});
+                    if (self.sdkReady) self.setState({ready: true});
                     defer.resolve(null);
                 });
                 this.setState({ready: false});

@@ -16,6 +16,19 @@ limitations under the License.
 
 'use strict';
 
-module.exports = {
-};
+var React = require('react');
 
+var RoomAvatarController = require("../../../../src/controllers/atoms/RoomAvatar");
+
+module.exports = React.createClass({
+    displayName: 'RoomAvatar',
+    mixins: [RoomAvatarController],
+
+    render: function() {
+        return (
+            <img className="mx_RoomAvatar" src={this.state.imageUrl} onError={this.onError}
+                width={this.props.width} height={this.props.height}
+            />
+        );
+    }
+});
