@@ -42,6 +42,21 @@ module.exports = React.createClass({
         this.refs.uploadInput.getDOMNode().value = null;
     },
 
+    onButtonsKeyup: function(event) {
+        var KEY_ENTER = 13;
+        var KEY_SPACE = 32;
+
+        switch (event.which) {
+            case KEY_ENTER:
+            case KEY_SPACE: {
+                this.refs.uploadInput.getDOMNode().click();
+                //event.stopPropagation();
+                return false;
+            }
+        }
+        return true;
+    },
+
     render: function() {
         var me = this.props.room.getMember(MatrixClientPeg.get().credentials.userId);
         var uploadInputStyle = {display: 'none'};
@@ -55,8 +70,8 @@ module.exports = React.createClass({
                         <div className="mx_MessageComposer_input">
                             <textarea ref="textarea" onKeyDown={this.onKeyDown} placeholder="Type a message" />
                         </div>
-                        <div className="mx_MessageComposer_upload" onClick={this.onUploadClick}>
-                            <img src="img/upload.png" width="32" height="32"/>
+                        <div className="mx_MessageComposer_upload" role="button" tabIndex="0" onClick={this.onUploadClick} onKeyUp={this.onButtonsKeyup}>
+                            <img src="img/upload.png" width="32" height="32" alt="Browse for a file..."/>
                             <input type="file" style={uploadInputStyle} ref="uploadInput" onChange={this.onUploadFileSelected} />
                         </div>
                     </div>
