@@ -152,6 +152,23 @@ function _setCallState(call, roomId, status) {
     });
 }
 
+function placeCall(newCall,payload) {
+    _setCallListeners(newCall);
+    _setCallState(newCall, newCall.roomId, "ringback");
+    if (payload.type === 'voice') {
+        newCall.placeVoiceCall();
+    }
+    else if (payload.type === 'video') {
+        newCall.placeVideoCall(
+            payload.remote_element,
+            payload.local_element
+        );
+    }
+    else {
+        console.error("Unknown conf call type: %s", payload.type);
+    }
+}
+
 dis.register(function(payload) {
     switch (payload.action) {
         case 'place_call':
@@ -168,23 +185,6 @@ dis.register(function(payload) {
                 return;
             }
 
-            function placeCall(newCall) {
-                _setCallListeners(newCall);
-                _setCallState(newCall, newCall.roomId, "ringback");
-                if (payload.type === 'voice') {
-                    newCall.placeVoiceCall();
-                }
-                else if (payload.type === 'video') {
-                    newCall.placeVideoCall(
-                        payload.remote_element,
-                        payload.local_element
-                    );
-                }
-                else {
-                    console.error("Unknown conf call type: %s", payload.type);
-                }
-            }
-
             var members = room.getJoinedMembers();
             if (members.length <= 1) {
                 Modal.createDialog(ErrorDialog, {
@@ -197,7 +197,7 @@ dis.register(function(payload) {
                 var call = Matrix.createNewMatrixCall(
                     MatrixClientPeg.get(), payload.room_id
                 );
-                placeCall(call);
+                placeCall(call, payload);
             }
             else { // > 2
                 console.log("Place conference call in %s", payload.room_id);
@@ -205,7 +205,7 @@ dis.register(function(payload) {
                     MatrixClientPeg.get(), payload.room_id
                 );
                 confCall.setup().done(function(call) {
-                    placeCall(call);
+                    placeCall(call, payload);
                 }, function(err) {
                     console.error("Failed to setup conference call: %s", err);
                 });

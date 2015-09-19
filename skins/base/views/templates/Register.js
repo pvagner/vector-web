@@ -76,7 +76,7 @@ module.exports = React.createClass({
     },
 
     getUserIdSuffix: function() {
-        return '';
+        // return '';
         var actualHsUrl = document.createElement('a');
         actualHsUrl.href = this.getHsUrl();
         var defaultHsUrl = document.createElement('a');
