@@ -191,6 +191,15 @@ module.exports = React.createClass({
                 roomEdit = <Loader/>;
             }
 
+            var conferenceCallNotification = null;
+            if (this.state.displayConfCallNotification) {
+                conferenceCallNotification = (
+                    <div className="mx_RoomView_ongoingConfCallNotification" onClick={this.onConferenceNotificationClick}>
+                        Ongoing conference call
+                    </div>
+                );
+            }
+
             var fileDropTarget = null;
             if (this.state.draggingFile) {
                 fileDropTarget = <div className="mx_RoomView_fileDropTarget">
@@ -207,6 +216,7 @@ module.exports = React.createClass({
                         onSettingsClick={this.onSettingsClick} onSaveClick={this.onSaveClick} onCancelClick={this.onCancelClick} onButtonsKeydown={this.onButtonsKeydown} />
                     <div className="mx_RoomView_auxPanel">
                         <CallView room={this.state.room}/>
+                        { conferenceCallNotification }
                         { roomEdit }
                     </div>
                     <div ref="messageWrapper" className="mx_RoomView_messagePanel" onScroll={ this.onMessageListScroll }>
