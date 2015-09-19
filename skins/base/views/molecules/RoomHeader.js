@@ -80,7 +80,7 @@ module.exports = React.createClass({
                     </div>
                 // if (topic) topic_el = <div className="mx_RoomHeader_topic"><textarea>{ topic.getContent().topic }</textarea></div>
                 cancel_button = <div className="mx_RoomHeader_textButton" role="button" tabIndex="0" onClick={this.props.onCancelClick} onKeyDown={this.props.onButtonsKeydown}>Cancel</div>
-                save_button = <div className="mx_RoomHeader_textButton" role="button" tabIndex=0" onClick={this.props.onSaveClick} onKeyDown={this.props.onButtonsKeydown}>Save Changes</div>
+                save_button = <div className="mx_RoomHeader_textButton" role="button" tabIndex="0" onClick={this.props.onSaveClick} onKeyDown={this.props.onButtonsKeydown}>Save Changes</div>
             } else {
                 name =
                     <div className="mx_RoomHeader_name">
