@@ -19,15 +19,12 @@ limitations under the License.
 var React = require('react');
 var filesize = require('filesize');
 
-var MImageTileController = require('matrix-react-sdk/lib/controllers/molecules/MImageTile')
-
 var MatrixClientPeg = require('matrix-react-sdk/lib/MatrixClientPeg');
 var Modal = require('matrix-react-sdk/lib/Modal');
 var sdk = require('matrix-react-sdk')
 
 module.exports = React.createClass({
     displayName: 'MImageTile',
-    mixins: [MImageTileController],
 
     thumbHeight: function(fullWidth, fullHeight, thumbWidth, thumbHeight) {
         if (!fullWidth || !fullHeight) {
@@ -83,7 +80,7 @@ module.exports = React.createClass({
                 <div className="mx_MImageTile_download">
                     <a href={cli.mxcUrlToHttp(content.url)} target="_blank">
                         <img src="img/download.png" width="10" height="12"/>
-                        Download {content.body} ({ filesize(content.info.size) })
+                        Download {content.body} ({ content.info && content.info.size ? filesize(content.info.size) : "Unknown size" })
                     </a>
                 </div>
             </span>
