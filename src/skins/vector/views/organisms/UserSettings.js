@@ -76,7 +76,7 @@ module.exports = React.createClass({
             }
         }
         return true;
-    }
+    },
 
     onAvatarDialogCancel: function() {
         this.avatarDialog.close();
