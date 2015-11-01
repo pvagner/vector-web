@@ -14,37 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-'use strict';
-
-var MatrixClientPeg = require("../../MatrixClientPeg");
+var MatrixClientPeg = require("matrix-react-sdk/lib/MatrixClientPeg");
 var React = require("react");
 var q = require("q");
-var ContentMessages = require("../../ContentMessages");
-var WhoIsTyping = require("../../WhoIsTyping");
-var Modal = require("../../Modal");
-var ComponentBroker = require('../../ComponentBroker');
+var ContentMessages = require("matrix-react-sdk/lib//ContentMessages");
+var WhoIsTyping = require("matrix-react-sdk/lib/WhoIsTyping");
+var Modal = require("matrix-react-sdk/lib/Modal");
+var sdk = require('matrix-react-sdk/lib/index');
+var CallHandler = require('matrix-react-sdk/lib/CallHandler');
+var VectorConferenceHandler = require('../../modules/VectorConferenceHandler');
 
-var ErrorDialog = ComponentBroker.get("organisms/ErrorDialog");
-
-var dis = require("../../dispatcher");
+var dis = require("matrix-react-sdk/lib/dispatcher");
 
 var PAGINATE_SIZE = 20;
-var INITIAL_SIZE = 100;
-
-var ConferenceHandler = require("../../ConferenceHandler");
-var CallHandler = require("../../CallHandler");
-var Notifier = ComponentBroker.get('organisms/Notifier');
-
-var tileTypes = {
-    'm.room.message': ComponentBroker.get('molecules/MessageTile'),
-    'm.room.member' : ComponentBroker.get('molecules/EventAsTextTile'),
-    'm.call.invite' : ComponentBroker.get('molecules/EventAsTextTile'),
-    'm.call.answer' : ComponentBroker.get('molecules/EventAsTextTile'),
-    'm.call.hangup' : ComponentBroker.get('molecules/EventAsTextTile'),
-    'm.room.topic'  : ComponentBroker.get('molecules/EventAsTextTile'),
-};
-
-var DateSeparator = ComponentBroker.get('molecules/DateSeparator');
+var INITIAL_SIZE = 20;
 
 module.exports = {
     getInitialState: function() {
@@ -88,6 +71,7 @@ module.exports = {
         switch (payload.action) {
             case 'message_send_failed':
             case 'message_sent':
+            case 'message_resend_started':
                 this.setState({
                     room: MatrixClientPeg.get().getRoom(this.props.roomId)
                 });
@@ -138,13 +122,13 @@ module.exports = {
         if (this.refs.messageWrapper) {
             var messageWrapper = this.refs.messageWrapper.getDOMNode();
             this.atBottom = (
-                messageWrapper.scrollHeight - messageWrapper.scrollTop <= 
+                messageWrapper.scrollHeight - messageWrapper.scrollTop <=
                 (messageWrapper.clientHeight + 150)
             );
         }
 
         var currentUnread = this.state.numUnreadMessages;
-        if (!toStartOfTimeline && 
+        if (!toStartOfTimeline &&
                 (ev.getSender() !== MatrixClientPeg.get().credentials.userId)) {
             // update unread count when scrolled up
             if (this.atBottom) {
@@ -180,21 +164,23 @@ module.exports = {
 
     onRoomStateMember: function(ev, state, member) {
         if (member.roomId !== this.props.roomId ||
-                member.userId !== ConferenceHandler.getConferenceUserIdForRoom(member.roomId)) {
+                member.userId !== VectorConferenceHandler.getConferenceUserIdForRoom(member.roomId)) {
             return;
         }
         this._updateConfCallNotification();
     },
 
     _updateConfCallNotification: function() {
-        var confMember = MatrixClientPeg.get().getRoom(this.props.roomId).getMember(
-            ConferenceHandler.getConferenceUserIdForRoom(this.props.roomId)
+        var room = MatrixClientPeg.get().getRoom(this.props.roomId);
+        if (!room) return;
+        var confMember = room.getMember(
+            VectorConferenceHandler.getConferenceUserIdForRoom(this.props.roomId)
         );
 
         if (!confMember) {
             return;
         }
-        var confCall = CallHandler.getConferenceCall(confMember.roomId);
+        var confCall = VectorConferenceHandler.getConferenceCallForRoom(confMember.roomId);
 
         // A conf call notification should be displayed if there is an ongoing
         // conf call but this cilent isn't a part of it.
@@ -203,14 +189,6 @@ module.exports = {
                 (!confCall || confCall.call_state === "ended") &&
                 confMember.membership === "join"
             )
-        });
-    },
-
-    onConferenceNotificationClick: function() {
-        dis.dispatch({
-            action: 'place_call',
-            type: "video",
-            room_id: this.props.roomId
         });
     },
 
@@ -227,6 +205,7 @@ module.exports = {
 
             this.fillSpace();
         }
+
         this._updateConfCallNotification();
     },
 
@@ -378,12 +357,20 @@ module.exports = {
     },
 
     getEventTiles: function() {
+        var DateSeparator = sdk.getComponent('molecules.DateSeparator');
+
         var ret = [];
         var count = 0;
 
+        var EventTile = sdk.getComponent('molecules.EventTile');
+
         for (var i = this.state.room.timeline.length-1; i >= 0 && count < this.state.messageCap; --i) {
             var mxEv = this.state.room.timeline[i];
-            var TileType = tileTypes[mxEv.getType()];
+
+            if (!EventTile.supportsEventType(mxEv.getType())) {
+                continue;
+            }
+
             var continuation = false;
             var last = false;
             var dateSeparator = null;
@@ -409,10 +396,15 @@ module.exports = {
                     continuation = false;
                 }
             }
-            if (!TileType) continue;
+
+            if (i === 1) { // n.b. 1, not 0, as the 0th event is an m.room.create and so doesn't show on the timeline
+                var ts1 = this.state.room.timeline[i].getTs();
+                dateSeparator = <li key={ts1}><DateSeparator ts={ts1}/></li>;
+                continuation = false;
+            }
+
             ret.unshift(
-                // XXX: don't wrap everything in a needless li - make the TileType a li if we must :(
-                <li key={mxEv.getId()}><TileType mxEvent={mxEv} continuation={continuation} last={last}/></li>
+                <li key={mxEv.getId()}><EventTile mxEvent={mxEv} continuation={continuation} last={last}/></li>
             );
             if (dateSeparator) {
                 ret.unshift(dateSeparator);
@@ -491,6 +483,7 @@ module.exports = {
         if (deferreds.length) {
             var self = this;
             q.all(deferreds).fail(function(err) {
+                var ErrorDialog = sdk.getComponent("organisms.ErrorDialog");
                 Modal.createDialog(ErrorDialog, {
                     title: "Failed to set state",
                     description: err.toString()
