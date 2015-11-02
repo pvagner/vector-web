@@ -63,6 +63,25 @@ module.exports = React.createClass({
         this.setState(this.getInitialState());
     },
 
+    onRejectButtonClicked: function(ev) {
+        var self = this;
+        this.setState({
+            rejecting: true
+        });
+        MatrixClientPeg.get().leave(this.props.roomId).done(function() {
+            dis.dispatch({ action: 'view_next_room' });
+            self.setState({
+                rejecting: false
+            });
+        }, function(err) {
+            console.error("Failed to reject invite: %s", err);
+            self.setState({
+                rejecting: false,
+                rejectError: err
+            });
+        });
+    },
+
     onSearchClick: function() {
         this.setState({ searching: true });
     },
@@ -126,7 +145,7 @@ module.exports = React.createClass({
 
         var myUserId = MatrixClientPeg.get().credentials.userId;
         if (this.state.room.currentState.members[myUserId].membership == 'invite') {
-            if (this.state.joining) {
+            if (this.state.joining || this.state.rejecting) {
                 return (
                     <div className="mx_RoomView">
                         <Loader />
@@ -136,6 +155,7 @@ module.exports = React.createClass({
                 var inviteEvent = this.state.room.currentState.members[myUserId].events.member.event;
                 // XXX: Leaving this intentionally basic for now because invites are about to change totally
                 var joinErrorText = this.state.joinError ? "Failed to join room!" : "";
+                var rejectErrorText = this.state.rejectError ? "Failed to reject invite!" : "";
                 return (
                     <div className="mx_RoomView">
                         <RoomHeader ref="header" room={this.state.room} simpleHeader="Room invite"/>
@@ -143,7 +163,9 @@ module.exports = React.createClass({
                             <div>{inviteEvent.user_id} has invited you to a room</div>
                             <br/>
                             <button ref="joinButton" onClick={this.onJoinButtonClicked}>Join</button>
+                            <button onClick={this.onRejectButtonClicked}>Reject</button>
                             <div className="error">{joinErrorText}</div>
+                            <div className="error">{rejectErrorText}</div>
                         </div>
                     </div>
                 );
@@ -223,9 +245,13 @@ module.exports = React.createClass({
 
             var conferenceCallNotification = null;
             if (this.state.displayConfCallNotification) {
+                var supportedText;
+                if (!MatrixClientPeg.get().supportsVoip()) {
+                    supportedText = " (unsupported)";
+                }
                 conferenceCallNotification = (
                     <div className="mx_RoomView_ongoingConfCallNotification" onClick={this.onConferenceNotificationClick}>
-                        Ongoing conference call
+                        Ongoing conference call {supportedText}
                     </div>
                 );
             }
