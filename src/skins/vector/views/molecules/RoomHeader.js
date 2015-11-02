@@ -112,7 +112,7 @@ module.exports = React.createClass({
             } else {
                 // <EditableText label={this.props.room.name} initialValue={actual_name} placeHolder="Name" onValueChanged={this.onNameChange} />
                 name =
-                    <div className="mx_RoomHeader_name" onClick={this.props.onSettingsClick}>
+                    <div className="mx_RoomHeader_name" role="button" tabIndex="0" onClick={this.props.onSettingsClick} onKeyDown={this.props.onButtonsKeydown}>
                         <div className="mx_RoomHeader_nametext">{ this.props.room.name }</div>
                         <div className="mx_RoomHeader_settingsButton">
                             <img src="img/settings.png" width="12" height="12"/>
@@ -132,17 +132,17 @@ module.exports = React.createClass({
             if (activeCall) {
                 if (activeCall.type == "video") {
                     zoom_button = (
-                        <div className="mx_RoomHeader_button" onClick={this.onFullscreenClick}>
+                        <div className="mx_RoomHeader_button" role="button" tabIndex="0" onClick={this.onFullscreenClick} onKeyDown={this.props.onButtonsKeydown}>
                             <img src="img/zoom.png" title="Fullscreen" alt="Fullscreen" width="32" height="32" style={{ 'marginTop': '-5px' }}/>
                         </div>
                     );
                 }
                 video_button = 
-                        <div className="mx_RoomHeader_button mx_RoomHeader_video" onClick={activeCall && activeCall.type === "video" ? this.onMuteVideoClick : this.onVideoClick}>
+                        <div className="mx_RoomHeader_button mx_RoomHeader_video" role="button" tabIndex="0" onClick={activeCall && activeCall.type === "video" ? this.onMuteVideoClick : this.onVideoClick} onKeyDown={this.props.onButtonsKeydown}>
                             <img src="img/video.png" title="Video call" alt="Video call" width="32" height="32" style={{ 'marginTop': '-8px' }}/>
                         </div>;
                 voice_button =
-                        <div className="mx_RoomHeader_button mx_RoomHeader_voice" onClick={activeCall ? this.onMuteAudioClick : this.onVoiceClick}>
+                        <div className="mx_RoomHeader_button mx_RoomHeader_voice" role="button" tabIndex="0" onClick={activeCall ? this.onMuteAudioClick : this.onVoiceClick} onKeyDown={this.props.onButtonsKeydown}>
                             <img src="img/voip.png" title="VoIP call" alt="VoIP call" width="32" height="32" style={{ 'marginTop': '-8px' }}/>
                         </div>;
             }
@@ -165,8 +165,8 @@ module.exports = React.createClass({
                         { video_button }
                         { voice_button }
                         { zoom_button }
-                        <div className="mx_RoomHeader_button">
-                            <img src="img/search.png" title="Search" alt="Search" width="21" height="19" onClick={this.props.onSearchClick}/>
+                        <div className="mx_RoomHeader_button" role="button" tabIndex="0"  onClick={this.props.onSearchClick} onKeyDown={this.props.onButtonsKeydown}>
+                            <img src="img/search.png" title="Search" alt="Search" width="21" height="19"/>
                         </div>
                     </div>
                 </div>

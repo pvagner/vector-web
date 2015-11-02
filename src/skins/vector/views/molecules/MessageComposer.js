@@ -82,8 +82,8 @@ module.exports = React.createClass({
                             <img src="img/upload.png" width="17" height="22" alt="Browse for a file..."/>
                             <input type="file" style={uploadInputStyle} ref="uploadInput" onChange={this.onUploadFileSelected} />
                         </div>
-                        <div className="mx_MessageComposer_call" onClick={this.onCallClick}>
-                            <img src="img/call.png" width="28" height="20"/>
+                        <div className="mx_MessageComposer_call" role="button" tabIndex="0" onClick={this.onCallClick} onKeyUp={this.onButtonsKeyup}>
+                            <img src="img/call.png" width="28" height="20" title="Call" alt="Call"/>
                         </div>
                     </div>
                 </div>
