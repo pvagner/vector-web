@@ -16,13 +16,13 @@ limitations under the License.
 
 .mx_MemberAvatar {
     position: relative;
-    z-index: 20;
 }
 
 .mx_MemberAvatar_initial {
     position: absolute;
     color: #fff;
     text-align: center;
+    speak: none;
 }
 
 .mx_MemberAvatar_image {
