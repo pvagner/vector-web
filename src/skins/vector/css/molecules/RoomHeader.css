@@ -48,7 +48,6 @@ limitations under the License.
 
 .mx_RoomHeader_textButton {
     height: 48px;
-    margin-top: 18px;
     background-color: #76cfa6;
     border-radius: 48px;
     margin-right: 8px;
@@ -85,7 +84,7 @@ limitations under the License.
 
 .mx_RoomHeader_info {
     display: table-cell;
-    height: 48px;
+    /* height: 48px; */
     vertical-align: middle;
 }
 
@@ -102,17 +101,18 @@ limitations under the License.
     cursor: pointer;
     vertical-align: middle;
     height: 28px;
+    overflow: hidden;
     color: #454545;
     font-weight: bold;
     font-size: 22px;
     padding-left: 19px;
     padding-right: 16px;
+    /* why isn't text-overflow working? */
     text-overflow: ellipsis;
 }
 
 .mx_RoomHeader_nametext {
     display: inline-block;
-    overflow-y: hidden;
 }
 
 .mx_RoomHeader_searchStatus {
@@ -137,6 +137,16 @@ limitations under the License.
 .mx_RoomHeader_leftRow:hover .mx_RoomHeader_settingsButton {
     visibility: visible;
 }
+
+.mx_RoomHeader_leaveButton {
+    visibility: hidden;
+    margin-top: -1px;
+}
+
+.mx_RoomHeader_wrapper:hover .mx_RoomHeader_leaveButton {
+    visibility: visible;
+}
+
 
 .mx_RoomHeader_nameEditing {
     padding-left: 8px;
