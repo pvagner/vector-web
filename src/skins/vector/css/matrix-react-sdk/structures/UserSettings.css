@@ -1,5 +1,5 @@
 /*
-Copyright 2015 OpenMarket Ltd
+Copyright 2015, 2016 OpenMarket Ltd
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,10 +15,42 @@ limitations under the License.
 */
 
 .mx_UserSettings {
-    width: 960px;
+    max-width: 960px;
+    width: 100%;
     margin-left: auto;
     margin-right: auto;
-    overflow-y: auto;
+
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    flex-direction: column;
+    -webkit-flex-direction: column;    
+}
+
+.mx_UserSettings .mx_RoomHeader {
+    -webkit-box-ordinal-group: 1;
+    -moz-box-ordinal-group: 1;
+    -ms-flex-order: 1;
+    -webkit-order: 1;
+    order: 1;
+
+    -webkit-flex: 0 0 83px;
+    flex: 0 0 83px;
+}
+
+.mx_UserSettings_body {
+    -webkit-box-ordinal-group: 2;
+    -moz-box-ordinal-group: 2;
+    -ms-flex-order: 2;
+    -webkit-order: 2;
+    order: 2;
+
+    -webkit-flex: 1 1 0;
+    flex: 1 1 0;
+
+    overflow-y: auto;    
 }
 
 .mx_UserSettings_spinner {
@@ -33,7 +65,6 @@ limitations under the License.
     display: inline;
     vertical-align: middle;
     border: 0px;
-    height: 36px;
     border-radius: 36px;
     font-weight: 400;
     font-size: 16px;
@@ -56,6 +87,13 @@ limitations under the License.
     border-bottom: 1px solid #eee;
 }
 
+.mx_UserSettings h3 {
+    font-weight: bold;
+    font-size: 15px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
 .mx_UserSettings_section {
     margin-left: 63px;
     margin-top: 28px;
@@ -74,8 +112,7 @@ limitations under the License.
     float: left;
 }
 
-.mx_UserSettings_profileTableRow,
-.mx_UserSettings_notifTableRow
+.mx_UserSettings_profileTableRow
 {
     display: table-row;
 }
@@ -97,6 +134,7 @@ limitations under the License.
 .mx_UserSettings_profileInputCell input,
 .mx_UserSettings_profileInputCell .mx_EditableText
 {
+    display: inline-block;
     border: 0px;
     border-bottom: 1px solid rgba(151, 151, 151, 0.5);
     padding: 0px;
@@ -106,52 +144,37 @@ limitations under the License.
     font-size: 16px;
 }
 
-.mx_UserSettings_notifInputCell {
+.mx_UserSettings_addThreepid {
     display: table-cell;
-    padding-bottom: 21px;
-    padding-right: 8px;
-    width: 16px;
-}
-
-.mx_UserSettings_notifLabelCell
-{
-    padding-bottom: 21px;
-    width: 270px;
-    display: table-cell;
-}
-
-.mx_UserSettings_logout {
-    margin-right: 24px;
-    margin-bottom: 24px;
-    margin-left: 63px;
-}
-
-.mx_UserSettings_avatarPicker {
-    width: 320px;
-    float: right;
-}
-
-.mx_UserSettings_avatarPicker_edit {
+    padding-left: 0.5em;
     position: relative;
-    left: 50%;
-    display: inline-block;
-    margin-top: 10px;
-}
-
-.mx_UserSettings_avatarPicker_edit > input{
-    display: none;
-}
-
-.mx_UserSettings_avatarPicker_edit > label {
     cursor: pointer;
 }
 
-.mx_UserSettings_avatarPicker_img {
-    margin: 0 auto;
-    width: 75%;
+.mx_UserSettings_changePasswordButton {
+    float: right;
+    margin-right: 32px;
+    margin-left: 32px;
 }
 
-.mx_UserSettings_avatarPicker_img > img {
-    display: block;
-    margin: 0 auto;
+.mx_UserSettings_logout {
+    float: right;
+    margin-right: 32px;
+    margin-left: 32px;
+}
+
+.mx_UserSettings_avatarPicker {
+    margin-left: 32px;
+    margin-right: 32px;
+    float: right;
+    cursor: pointer;
+}
+
+.mx_UserSettings_avatarPicker_edit {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.mx_UserSettings_avatarPicker_edit > input {
+    display: none;
 }

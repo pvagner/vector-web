@@ -1,5 +1,5 @@
 /*
-Copyright 2015 OpenMarket Ltd
+Copyright 2015, 2016 OpenMarket Ltd
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ var React = require('react');
 var DropTarget = require('react-dnd').DropTarget;
 var sdk = require('matrix-react-sdk')
 var dis = require('matrix-react-sdk/lib/dispatcher');
-var UnreadStatus = require('matrix-react-sdk/lib/UnreadStatus');
+var Unread = require('matrix-react-sdk/lib/Unread');
 
 // turn this on for drop & drag console debugging galore
 var debug = false;
@@ -62,7 +62,6 @@ var RoomSubList = React.createClass({
         editable: React.PropTypes.bool,
         order: React.PropTypes.string.isRequired,
         selectedRoom: React.PropTypes.string.isRequired,
-        activityMap: React.PropTypes.object.isRequired,
         startAsHidden: React.PropTypes.bool,
         showSpinner: React.PropTypes.bool, // true to show a spinner if 0 elements when expanded
 
@@ -73,19 +72,22 @@ var RoomSubList = React.createClass({
         collapsed: React.PropTypes.bool.isRequired,
         onHeaderClick: React.PropTypes.func,
         alwaysShowHeader: React.PropTypes.bool,
-        incomingCall: React.PropTypes.object
+        incomingCall: React.PropTypes.object,
+        onShowMoreRooms: React.PropTypes.func
     },
 
     getInitialState: function() {
         return {
             hidden: this.props.startAsHidden || false,
+            truncateAt: 20,
             sortedList: [],
         };
     },
 
     getDefaultProps: function() {
         return {
-            onHeaderClick: function() {} // NOP
+            onHeaderClick: function() {}, // NOP
+            onShowMoreRooms: function() {} // NOP
         };
     },
 
@@ -102,14 +104,20 @@ var RoomSubList = React.createClass({
     onClick: function(ev) {
         var isHidden = !this.state.hidden;
         this.setState({ hidden : isHidden });
+
+        if (isHidden) {
+            // as good a way as any to reset the truncate state
+            this.setState({ truncateAt : 20 });
+            this.props.onShowMoreRooms();
+        }
+
         this.props.onHeaderClick(isHidden);
     },
 
     tsOfNewestEvent: function(room) {
         for (var i = room.timeline.length - 1; i >= 0; --i) {
             var ev = room.timeline[i];
-            // logic copied from RoomList.js for when we do/don't highlight
-            if (UnreadStatus.eventTriggersUnreadCount(ev)) {
+            if (Unread.eventTriggersUnreadCount(ev)) {
                 return ev.getTs();
             }
         }
@@ -254,29 +262,50 @@ var RoomSubList = React.createClass({
                     key={ room.roomId }
                     collapsed={ self.props.collapsed || false}
                     selected={ selected }
-                    unread={ self.props.activityMap[room.roomId] === 1 }
-                    highlight={ self.props.activityMap[room.roomId] === 2 }
+                    unread={ Unread.doesRoomHaveUnreadMessages(room) }
+                    highlight={ room.getUnreadNotificationCount('highlight') > 0 || self.props.label === 'Invites' }
                     isInvite={ self.props.label === 'Invites' }
-                    incomingCall={ self.props.incomingCall && (self.props.incomingCall.roomId === room.roomId) ? self.props.incomingCall : null }
-                     />
+                    incomingCall={ self.props.incomingCall && (self.props.incomingCall.roomId === room.roomId) ? self.props.incomingCall : null } />
             );
         });
     },
 
     _getHeaderJsx: function() {
+        var TintableSvg = sdk.getComponent("elements.TintableSvg");        
         return (
             <h2 onClick={ this.onClick } className="mx_RoomSubList_label">
                 { this.props.collapsed ? '' : this.props.label }
-                <img className="mx_RoomSubList_chevron"
+                <TintableSvg className="mx_RoomSubList_chevron"
                     src={ this.state.hidden ? "img/list-close.svg" : "img/list-open.svg" }
                     width="10" height="10" />
             </h2>
         );
     },
 
+    _createOverflowTile: function(overflowCount, totalCount) {
+        var BaseAvatar = sdk.getComponent('avatars.BaseAvatar');
+        // XXX: this is duplicated from RoomTile - factor it out
+        return (
+            <div className="mx_RoomTile mx_RoomTile_ellipsis" onClick={this._showFullMemberList}>
+                <div className="mx_RoomTile_avatar">
+                    <BaseAvatar url="img/ellipsis.svg" name="..." width={24} height={24} />
+                </div>
+                <div className="mx_RoomTile_name">and { overflowCount } others...</div>
+            </div>
+        );
+    },
+
+    _showFullMemberList: function() {
+        this.setState({
+            truncateAt: -1
+        });
+        this.props.onShowMoreRooms();
+    },
+
     render: function() {
         var connectDropTarget = this.props.connectDropTarget;
         var RoomDropTarget = sdk.getComponent('rooms.RoomDropTarget');
+        var TruncatedList = sdk.getComponent('elements.TruncatedList');
 
         var label = this.props.collapsed ? null : this.props.label;
 
@@ -292,14 +321,15 @@ var RoomSubList = React.createClass({
             var classes = "mx_RoomSubList";
 
             if (!this.state.hidden) {
-                subList = <div className={ classes }>
+                subList = <TruncatedList className={ classes } truncateAt={this.state.truncateAt}
+                                         createOverflowElement={this._createOverflowTile} >
                                 { target }
                                 { this.makeRoomTiles() }
-                          </div>;
+                          </TruncatedList>;
             }
             else {
-                subList = <div className={ classes }>
-                          </div>;                
+                subList = <TruncatedList className={ classes }>
+                          </TruncatedList>;                
             }
 
             return connectDropTarget(

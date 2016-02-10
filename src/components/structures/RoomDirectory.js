@@ -1,5 +1,5 @@
 /*
-Copyright 2015 OpenMarket Ltd
+Copyright 2015, 2016 OpenMarket Ltd
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -56,22 +56,10 @@ module.exports = React.createClass({
         });
     },
 
-    joinRoom: function(roomId) {        
-        var self = this;
-        self.setState({ loading: true });
-        // XXX: check that JS SDK suppresses duplicate attempts to join the same room
-        MatrixClientPeg.get().joinRoom(roomId).done(function() {
-            dis.dispatch({
-                action: 'view_room',
-                room_id: roomId
-            });
-        }, function(err) {
-            console.error("Failed to join room: %s", JSON.stringify(err));
-            var ErrorDialog = sdk.getComponent("dialogs.ErrorDialog");
-            Modal.createDialog(ErrorDialog, {
-                title: "Failed to join room",
-                description: err.message
-            });
+    showRoom: function(roomId) {
+        dis.dispatch({
+            action: 'view_room',
+            room_id: roomId
         });
     },
 
@@ -87,18 +75,42 @@ module.exports = React.createClass({
         });
         var rows = [];
         var self = this;
+        var guestRead, guestJoin, perms;
         for (var i = 0; i < rooms.length; i++) {
             var name = rooms[i].name || rooms[i].aliases[0];
+            guestRead = null;
+            guestJoin = null;
+
+            if (rooms[i].world_readable) {
+                guestRead = (
+                    <span>[world readable]</span>
+                );
+                    // <img src="img/members.svg"
+                    //     alt="World Readable" title="World Readable" width="12" height="12" />
+            }
+            if (rooms[i].guest_can_join) {
+                guestJoin = (
+                    <span>[guests allowed]</span>
+                );
+                    // <img src="img/leave.svg"
+                    //     alt="Guests can join" title="Guests can join" width="12" height="12" />
+            }
+            
+            perms = null;
+            if (guestRead || guestJoin) {
+                perms = <div>{guestRead} {guestJoin}</div>;
+            }
+
             // <img src={ MatrixClientPeg.get().getAvatarUrlForRoom(rooms[i].room_id, 40, 40, "crop") } width="40" height="40" alt=""/>
             rows.unshift(
                 <tbody key={ rooms[i].room_id }>
-                    <tr onClick={self.joinRoom.bind(null, rooms[i].room_id)}>
+                    <tr onClick={self.showRoom.bind(null, rooms[i].room_id)}>
                         <td className="mx_RoomDirectory_name">{ name }</td>
                         <td>{ rooms[i].aliases[0] }</td>
                         <td>{ rooms[i].num_joined_members }</td>
                     </tr>
-                    <tr>
-                        <td className="mx_RoomDirectory_topic" colSpan="3">{ rooms[i].topic }</td>
+                    <tr onClick={self.showRoom.bind(null, rooms[i].room_id)}>
+                        <td className="mx_RoomDirectory_topic" colSpan="3">{perms} { rooms[i].topic }</td>
                     </tr>
                 </tbody>
             );
@@ -110,10 +122,7 @@ module.exports = React.createClass({
         this.forceUpdate();
         this.setState({ roomAlias : this.refs.roomAlias.value })
         if (ev.key == "Enter") {
-            this.joinRoom(this.refs.roomAlias.value);
-        }
-        if (ev.key == "Down") {
-
+            this.showRoom(this.refs.roomAlias.value);
         }
     },
 

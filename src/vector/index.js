@@ -1,5 +1,5 @@
 /*
-Copyright 2015 OpenMarket Ltd
+Copyright 2015, 2016 OpenMarket Ltd
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,6 +16,10 @@ limitations under the License.
 
 'use strict';
 
+// for ES6 stuff like startsWith() that Safari doesn't handle
+// and babel doesn't do by default
+require('babel-polyfill');
+
 // CSS requires: just putting them here for now as CSS is going to be
 // refactored soon anyway
 require('../../vector/components.css');
@@ -30,6 +34,7 @@ var sdk = require("matrix-react-sdk");
 sdk.loadSkin(require('../component-index'));
 var VectorConferenceHandler = require('../VectorConferenceHandler');
 var configJson = require("../../config.json");
+var UpdateChecker = require("./updater");
 
 var qs = require("querystring");
 
@@ -93,7 +98,8 @@ function routeUrl(location) {
     else if (location.hash.indexOf('#/register') == 0) {
         window.matrixChat.showScreen('register', parseQsFromFragment(location));
     } else {
-        window.matrixChat.showScreen(location.hash.substring(2));
+        var hashparts = location.hash.split('?');
+        window.matrixChat.showScreen(hashparts[0].substring(2));
     }
 }
 
@@ -103,6 +109,10 @@ function onHashChange(ev) {
         return;
     }
     routeUrl(window.location);
+}
+
+function onVersion(current, latest) {
+    window.matrixChat.onVersion(current, latest);
 }
 
 var loaded = false;
@@ -117,6 +127,7 @@ var onNewScreen = function(screen) {
         var hash = '#/' + screen;
         lastLocationHashSet = hash;
         window.location.hash = hash;
+        if (ga) ga('send', 'pageview', window.location.pathname + window.location.search + window.location.hash);
     }
 }
 
@@ -137,6 +148,8 @@ window.onload = function() {
     if (!validBrowser) {
         return;
     }
+    UpdateChecker.setVersionListener(onVersion);
+    UpdateChecker.run();
     routeUrl(window.location);
     loaded = true;
     if (lastLoadedScreen) {
@@ -154,7 +167,8 @@ function loadApp() {
                 registrationUrl={makeRegistrationUrl()}
                 ConferenceHandler={VectorConferenceHandler}
                 config={configJson}
-                startingQueryParams={parseQsFromFragment(window.location)} />,
+                startingQueryParams={parseQsFromFragment(window.location)}
+                enableGuest={true} />,
             document.getElementById('matrixchat')
         );
     }

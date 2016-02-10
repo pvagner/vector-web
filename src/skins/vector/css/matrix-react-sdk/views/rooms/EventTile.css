@@ -1,5 +1,5 @@
 /*
-Copyright 2015 OpenMarket Ltd
+Copyright 2015, 2016 OpenMarket Ltd
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -31,11 +31,6 @@ limitations under the License.
     top: 0px;
 }
 
-.mx_EventTile_avatar img {
-    border-radius: 20px;
-    border: 0px;
-}
-
 .mx_EventTile_continuation {
     margin-top: 8px ! important;
 }
@@ -56,11 +51,6 @@ limitations under the License.
 
 .mx_EventTile_line {
     position: relative;
-}
-
-.mx_EventTile_content {
-    padding-right: 100px;
-    display: block;
 }
 
 .mx_EventTile_content {
@@ -94,10 +84,19 @@ limitations under the License.
 }
 
 .mx_EventTile_content .markdown-body .hljs {
-    display: inherit ! important;
+    display: inline ! important;
 }
 
 /* end of overrides */
+
+/* this is used for the tile for the event which is selected via the URL.  
+ * for now, it is just a crude color; ultimately we probably want some
+ * transition on here.  
+ */
+.mx_EventTile_selected { 
+    background-color: #76cfa6; 
+    color: #fff;
+}
 
 .mx_EventTile_searchHighlight {
     background-color: #76cfa6;
@@ -135,8 +134,8 @@ limitations under the License.
     z-index: 1;
     position: relative;
     width: 90px;
+    height: 1px; /* Hack to stop the height of this pushing the messages apart. Replaces marigin-top: -6px. This interacts better with a read marker being in between. Content overflows. */
     margin-right: 10px;
-    margin-top: -6px;
 }
 
 .mx_EventTile .mx_MessageTimestamp {
@@ -178,7 +177,7 @@ limitations under the License.
     height: 14px;
 }
 
-.mx_EventTile_readAvatars .mx_MemberAvatar {
+.mx_EventTile_readAvatars .mx_BaseAvatar {
     position: absolute;
     display: inline-block;
 }

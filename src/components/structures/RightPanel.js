@@ -1,5 +1,5 @@
 /*
-Copyright 2015 OpenMarket Ltd
+Copyright 2015, 2016 OpenMarket Ltd
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ var React = require('react');
 var sdk = require('matrix-react-sdk')
 var dis = require('matrix-react-sdk/lib/dispatcher');
 var MatrixClientPeg = require("matrix-react-sdk/lib/MatrixClientPeg");
+var rate_limited_func = require('matrix-react-sdk/lib/ratelimitedfunc');
 
 module.exports = React.createClass({
     displayName: 'RightPanel',
@@ -81,14 +82,18 @@ module.exports = React.createClass({
     onRoomStateMember: function(ev, state, member) {
         // redraw the badge on the membership list
         if (this.state.phase == this.Phase.MemberList && member.roomId === this.props.roomId) {
-            this.forceUpdate();
+            this._delayedUpdate();
         }
         else if (this.state.phase === this.Phase.MemberInfo && member.roomId === this.props.roomId &&
                 member.userId === this.state.member.userId) {
             // refresh the member info (e.g. new power level)
-            this.forceUpdate();
+            this._delayedUpdate();
         }
     },
+
+    _delayedUpdate: new rate_limited_func(function() {
+        this.forceUpdate();
+    }, 500),
 
     onAction: function(payload) {
         if (payload.action === "view_user") {
@@ -116,6 +121,7 @@ module.exports = React.createClass({
     render: function() {
         var memberListExpandedState =(!this.props.collapsed);
         var MemberList = sdk.getComponent('rooms.MemberList');
+        var TintableSvg = sdk.getComponent("elements.TintableSvg");
         var buttonGroup;
         var panel;
 
@@ -142,13 +148,13 @@ module.exports = React.createClass({
         if (this.props.roomId) {
             buttonGroup =
                     <div className="mx_RightPanel_headerButtonGroup">
-                        <div className="mx_RightPanel_headerButton" role="button" tabIndex="0" aria-expanded={memberListExpandedState} onClick={ this.onMemberListButtonClick } onKeyDown={this.onButtonsKeydown}>
-                            <img src="img/members.svg" width="17" height="22" title="Members" alt="Members"/>
+                        <div className="mx_RightPanel_headerButton" title="Members" role="button" tabIndex="0" aria-expanded={memberListExpandedState} onClick={ this.onMemberListButtonClick } onKeyDown={this.onButtonsKeydown}>
+                            <TintableSvg src="img/members.svg" width="17" height="22"/>
                             { membersBadge }
                             { membersHighlight }
                         </div>
-                        <div className="mx_RightPanel_headerButton mx_RightPanel_filebutton">
-                            <img src="img/files.svg" width="17" height="22" title="Files" alt="Files"/>
+                        <div className="mx_RightPanel_headerButton mx_RightPanel_filebutton" title="Files">
+                            <TintableSvg src="img/files.svg" width="17" height="22"/>
                             { filesHighlight }
                         </div>
                     </div>;

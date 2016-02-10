@@ -1,5 +1,5 @@
 /*
-Copyright 2015 OpenMarket Ltd
+Copyright 2015, 2016 OpenMarket Ltd
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ limitations under the License.
     -webkit-flex: 0 0 140px;
     flex: 0 0 140px;
 
-    background-color: rgba(118,207,166,0.19);
+    background-color: rgba(118,207,166,0.2);
 }
 
 .mx_LeftPanel .mx_BottomLeftMenu .mx_RoomTile {

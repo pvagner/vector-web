@@ -1,5 +1,5 @@
 /*
-Copyright 2015 OpenMarket Ltd
+Copyright 2015, 2016 OpenMarket Ltd
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,15 +14,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.mx_RoomAvatar {
-    vertical-align: middle;
+.mx_GuestWarningBar {
+    background-color: #76cfa6;
+    color: #fff;
+
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-align-items: center;
+    align-items: center;
 }
 
-.mx_RoomAvatar_initial {
-    position: absolute;
-    color: #fff;
-    text-align: center;
-    font-weight: normal ! important;
-    speak: none;
-    pointer-events: none;
+.mx_GuestWarningBar_warning {
+    margin-left: 16px;
+    margin-right: 8px;
+    margin-top: -2px;
 }
+
+.mx_GuestWarningBar a {
+    color: #fff ! important;
+    text-decoration: underline ! important;
+    cursor: pointer;
+}
+

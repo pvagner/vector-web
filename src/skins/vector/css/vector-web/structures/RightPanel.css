@@ -1,5 +1,5 @@
 /*
-Copyright 2015 OpenMarket Ltd
+Copyright 2015, 2016 OpenMarket Ltd
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -53,6 +53,10 @@ limitations under the License.
     padding-left: 15px;
     padding-right: 15px;
     position: relative;
+}
+
+.mx_RightPanel_headerButton object {
+    pointer-events: none;
 }
 
 .mx_RightPanel_headerButton_highlight {
