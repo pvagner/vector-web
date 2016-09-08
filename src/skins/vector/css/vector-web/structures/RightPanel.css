@@ -33,14 +33,17 @@ limitations under the License.
     -webkit-order: 1;
     order: 1;
 
-    -webkit-flex: 0 0 83px;
-    flex: 0 0 83px;
+    border-bottom: 1px solid #e5e5e5;
+    margin-right: 20px;
+
+    -webkit-flex: 0 0 70px;
+    flex: 0 0 70px;
 }
 
 /** Fixme - factor this out with the main header **/
 
 .mx_RightPanel_headerButtonGroup {
-    margin-top: 32px;
+    margin-top: 6px;
     float: left;
     background-color: #fff;
     margin-left: -4px;
@@ -49,44 +52,54 @@ limitations under the License.
 .mx_RightPanel_headerButton {
     cursor: pointer;
     display: table-cell;
-    vertical-align: middle;    
+    vertical-align: middle;
     padding-left: 15px;
     padding-right: 15px;
+    text-align: center;
     position: relative;
 }
 
 .mx_RightPanel_headerButton object {
     pointer-events: none;
+    padding-bottom: 3px;
 }
 
 .mx_RightPanel_headerButton_highlight {
-    position: absolute;
-    bottom: -2px;
-    left: 10px;
     width: 25px;
-    height: 4px;
-    background-color: #76cfa6;
+    height: 5px;
+    border-radius: 5px;
+    background-color: rgba(118, 207, 166, 0.2);
 }
 
 .mx_RightPanel_headerButton_badge {
-    position: absolute;
-    top: 4px;
-    left: 28px;
-    font-size: 12px;    
-    background-color: #76cfa6;
-    color: #fff;
+    font-size: 11px;
+    color: #76cfa6;
     font-weight: bold;
-    border-radius: 20px;
-    padding-left: 4px;
-    padding-right: 4px;
-    padding-top: 0px;
+    padding-bottom: 2px;
 }
 
 .mx_RightPanel .mx_MemberList,
-.mx_RightPanel .mx_MemberInfo {
+.mx_RightPanel .mx_MemberInfo,
+.mx_RightPanel_blank {
     -webkit-box-ordinal-group: 2;
     -moz-box-ordinal-group: 2;
     -ms-flex-order: 2;
     -webkit-order: 2;
     order: 2;
+    flex: 1;
+    -webkit-flex: 1;
+}
+
+.mx_RightPanel_footer {
+    -webkit-box-ordinal-group: 3;
+    -moz-box-ordinal-group: 3;
+    -ms-flex-order: 3;
+    -webkit-order: 3;
+    order: 3;
+
+    border-top: 1px solid #e5e5e5;
+    margin-right: 20px;
+
+    -webkit-flex: 0 0 60px;
+    flex: 0 0 60px;
 }

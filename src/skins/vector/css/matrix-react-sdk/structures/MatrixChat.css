@@ -31,7 +31,7 @@ limitations under the License.
     display: -moz-box;
     display: -ms-flexbox;
     display: -webkit-flex;
-    display: flex;    
+    display: flex;
 
     flex-direction: column;
     -webkit-flex-direction: column;
@@ -93,8 +93,8 @@ limitations under the License.
 
     background-color: #eaf5f0;
 
-    -webkit-flex: 0 0 210px;
-    flex: 0 0 210px;
+    -webkit-flex: 0 0 235px;
+    flex: 0 0 235px;
 }
 
 .mx_MatrixChat .mx_LeftPanel.collapsed {
@@ -109,12 +109,19 @@ limitations under the License.
     -webkit-order: 2;
     order: 2;
 
-    padding-left: 25px;
+    padding-left: 20px;
     padding-right: 22px;
     background-color: #fff;
 
     -webkit-flex: 1;
     flex: 1;
+
+    /* Experimental fix for https://github.com/vector-im/vector-web/issues/947
+       and https://github.com/vector-im/vector-web/issues/946.
+       Empirically this stops the MessagePanel's width exploding outwards when
+       gemini is in 'prevented' mode
+       */
+    overflow-x: auto;
 
     /* XXX: Hack: apparently if you try to nest a flex-box
      * within a non-flex-box within a flex-box, the height

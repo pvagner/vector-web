@@ -27,7 +27,19 @@ module.exports = React.createClass({
     displayName: 'ImageView',
 
     propTypes: {
-        onFinished: React.PropTypes.func.isRequired
+        src: React.PropTypes.string.isRequired, // the source of the image being displayed
+        name: React.PropTypes.string, // the main title ('name') for the image
+        link: React.PropTypes.string, // the link (if any) applied to the name of the image
+        width: React.PropTypes.number, // width of the image src in pixels
+        height: React.PropTypes.number, // height of the image src in pixels
+        fileSize: React.PropTypes.number, // size of the image src in bytes
+        onFinished: React.PropTypes.func.isRequired, // callback when the lightbox is dismissed
+
+        // the event (if any) that the Image is displaying. Used for event-specific stuff like
+        // redactions, senders, timestamps etc.  Other descriptors are taken from the explicit
+        // properties above, which let us use lightboxes to display images which aren't associated
+        // with events.
+        mxEvent: React.PropTypes.object,
     },
 
     // XXX: keyboard shortcuts for managing dialogs should be done by the modal
@@ -63,6 +75,14 @@ module.exports = React.createClass({
                 description: "You cannot delete this image. (" + code + ")"
             });
         });
+    },
+
+    getName: function () {
+        var name = this.props.name;
+        if (name && this.props.link) {
+            name = <a href={ this.props.link } target="_blank" rel="noopener">{ name }</a>;
+        }
+        return name;
     },
 
     render: function() {
@@ -102,12 +122,36 @@ module.exports = React.createClass({
                 width: this.props.width,
                 height: this.props.height,
             };
-            res = ", " + style.width + "x" + style.height + "px";
+            res = style.width + "x" + style.height + "px";
         }
 
         var size;
-        if (this.props.mxEvent.getContent().info && this.props.mxEvent.getContent().info.size) {
-            size = filesize(this.props.mxEvent.getContent().info.size);
+        if (this.props.fileSize) {
+            size = filesize(this.props.fileSize);
+        }
+
+        var size_res;
+        if (size && res) {
+            size_res = size + ", " + res;
+        }
+        else {
+            size_res = size || res;
+        }
+
+        var showEventMeta = !!this.props.mxEvent;
+
+        var eventMeta;
+        if(showEventMeta) {
+            eventMeta = (<div className="mx_ImageView_metadata">
+                Uploaded on { DateUtils.formatDate(new Date(this.props.mxEvent.getTs())) } by { this.props.mxEvent.getSender() }
+            </div>);
+        }
+
+        var eventRedact;
+        if(showEventMeta) {
+            eventRedact = (<div className="mx_ImageView_button" onClick={this.onRedactClick}>
+                Redact
+            </div>);
         }
 
         return (
@@ -122,25 +166,16 @@ module.exports = React.createClass({
                             <div className="mx_ImageView_shim">
                             </div>
                             <div className="mx_ImageView_name">
-                                { this.props.mxEvent.getContent().body }
+                                { this.getName() }
                             </div>
-                            <div className="mx_ImageView_metadata">
-                                Uploaded on { DateUtils.formatDate(new Date(this.props.mxEvent.getTs())) } by { this.props.mxEvent.getSender() }
-                            </div>
-                            <a className="mx_ImageView_link" href={ this.props.src } target="_blank">
+                            { eventMeta }
+                            <a className="mx_ImageView_link" href={ this.props.src } target="_blank" rel="noopener">
                                 <div className="mx_ImageView_download">
                                         Download this file<br/>
-                                         <span className="mx_ImageView_size">{ size } { res }</span>
+                                         <span className="mx_ImageView_size">{ size_res }</span>
                                 </div>
                             </a>
-                            <div className="mx_ImageView_button">
-                                <a className="mx_ImageView_link" href={ this.props.src } target="_blank">
-                                    View full screen
-                                </a>
-                            </div>
-                            <div className="mx_ImageView_button" onClick={this.onRedactClick}>
-                                Redact
-                            </div>
+                            { eventRedact }
                             <div className="mx_ImageView_shim">
                             </div>
                         </div>

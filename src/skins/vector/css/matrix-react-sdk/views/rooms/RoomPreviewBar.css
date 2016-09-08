@@ -23,7 +23,7 @@ limitations under the License.
 
     flex-direction: column;
     -webkit-flex-direction: column;
-    
+
     justify-content: center;
     -webkit-justify-content: center;
 
@@ -53,4 +53,16 @@ limitations under the License.
 .mx_RoomPreviewBar_join_text a {
     text-decoration: underline;
     cursor: pointer;
+}
+
+.mx_RoomPreviewBar_warning {
+    display: -webkit-flex;
+    display: flex;
+    -webkit-align-items: center;
+    align-items: center;
+    padding: 8px;
+}
+
+.mx_RoomPreviewBar_warningIcon {
+    padding: 12px;
 }

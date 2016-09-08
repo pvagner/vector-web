@@ -36,8 +36,8 @@ limitations under the License.
     -webkit-order: 1;
     order: 1;
 
-    -webkit-flex: 0 0 83px;
-    flex: 0 0 83px;
+    -webkit-flex: 0 0 70px;
+    flex: 0 0 70px;
 }
 
 .mx_RoomView_fileDropTarget {
@@ -64,7 +64,7 @@ limitations under the License.
     border: 2px #e1dddd solid;
     border-bottom: none;
     position: absolute;
-    top: 83px;
+    top: 70px;
     bottom: 0px;
     z-index: 3000;
 }
@@ -89,18 +89,26 @@ limitations under the License.
     margin: auto;
 
     overflow: auto;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #e5e5e5;
 
     -webkit-flex: 0 0 auto;
     flex: 0 0 auto;
 }
 
-.mx_RoomView_messagePanel {
+.mx_RoomView_topUnreadMessagesBar {
     -webkit-box-ordinal-group: 3;
     -moz-box-ordinal-group: 3;
     -ms-flex-order: 3;
     -webkit-order: 3;
     order: 3;
+}
+
+.mx_RoomView_messagePanel {
+    -webkit-box-ordinal-group: 4;
+    -moz-box-ordinal-group: 4;
+    -ms-flex-order: 4;
+    -webkit-order: 4;
+    order: 4;
 
     -webkit-flex: 1 1 0;
     flex: 1 1 0;
@@ -113,7 +121,7 @@ limitations under the License.
 .mx_RoomView_messageListWrapper {
     max-width: 960px;
     margin: auto;
-    
+
     min-height: 100%;
 
     display: -webkit-box;
@@ -127,6 +135,11 @@ limitations under the License.
 
     justify-content: flex-end;
     -webkit-justify-content: flex-end;
+}
+
+.mx_RoomView_searchResultsPanel .mx_RoomView_messageListWrapper {
+    justify-content: flex-start;
+    -webkit-justify-content: flex-start;
 }
 
 .mx_RoomView_MessageList {
@@ -145,7 +158,7 @@ limitations under the License.
     margin-bottom: 8px;
     margin-left: 63px;
     padding-bottom: 6px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #e5e5e5;
 }
 
 .mx_RoomView_invitePrompt {
@@ -180,11 +193,11 @@ hr.mx_RoomView_myReadMarker {
 }
 
 .mx_RoomView_statusArea {
-    -webkit-box-ordinal-group: 4;
-    -moz-box-ordinal-group: 4;
-    -ms-flex-order: 4;
-    -webkit-order: 4;
-    order: 4;
+    -webkit-box-ordinal-group: 5;
+    -moz-box-ordinal-group: 5;
+    -ms-flex-order: 5;
+    -webkit-order: 5;
+    order: 5;
 
     width: 100%;
     -webkit-flex: 0 0 auto;
@@ -194,12 +207,22 @@ hr.mx_RoomView_myReadMarker {
 .mx_RoomView_statusAreaBox {
     max-width: 960px;
     margin: auto;
-    min-height: 36px;
+    min-height: 50px;
 }
 
 .mx_RoomView_statusAreaBox_line {
-    border-top: 1px solid #eee;
+    margin-left: 65px;
+    border-top: 1px solid #e5e5e5;
     height: 1px;
+}
+
+.mx_RoomView_callStatusBar .mx_UploadBar_uploadProgressInner {
+    background-color: #fff;
+}
+
+.mx_RoomView_callStatusBar .mx_UploadBar_uploadFilename {
+    color: #fff;
+    opacity: 1.0;
 }
 
 .mx_RoomView_inCall .mx_RoomView_statusAreaBox_line {
@@ -225,6 +248,7 @@ hr.mx_RoomView_myReadMarker {
 .mx_RoomView_voipButton {
     float: right;
     margin-right: 13px;
+    margin-top: 10px;
     cursor: pointer;
 }
 
@@ -232,122 +256,12 @@ hr.mx_RoomView_myReadMarker {
     pointer-events: none;
 }
 
-.mx_RoomView_unreadMessagesBar,
-.mx_RoomView_scrollToBottomBar
- {
-    color: #ff0064;
-    cursor: pointer;
-    margin-top: 5px;
-}
-
-.mx_RoomView_unreadMessagesBar img,
-.mx_RoomView_scrollToBottomBar img {
-    padding-left: 10px;
-    padding-right: 31px;
-    vertical-align: middle;
-}
-
-.mx_RoomView_scrollToBottomBar {
-    color: rgba(69,69,69,0.5);
-}
-
-.mx_RoomView_callBar {
-    margin-top: 5px;
-}
-
-.mx_RoomView_callBar img {
-    padding-left: 13px;
-    padding-right: 30px;
-    vertical-align: middle;
-}
-
-.mx_RoomView_connectionLostBar {
-    margin-top: 19px;
-    height: 58px;
-}
-
-.mx_RoomView_connectionLostBar img {
-    padding-left: 10px;
-    padding-right: 22px;
-    vertical-align: middle;
-    float: left;
-}
-
-.mx_RoomView_connectionLostBar_title {
-    color: #ff0064;
-}
-
-.mx_RoomView_connectionLostBar_desc {
-    color: #454545;
-    font-size: 13px;
-    opacity: 0.5;
-}
-
-.mx_RoomView_resend_link {
-    color: #454545 ! important;
-    text-decoration: underline ! important;
-    cursor: pointer;
-}
-
-.mx_RoomView_tabCompleteBar {
-    margin-top: 5px;
-    margin-left: 65px;
-    color: #4a4a4a;
-}
-
-.mx_RoomView_typingBar {
-    margin-top: 6px;
-    margin-left: 65px;
-    color: #4a4a4a;
-    opacity: 0.5;
-}
-
-.mx_RoomView_tabCompleteImage,
-.mx_RoomView_typingImage {
-    display: inline;
-    margin-left: -50px;
-    margin-top: -4px;
-    float: left;
-}
-
-.mx_RoomView_tabCompleteImage {
-    opacity: 0.5;    
-}
-
-.mx_RoomView_typingText {
-    overflow-y: hidden;
-    display: block;
-}
-
-.mx_RoomView_tabCompleteWrapper {
-    display: flex;
-    display: -webkit-flex;
-    height: 24px;
-}
-
-.mx_RoomView_tabCompleteWrapper .mx_TabCompleteBar {
-    flex: 1 1 auto;
-    -webkit-flex: 1 1 auto;
-}
-
-.mx_RoomView_tabCompleteEol {
-    flex: 0 0 auto;
-    -webkit-flex: 0 0 auto;
-    color: #76CFA6;
-}
-
-.mx_RoomView_tabCompleteEol object {
-    vertical-align: middle;
-    margin-right: 8px;
-    margin-top: -2px;
-}
-
 .mx_RoomView .mx_MessageComposer {
-    -webkit-box-ordinal-group: 5;
-    -moz-box-ordinal-group: 5;
-    -ms-flex-order: 5;
-    -webkit-order: 5;
-    order: 5;
+    -webkit-box-ordinal-group: 6;
+    -moz-box-ordinal-group: 6;
+    -ms-flex-order: 6;
+    -webkit-order: 6;
+    order: 6;
 
     width: 100%;
     -webkit-flex: 0 0 auto;
@@ -362,4 +276,9 @@ hr.mx_RoomView_myReadMarker {
     color: #fff;
     font-weight: bold;
     padding: 6px 0;
+    cursor: pointer;
+}
+
+.mx_RoomView_ongoingConfCallNotification a {
+    color: #fff ! important;
 }

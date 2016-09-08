@@ -19,6 +19,9 @@ limitations under the License.
  * You can edit it you like, but your changes will be overwritten,
  * so you'd just be trying to swim upstream like a salmon.
  * You are not a salmon.
+ *
+ * To update it, run:
+ *    ./reskindex.js -h header
  */
 
 module.exports.components = require('matrix-react-sdk/lib/component-index').components;
@@ -29,7 +32,12 @@ module.exports.components['structures.LeftPanel'] = require('./components/struct
 module.exports.components['structures.RightPanel'] = require('./components/structures/RightPanel');
 module.exports.components['structures.RoomDirectory'] = require('./components/structures/RoomDirectory');
 module.exports.components['structures.RoomSubList'] = require('./components/structures/RoomSubList');
+module.exports.components['structures.SearchBox'] = require('./components/structures/SearchBox');
 module.exports.components['structures.ViewSource'] = require('./components/structures/ViewSource');
+module.exports.components['views.context_menus.MessageContextMenu'] = require('./components/views/context_menus/MessageContextMenu');
+module.exports.components['views.context_menus.NotificationStateContextMenu'] = require('./components/views/context_menus/NotificationStateContextMenu');
+module.exports.components['views.context_menus.RoomTagContextMenu'] = require('./components/views/context_menus/RoomTagContextMenu');
+module.exports.components['views.dialogs.ChangelogDialog'] = require('./components/views/dialogs/ChangelogDialog');
 module.exports.components['views.elements.ImageView'] = require('./components/views/elements/ImageView');
 module.exports.components['views.elements.Spinner'] = require('./components/views/elements/Spinner');
 module.exports.components['views.globals.GuestWarningBar'] = require('./components/views/globals/GuestWarningBar');
@@ -40,11 +48,10 @@ module.exports.components['views.login.VectorLoginFooter'] = require('./componen
 module.exports.components['views.login.VectorLoginHeader'] = require('./components/views/login/VectorLoginHeader');
 module.exports.components['views.messages.DateSeparator'] = require('./components/views/messages/DateSeparator');
 module.exports.components['views.messages.MessageTimestamp'] = require('./components/views/messages/MessageTimestamp');
-module.exports.components['views.messages.SenderProfile'] = require('./components/views/messages/SenderProfile');
 module.exports.components['views.rooms.BottomLeftMenuTile'] = require('./components/views/rooms/BottomLeftMenuTile');
-module.exports.components['views.rooms.MessageContextMenu'] = require('./components/views/rooms/MessageContextMenu');
 module.exports.components['views.rooms.RoomDNDView'] = require('./components/views/rooms/RoomDNDView');
 module.exports.components['views.rooms.RoomDropTarget'] = require('./components/views/rooms/RoomDropTarget');
 module.exports.components['views.rooms.RoomTooltip'] = require('./components/views/rooms/RoomTooltip');
 module.exports.components['views.rooms.SearchBar'] = require('./components/views/rooms/SearchBar');
+module.exports.components['views.settings.IntegrationsManager'] = require('./components/views/settings/IntegrationsManager');
 module.exports.components['views.settings.Notifications'] = require('./components/views/settings/Notifications');

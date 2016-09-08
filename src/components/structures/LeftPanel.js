@@ -31,6 +31,7 @@ var LeftPanel = React.createClass({
     getInitialState: function() {
         return {
             showCallElement: null,
+            searchFilter: '',
         };
     },
 
@@ -40,7 +41,7 @@ var LeftPanel = React.createClass({
 
     componentWillReceiveProps: function(newProps) {
         this._recheckCallElement(newProps.selectedRoom);
-    },    
+    },
 
     componentWillUnmount: function() {
         dis.unregister(this.dispatcherRef);
@@ -79,23 +80,28 @@ var LeftPanel = React.createClass({
         if (call) {
             dis.dispatch({
                 action: 'view_room',
-                room_id: call.roomId,
+                room_id: call.groupRoomId || call.roomId,
             });
         }
+    },
+
+    onSearch: function(term) {
+        this.setState({ searchFilter: term });
     },
 
     render: function() {
         var RoomList = sdk.getComponent('rooms.RoomList');
         var BottomLeftMenu = sdk.getComponent('structures.BottomLeftMenu');
+        var SearchBox = sdk.getComponent('structures.SearchBox');
 
         var collapseButton;
-        var classes = "mx_LeftPanel";
+        var classes = "mx_LeftPanel mx_fadable";
         if (this.props.collapsed) {
             classes += " collapsed";
         }
         else {
             // Hide the collapse button until we work out how to display it in the new skin
-            // collapseButton = <img className="mx_LeftPanel_hideButton" onClick={ this.onHideClick } src="img/hide.png" width="12" height="20" alt="<"/>   
+            // collapseButton = <img className="mx_LeftPanel_hideButton" onClick={ this.onHideClick } src="img/hide.png" width="12" height="20" alt="<"/>
         }
 
         var callPreview;
@@ -103,18 +109,20 @@ var LeftPanel = React.createClass({
             var CallView = sdk.getComponent('voip.CallView');
             callPreview = (
                 <CallView
-                    className="mx_LeftPanel_callView" onClick={this.onCallViewClick}
+                    className="mx_LeftPanel_callView" showVoice={true} onClick={this.onCallViewClick}
                     ConferenceHandler={VectorConferenceHandler} />
             );
         }
 
         return (
-            <aside className={classes}>
+            <aside className={classes} style={{ opacity: this.props.opacity }}>
+                <SearchBox collapsed={ this.props.collapsed } onSearch={ this.onSearch } />
                 { collapseButton }
                 { callPreview }
                 <RoomList
                     selectedRoom={this.props.selectedRoom}
                     collapsed={this.props.collapsed}
+                    searchFilter={this.state.searchFilter}
                     ConferenceHandler={VectorConferenceHandler} />
                 <BottomLeftMenu collapsed={this.props.collapsed}/>
             </aside>

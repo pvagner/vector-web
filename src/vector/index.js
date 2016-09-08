@@ -26,17 +26,29 @@ require('../../vector/components.css');
 require('gemini-scrollbar/gemini-scrollbar.css');
 require('gfm.css/gfm.css');
 require('highlight.js/styles/github.css');
+require('draft-js/dist/Draft.css');
+
+
+ // add React and ReactPerf to the global namespace, to make them easier to
+ // access via the console
+global.React = require("react");
+if (process.env.NODE_ENV !== 'production') {
+    global.ReactPerf = require("react-addons-perf");
+}
 
 var RunModernizrTests = require("./modernizr"); // this side-effects a global
-var React = require("react");
 var ReactDOM = require("react-dom");
 var sdk = require("matrix-react-sdk");
 sdk.loadSkin(require('../component-index'));
 var VectorConferenceHandler = require('../VectorConferenceHandler');
-var configJson = require("../../config.json");
 var UpdateChecker = require("./updater");
+var q = require('q');
+var request = require('browser-request');
 
-var qs = require("querystring");
+import UAParser from 'ua-parser-js';
+import url from 'url';
+
+import {parseQs, parseQsFromFragment} from './url_utils';
 
 var lastLocationHashSet = null;
 
@@ -72,35 +84,15 @@ var validBrowser = checkBrowserFeatures([
     "objectfit"
 ]);
 
-// We want to support some name / value pairs in the fragment
-// so we're re-using query string like format
-function parseQsFromFragment(location) {
-    var hashparts = location.hash.split('?');
-    if (hashparts.length > 1) {
-        return qs.parse(hashparts[1]);
-    }
-    return {};
-}
-
-function parseQs(location) {
-    return qs.parse(location.search.substring(1));
-}
-
 // Here, we do some crude URL analysis to allow
-// deep-linking. We only support registration
-// deep-links in this example.
+// deep-linking.
 function routeUrl(location) {
-    var params = parseQs(location);
-    var loginToken = params.loginToken;
-    if (loginToken) {
-        window.matrixChat.showScreen('token_login', parseQs(location));
-    }
-    else if (location.hash.indexOf('#/register') == 0) {
-        window.matrixChat.showScreen('register', parseQsFromFragment(location));
-    } else {
-        var hashparts = location.hash.split('?');
-        window.matrixChat.showScreen(hashparts[0].substring(2));
-    }
+    if (!window.matrixChat) return;
+
+    console.log("Routing URL "+location);
+    var fragparts = parseQsFromFragment(location);
+    window.matrixChat.showScreen(fragparts.location.substring(1),
+                                 fragparts.params);
 }
 
 function onHashChange(ev) {
@@ -121,6 +113,7 @@ var lastLoadedScreen = null;
 // This will be called whenever the SDK changes screens,
 // so a web page can update the URL bar appropriately.
 var onNewScreen = function(screen) {
+    console.log("newscreen "+screen);
     if (!loaded) {
         lastLoadedScreen = screen;
     } else {
@@ -143,8 +136,22 @@ var makeRegistrationUrl = function() {
            '#/register';
 }
 
+
+function getDefaultDeviceDisplayName() {
+    // strip query-string and fragment from uri
+    let u = url.parse(window.location.href);
+    u.search = "";
+    u.hash = "";
+    let app_name = u.format();
+
+    let ua = new UAParser();
+    return app_name + " via " + ua.getBrowser().name +
+        " on " + ua.getOS().name;
+}
+
 window.addEventListener('hashchange', onHashChange);
 window.onload = function() {
+    console.log("window.onload");
     if (!validBrowser) {
         return;
     }
@@ -158,17 +165,96 @@ window.onload = function() {
     }
 }
 
-function loadApp() {
-    if (validBrowser) {
+function getConfig() {
+    let deferred = q.defer();
+
+    request(
+        { method: "GET", url: "config.json", json: true },
+        (err, response, body) => {
+            if (err || response.status < 200 || response.status >= 300) {
+                deferred.reject({err: err, response: response});
+                return;
+            }
+
+            deferred.resolve(body);
+        }
+    );
+
+    return deferred.promise;
+}
+
+function onLoadCompleted() {
+    // if we did a token login, we're now left with the token, hs and is
+    // url as query params in the url; a little nasty but let's redirect to
+    // clear them.
+    if (window.location.search) {
+        var parsedUrl = url.parse(window.location.href);
+        parsedUrl.search = "";
+        var formatted = url.format(parsedUrl);
+        console.log("Redirecting to " + formatted + " to drop loginToken " +
+                    "from queryparams");
+        window.location.href = formatted;
+    }
+}
+
+
+async function loadApp() {
+    const fragparts = parseQsFromFragment(window.location);
+    const params = parseQs(window.location);
+
+    // don't try to redirect to the native apps if we're
+    // verifying a 3pid
+    const preventRedirect = Boolean(fragparts.params.client_secret);
+
+    if (!preventRedirect) {
+        if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+            if (confirm("Vector is not supported on mobile web. Install the app?")) {
+                window.location = "https://itunes.apple.com/us/app/vector.im/id1083446067";
+                return;
+            }
+        }
+        else if (/Android/.test(navigator.userAgent)) {
+            if (confirm("Vector is not supported on mobile web. Install the app?")) {
+                window.location = "https://play.google.com/store/apps/details?id=im.vector.alpha";
+                return;
+            }
+        }
+    }
+
+    let configJson;
+    let configError;
+    try {
+        configJson = await getConfig();
+    } catch (e) {
+        // On 404 errors, carry on without a config,
+        // but on other errors, fail, otherwise it will
+        // lead to subtle errors where the app runs with
+        // the default config if it fails to fetch config.json.
+        if (e.response.status != 404) {
+            configError = e;
+        }
+    }
+
+    console.log("Vector starting at "+window.location);
+    if (configError) {
+        window.matrixChat = ReactDOM.render(<div className="error">
+            Unable to load config file: please refresh the page to try again.
+        </div>, document.getElementById('matrixchat'));
+    } else if (validBrowser) {
         var MatrixChat = sdk.getComponent('structures.MatrixChat');
+
         window.matrixChat = ReactDOM.render(
             <MatrixChat
                 onNewScreen={onNewScreen}
                 registrationUrl={makeRegistrationUrl()}
                 ConferenceHandler={VectorConferenceHandler}
                 config={configJson}
-                startingQueryParams={parseQsFromFragment(window.location)}
-                enableGuest={true} />,
+                realQueryParams={params}
+                startingFragmentQueryParams={fragparts.params}
+                enableGuest={true}
+                onLoadCompleted={onLoadCompleted}
+                defaultDeviceDisplayName={getDefaultDeviceDisplayName()}
+            />,
             document.getElementById('matrixchat')
         );
     }
@@ -185,7 +271,7 @@ function loadApp() {
             }} />,
             document.getElementById('matrixchat')
         );
-    }  
+    }
 }
 
 loadApp();

@@ -47,11 +47,12 @@ limitations under the License.
     top: 0px;
     right: 6px;
 }
-  
+
 .mx_EntityTile_name {
     display: table-cell;
     vertical-align: middle;
     overflow: hidden;
+    font-size: 14px;
     text-overflow: ellipsis;
 }
 
@@ -86,14 +87,17 @@ limitations under the License.
 
 .mx_EntityTile_unavailable .mx_EntityTile_avatar,
 .mx_EntityTile_unavailable .mx_EntityTile_name,
-.mx_EntityTile_unavailable .mx_EntityTile_name_hover
+.mx_EntityTile_unavailable .mx_EntityTile_name_hover,
+.mx_EntityTile_offline_beenactive .mx_EntityTile_avatar,
+.mx_EntityTile_offline_beenactive .mx_EntityTile_name,
+.mx_EntityTile_offline_beenactive .mx_EntityTile_name_hover
 {
     opacity: 0.66;
 }
 
-.mx_EntityTile_offline .mx_EntityTile_avatar,
-.mx_EntityTile_offline .mx_EntityTile_name,
-.mx_EntityTile_offline .mx_EntityTile_name_hover
+.mx_EntityTile_offline_neveractive .mx_EntityTile_avatar,
+.mx_EntityTile_offline_neveractive .mx_EntityTile_name,
+.mx_EntityTile_offline_neveractive .mx_EntityTile_name_hover
 {
     opacity: 0.25;
 }

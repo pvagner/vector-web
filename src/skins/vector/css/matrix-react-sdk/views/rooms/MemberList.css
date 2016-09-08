@@ -17,6 +17,9 @@ limitations under the License.
 .mx_MemberList {
     height: 100%;
 
+    margin-top: 12px;
+    margin-right: 20px;
+
     -webkit-flex: 1;
     flex: 1;
 
@@ -28,6 +31,11 @@ limitations under the License.
 
     flex-direction: column;
     -webkit-flex-direction: column;
+}
+
+.mx_MemberList .mx_Spinner {
+    flex: 0;
+    -webkit-flex: 0;
 }
 
 .mx_MemberList_chevron {
@@ -51,14 +59,14 @@ limitations under the License.
 }
 
 .mx_MemberList .mx_SearchableEntityList_expanded {
-    flex: 1 1 100%;
-    -webkit-flex: 1 1 100%;
+    flex: 1 0 0;
+    -webkit-flex: 1 0 0;
 }
 
 .mx_MemberList_joined {
     order: 2;
-    flex: 1 1 50%;
-    -webkit-flex: 1 1 50%;
+    flex: 1 0 0;
+    -webkit-flex: 1 0 0;
 
     overflow-y: auto;
 }
@@ -72,17 +80,6 @@ limitations under the License.
 }
 */
 
-.mx_MemberList_bottom {
-    order: 4;
-    flex: 0 0 72px;
-    -webkit-flex: 0 0 72px;
-}
-
-.mx_MemberList_bottomRule {
-    border-top: 2px solid #e1dddd;
-    margin-right: 15px;
-}
-
 .mx_MemberList_invited h2 {
     text-transform: uppercase;
     color: #3d3b39;
@@ -91,12 +88,12 @@ limitations under the License.
     padding-left: 3px;
     padding-right: 12px;
     margin-top: 8px;
-    margin-bottom: 4px;    
+    margin-bottom: 4px;
 }
 
 /* we have to have display: table in order for the horizontal wrapping to work */
 .mx_MemberList_wrapper {
-    display: table; 
+    display: table;
     table-layout: fixed;
     width: 100%;
 }

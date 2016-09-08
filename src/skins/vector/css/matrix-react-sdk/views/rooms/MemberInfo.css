@@ -15,7 +15,9 @@ limitations under the License.
 */
 
 .mx_MemberInfo {
+    margin-top: 20px;
     height: 100%;
+    overflow-y: auto;
 }
 
 .mx_MemberInfo h2 {
@@ -32,6 +34,14 @@ limitations under the License.
     clear: both;
 }
 
+.mx_MemberInfo_avatar .mx_BaseAvatar {
+    cursor: not-allowed;
+}
+
+.mx_MemberInfo_avatar .mx_BaseAvatar.mx_BaseAvatar_image {
+    cursor: pointer;
+}
+
 .mx_MemberInfo_profile {
     margin-bottom: 16px;
 }
@@ -46,7 +56,7 @@ limitations under the License.
 }
 
 .mx_MemberInfo_profileField {
-    font-color: #999999;    
+    font-color: #999999;
     font-size: 13px;
     position: relative;
     background-color: #fff;

@@ -28,33 +28,36 @@ limitations under the License.
     border: 1px solid #f0f0f0;
     padding: 9px;
     color: #454545;
+    background-color: #fff;
     margin-left: 3px;
     font-size: 15px;
     margin-bottom: 8px;
-    width: 180px;
+    width: 189px;
 }
 
 .mx_SearchableEntityList_query::-moz-placeholder {
     color: #454545;
     opacity: 0.5;
+    font-size: 12px;
 }
 
 .mx_SearchableEntityList_query::-webkit-input-placeholder {
     color: #454545;
     opacity: 0.5;
+    font-size: 12px;
 }
 
 .mx_SearchableEntityList_listWrapper {
     flex: 1;
     -webkit-flex: 1;
 
-    overflow-y: auto;    
+    overflow-y: auto;
 }
 
 .mx_SearchableEntityList_list {
     display: table;
     table-layout: fixed;
-    width: 100%;    
+    width: 100%;
 }
 
 .mx_SearchableEntityList_list .mx_EntityTile_chevron {
@@ -64,7 +67,7 @@ limitations under the License.
 .mx_SearchableEntityList_hrWrapper {
     width: 100%;
     flex: 0 0 auto;
-    -webkit-flex: 0 0 auto;    
+    -webkit-flex: 0 0 auto;
 }
 
 .mx_SearchableEntityList hr {

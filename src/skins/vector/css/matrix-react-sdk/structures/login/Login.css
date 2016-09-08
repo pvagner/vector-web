@@ -60,6 +60,14 @@ limitations under the License.
     margin-bottom: 14px;
 }
 
+.mx_Login_fieldLabel {
+    margin-top: -10px;
+    margin-left: 8px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    opacity: 0.8;
+}
+
 .mx_Login_submit {
     margin-top: 35px;
     margin-bottom: 24px;
@@ -77,7 +85,8 @@ limitations under the License.
     opacity: 0.8;
 }
 
-.mx_Login_checkbox {
+.mx_Login_checkbox,
+.mx_Login_radio {
     margin-right: 10px;
 }
 
@@ -96,6 +105,7 @@ limitations under the License.
 .mx_Login_links {
     display: block;
     text-align: center;
+    margin-top: 15px;
     width: 100%;
     font-size: 13px;
     opacity: 0.8;
@@ -103,6 +113,12 @@ limitations under the License.
 
 .mx_Login_links a:link {
    color: #4a4a4a;
+}
+
+.mx_Login_prompt {
+    padding-top: 15px;
+    padding-bottom: 15px;
+    font-size: 13px;
 }
 
 .mx_Login_forgot {
@@ -115,9 +131,19 @@ limitations under the License.
 }
 
 .mx_Login_loader {
-    position: absolute;
-    left: 50%;
-    margin-top: 12px;
+    display: inline;
+    position: relative;
+    top: 2px;
+    left: 8px;
+}
+
+.mx_Login_loader .mx_Spinner {
+    display: inline;
+}
+
+.mx_Login_loader .mx_Spinner img {
+    width: 16px;
+    height: 16px;
 }
 
 .mx_Login_error {

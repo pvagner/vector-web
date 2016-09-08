@@ -3,7 +3,6 @@
   <head>
     <meta charset="utf-8">
     <title>Vector</title>
-    <link href='fonts/OpenSans.css' rel='stylesheet' type='text/css'>
     <link rel="apple-touch-icon" sizes="57x57" href="vector-icons/apple-touch-icon-57x57.png">
     <link rel="apple-touch-icon" sizes="60x60" href="vector-icons/apple-touch-icon-60x60.png">
     <link rel="apple-touch-icon" sizes="72x72" href="vector-icons/apple-touch-icon-72x72.png">
@@ -24,10 +23,16 @@
   </head>
   <body style="height: 100%;">
     <section id="matrixchat" style="height: 100%;"></section>
+    <!-- load olm, if possible. -->
+    <script src="olm.js"></script>
     <script src="bundle.js"></script>
     <noscript>Sorry, Vector requires JavaScript to be enabled.</noscript>
     <link rel="stylesheet" href="bundle.css">
     <img src="img/warning.svg" width="24" height="23" style="visibility: hidden; position: absolute; top: 0px; left: 0px;"/>
+    <audio id="messageAudio">
+        <source src="media/message.ogg" type="audio/ogg" />
+        <source src="media/message.mp3" type="audio/mpeg" />
+    </audio>
     <audio id="ringAudio" loop>
         <source src="media/ring.ogg" type="audio/ogg" />
         <source src="media/ring.mp3" type="audio/mpeg" />
@@ -44,6 +49,7 @@
         <source src="media/busy.ogg" type="audio/ogg" />
         <source src="media/busy.mp3" type="audio/mpeg" />
     </audio>
+    <audio id="remoteAudio"/>
     <script>
         if (window.location.host === 'www.vector.im' || window.location.host === 'vector.im') {
             (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
