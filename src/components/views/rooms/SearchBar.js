@@ -59,10 +59,12 @@ module.exports = React.createClass({
         return (
             <div className="mx_SearchBar">
                 <input ref="search_term" className="mx_SearchBar_input" type="text" autoFocus={true} placeholder="Search..." onKeyDown={this.onSearchChange}/>
-                <div className={ searchButtonClasses } onClick={this.onSearch}><img src="img/search-button.svg" width="37" height="37" alt="Search"/></div>
-                <div className={ thisRoomClasses } onClick={this.onThisRoomClick}>This Room</div>
-                <div className={ allRoomsClasses } onClick={this.onAllRoomsClick}>All Rooms</div>
-                <img className="mx_SearchBar_cancel" src="img/cancel.svg" width="18" height="18" onClick={this.props.onCancelClick} />
+                <button className={ searchButtonClasses } aria-pressed={ this.props.searchInProgress } onClick={this.onSearch}><img src="img/search-button.svg" width="37" height="37" alt="Search"/></button>
+                <div role="radiogroup">
+                    <button className={ thisRoomClasses } role="radio" aria-checked={ this.state.scope === 'Room' } onClick={this.onThisRoomClick}>This Room</button>
+                    <button className={ allRoomsClasses } role="radio" aria-checked={ this.state.scope === 'All' } onClick={this.onAllRoomsClick}>All Rooms</button>
+                </div>
+                <button className="mx_SearchBar_cancel"  onClick={this.props.onCancelClick}><img src="img/cancel.svg" width="18" height="18" /></button>
             </div>
         );
     }

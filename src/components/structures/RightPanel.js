@@ -64,21 +64,6 @@ module.exports = React.createClass({
         }
     },
 
-    onButtonsKeydown: function(event) {
-        var KEY_ENTER = 13;
-        var KEY_SPACE = 32;
-
-        switch (event.which) {
-            case KEY_ENTER:
-            case KEY_SPACE: {
-                event.target.click();
-                event.stopPropagation();
-                return false;
-            }
-        }
-        return true;
-    },
-
     onRoomStateMember: function(ev, state, member) {
         // redraw the badge on the membership list
         if (this.state.phase == this.Phase.MemberList && member.roomId === this.props.roomId) {
@@ -148,11 +133,11 @@ module.exports = React.createClass({
         if (this.props.roomId) {
             buttonGroup =
                     <div className="mx_RightPanel_headerButtonGroup">
-                        <div className="mx_RightPanel_headerButton" title="Members" role="button" tabIndex="0" aria-expanded={memberListExpandedState} onClick={ this.onMemberListButtonClick } onKeyDown={this.onButtonsKeydown}>
+                        <button className="mx_RightPanel_headerButton" title="Members" tabIndex="0" aria-expanded={memberListExpandedState} onClick={ this.onMemberListButtonClick }>
                             <TintableSvg src="img/members.svg" width="17" height="22"/>
                             { membersBadge }
                             { membersHighlight }
-                        </div>
+                        </button>
                         <div className="mx_RightPanel_headerButton mx_RightPanel_filebutton" title="Files">
                             <TintableSvg src="img/files.svg" width="17" height="22"/>
                             { filesHighlight }

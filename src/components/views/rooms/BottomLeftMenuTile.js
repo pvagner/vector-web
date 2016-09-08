@@ -46,12 +46,12 @@ module.exports = React.createClass({
         }
 
         return (
-            <div className="mx_RoomTile" onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave} onClick={this.props.onClick}>
+            <button className="mx_RoomTile" onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave} onClick={this.props.onClick}>
                 <div className="mx_RoomTile_avatar">
                     <img src={ this.props.img } width="26" height="26"/>
                 </div>
                 { label }
-            </div>
+            </button>
         );
     }
 });
