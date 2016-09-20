@@ -224,7 +224,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:gravity="center_vertical"
-                        android:text="@string/auth_use_server_options"/>
+                        android:text="@string/auth_use_server_options"
+                        android:labelFor = "@+id/display_server_url_expand_checkbox" />
 
                 </LinearLayout>
 
