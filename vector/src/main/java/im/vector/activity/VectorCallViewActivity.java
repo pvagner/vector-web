@@ -904,8 +904,10 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
         Log.d(LOG_TAG,"## refreshMuteMicButton(): isMuted="+isMuted);
 
         // update icon
-        int iconId = isMuted?R.drawable.ic_material_mic_off_pink_red:R.drawable.ic_material_mic_off_grey;
-        mMuteMicImageView.setImageResource(iconId);
+        int resourceId = isMuted?R.drawable.ic_material_mic_off_pink_red:R.drawable.ic_material_mic_off_grey;
+        mMuteMicImageView.setImageResource(resourceId);
+        resourceId = isMuted?R.string.desc_unmute_microphone:R.string.desc_mute_microphone;
+        mMuteMicImageView.setContentDescription(VectorCallViewActivity.this.getString(resourceId));
     }
 
     /**
@@ -917,8 +919,10 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
         Log.d(LOG_TAG,"## refreshSpeakerButton(): isOn="+isOn);
 
         // update icon
-        int iconId = isOn?R.drawable.ic_material_speaker_phone_pink_red:R.drawable.ic_material_speaker_phone_grey;
-        mSpeakerSelectionView.setImageResource(iconId);
+        int resourceId = isOn?R.drawable.ic_material_speaker_phone_pink_red:R.drawable.ic_material_speaker_phone_grey;
+        mSpeakerSelectionView.setImageResource(resourceId);
+        resourceId = isOn?R.string.desc_earpiece:R.string.desc_speaker_phone;
+        mSpeakerSelectionView.setContentDescription(VectorCallViewActivity.this.getString(resourceId));
 
         VectorCallViewActivity.this.setVolumeControlStream(audioManager.getMode());
     }
@@ -935,8 +939,10 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
             Log.d(LOG_TAG,"## refreshMuteVideoButton(): isMuted="+isMuted);
 
             // update icon
-            int iconId = isMuted?R.drawable.ic_material_videocam_off_pink_red:R.drawable.ic_material_videocam_off_grey;
-            mMuteLocalCameraView.setImageResource(iconId);
+            int resourceId = isMuted?R.drawable.ic_material_videocam_off_pink_red:R.drawable.ic_material_videocam_off_grey;
+            mMuteLocalCameraView.setImageResource(resourceId);
+            resourceId = isMuted?R.string.desc_unmute_camera:R.string.desc_mute_camera;
+            mMuteLocalCameraView.setContentDescription(VectorCallViewActivity.this.getString(resourceId));
         } else {
             Log.d(LOG_TAG,"## refreshMuteVideoButton(): View.INVISIBLE");
             mMuteLocalCameraView.setVisibility(View.INVISIBLE);
@@ -956,8 +962,10 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
             Log.d(LOG_TAG,"## refreshSwitchRearFrontCameraButton(): isSwitched="+isSwitched);
 
             // update icon
-            int iconId = isSwitched?R.drawable.ic_material_switch_video_pink_red:R.drawable.ic_material_switch_video_grey;
-            mSwichRearFrontCameraImageView.setImageResource(iconId);
+            int resourceId = isSwitched?R.drawable.ic_material_switch_video_pink_red:R.drawable.ic_material_switch_video_grey;
+            mSwichRearFrontCameraImageView.setImageResource(resourceId);
+            resourceId = isSwitched?R.string.desc_rear_camera:R.string.desc_front_camera;
+            mSwichRearFrontCameraImageView.setContentDescription(VectorCallViewActivity.this.getString(resourceId));
         } else {
             Log.d(LOG_TAG,"## refreshSwitchRearFrontCameraButton(): View.INVISIBLE");
             mSwichRearFrontCameraImageView.setVisibility(View.INVISIBLE);

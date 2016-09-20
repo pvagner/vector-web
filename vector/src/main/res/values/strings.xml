@@ -751,4 +751,15 @@
     <!-- matrix error -->
     <string name="failed_to_load_timeline_position">%s was trying to load a specific point in this room\'s timeline but was unable to find it.</string>
 
+    <!-- content descriptions -->
+    <string name="desc_front_camera">Front camera</string>
+    <string name="desc_rear_camera">Rear camera</string>
+    <string name="desc_speaker_phone">Loud speaker</string>
+    <string name="desc_earpiece">Ear speaker</string>
+    <string name="hangup">Hangup</string>
+    <string name="desc_mute_camera">Mute camera</string>
+    <string name="desc_unmute_camera">Unmute camera</string>
+    <string name="desc_mute_microphone">Mute microphone</string>
+    <string name="desc_unmute_microphone">Unmute microphone</string>
+
 </resources>

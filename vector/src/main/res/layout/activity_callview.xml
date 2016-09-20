@@ -37,14 +37,16 @@
                 android:layout_width="0dp"
                 android:layout_weight="14"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_material_message_grey"/>
+                android:src="@drawable/ic_material_message_grey"
+                android:contentDescription="@string/chat"/>
 
             <ImageView
                 android:id="@+id/call_speaker_view"
                 android:layout_width="0dp"
                 android:layout_weight="14"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_material_speaker_phone_grey"/>
+                android:src="@drawable/ic_material_speaker_phone_grey"
+                android:contentDescription="@string/desc_speaker_phone"/>
 
             <ImageView
                 android:id="@+id/call_switch_camera_view"
@@ -52,8 +54,8 @@
                 android:layout_weight="14"
                 android:layout_height="24dp"
                 android:visibility="invisible"
-                android:src="@drawable/ic_material_switch_video_grey"/>
-
+                android:src="@drawable/ic_material_switch_video_grey"
+                android:contentDescription="@string/desc_front_camera"/>
 
             <!-- Hang up button used when the call is established or
             when the call is being setup and the called device has not yet reached -->
@@ -62,7 +64,8 @@
                 android:layout_width="0dp"
                 android:layout_weight="16"
                 android:layout_height="48dp"
-                android:src="@drawable/ic_material_call_end_black"/>
+                android:src="@drawable/ic_material_call_end_black"
+                android:contentDescription="@string/hangup"/>
 
             <!-- for further use: for now we cannot switch from audio to video -->
             <ImageView
@@ -79,14 +82,16 @@
                 android:layout_weight="14"
                 android:layout_height="24dp"
                 android:visibility="invisible"
-                android:src="@drawable/ic_material_videocam_off_grey"/>
+                android:src="@drawable/ic_material_videocam_off_grey"
+                android:contentDescription="@string/desc_mute_camera"/>
 
             <ImageView
                 android:id="@+id/mute_audio"
                 android:layout_width="0dp"
                 android:layout_weight="14"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_material_mic_off_grey"/>
+                android:src="@drawable/ic_material_mic_off_grey"
+                android:contentDescription="@string/desc_mute_microphone"/>
             </LinearLayout>
 
         <im.vector.view.VectorPendingCallView
