@@ -761,7 +761,6 @@
     <string name="desc_unmute_camera">Unmute camera</string>
     <string name="desc_mute_microphone">Mute microphone</string>
     <string name="desc_unmute_microphone">Unmute microphone</string>
-    <string name="desc_switch_camera">Switch camera</string>
     <string name="desc_redo">Redo</string>
     <string name="desc_attach">Attach</string>
 

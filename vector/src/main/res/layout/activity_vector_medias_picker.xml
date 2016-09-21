@@ -60,7 +60,7 @@
                     android:layout_marginTop="@dimen/activity_vertical_margin"
                     android:layout_marginRight="@dimen/activity_horizontal_margin"
                     android:src="@drawable/ic_switch_camera"
-                    android:contentDescription="@string/desc_switch_camera" />
+                    android:contentDescription="@string/desc_front_camera" />
 
                 <!-- Exit button: = back button -->
                 <ImageView

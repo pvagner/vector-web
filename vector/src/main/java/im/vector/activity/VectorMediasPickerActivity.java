@@ -1243,8 +1243,10 @@ public class VectorMediasPickerActivity extends MXCActionBarActivity implements 
 
             if (mCameraId == Camera.CameraInfo.CAMERA_FACING_BACK) {
                 mCameraId = Camera.CameraInfo.CAMERA_FACING_FRONT;
+                mSwitchCameraImageView.setContentDescription(VectorMediasPickerActivity.this.getString(R.string.desc_rear_camera));
             } else {
                 mCameraId = Camera.CameraInfo.CAMERA_FACING_BACK;
+                mSwitchCameraImageView.setContentDescription(VectorMediasPickerActivity.this.getString(R.string.desc_front_camera));
             }
 
             try {
