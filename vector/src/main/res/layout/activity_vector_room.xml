@@ -196,15 +196,15 @@
                     <RelativeLayout
                         android:id="@+id/room_send_layout"
                         android:layout_width="37dp"
-                        android:layout_height="match_parent"
-                        android:contentDescription="@string/send">
+                        android:layout_height="match_parent">
 
                         <ImageView
                             android:id="@+id/room_send_image_view"
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:layout_centerInParent="true"
-                            android:src="@drawable/ic_material_file"/>
+                            android:src="@drawable/ic_material_file"
+                            android:contentDescription="@string/option_send_files"/>
 
                     </RelativeLayout>
 

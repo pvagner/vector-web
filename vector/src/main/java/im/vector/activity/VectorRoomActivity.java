@@ -1706,6 +1706,7 @@ public class VectorRoomActivity extends MXCActionBarActivity implements MatrixMe
     private void manageSendMoreButtons() {
         boolean hasText = mEditText.getText().length() > 0;
         mSendImageView.setImageResource(hasText ? R.drawable.ic_material_send_green : R.drawable.ic_material_file);
+        mSendImageView.setContentDescription(getString(hasText ? R.string.send : R.string.option_send_files));
     }
 
     /**

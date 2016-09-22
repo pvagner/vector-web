@@ -756,12 +756,13 @@
     <string name="desc_rear_camera">Rear camera</string>
     <string name="desc_speaker_phone">Loud speaker</string>
     <string name="desc_earpiece">Ear speaker</string>
-    <string name="hangup">Hangup</string>
+    <string name="hangup">End call</string>
     <string name="desc_mute_camera">Mute camera</string>
     <string name="desc_unmute_camera">Unmute camera</string>
     <string name="desc_mute_microphone">Mute microphone</string>
     <string name="desc_unmute_microphone">Unmute microphone</string>
     <string name="desc_redo">Redo</string>
     <string name="desc_attach">Attach</string>
+    <string name="desc_start_call">Start call</string>
 
 </resources>
