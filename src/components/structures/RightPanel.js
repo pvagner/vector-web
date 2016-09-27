@@ -22,13 +22,21 @@ var Matrix = require("matrix-js-sdk");
 var dis = require('matrix-react-sdk/lib/dispatcher');
 var MatrixClientPeg = require("matrix-react-sdk/lib/MatrixClientPeg");
 var rate_limited_func = require('matrix-react-sdk/lib/ratelimitedfunc');
+var Modal = require('matrix-react-sdk/lib/Modal');
 
 module.exports = React.createClass({
     displayName: 'RightPanel',
 
+    propTypes: {
+        userId: React.PropTypes.string, // if showing an orphaned MemberInfo page, this is set
+        roomId: React.PropTypes.string, // if showing panels for a given room, this is set
+        collapsed: React.PropTypes.bool, // currently unused property to request for a minimized view of the panel
+    },
+
     Phase : {
         MemberList: 'MemberList',
-        FileList: 'FileList',
+        FilePanel: 'FilePanel',
+        NotificationPanel: 'NotificationPanel',
         MemberInfo: 'MemberInfo',
     },
 
@@ -61,7 +69,7 @@ module.exports = React.createClass({
     },
 
     onMemberListButtonClick: function() {
-        if (this.props.collapsed) {
+        if (this.props.collapsed || this.state.phase !== this.Phase.MemberList) {
             this.setState({ phase: this.Phase.MemberList });
             dis.dispatch({
                 action: 'show_right_panel',
@@ -72,6 +80,51 @@ module.exports = React.createClass({
                 action: 'hide_right_panel',
             });
         }
+    },
+
+    onFileListButtonClick: function() {
+        if (this.props.collapsed || this.state.phase !== this.Phase.FilePanel) {
+            this.setState({ phase: this.Phase.FilePanel });
+            dis.dispatch({
+                action: 'show_right_panel',
+            });
+        }
+        else {
+            dis.dispatch({
+                action: 'hide_right_panel',
+            });
+        }
+    },
+
+    onNotificationListButtonClick: function() {
+        if (this.props.collapsed || this.state.phase !== this.Phase.NotificationPanel) {
+            this.setState({ phase: this.Phase.NotificationPanel });
+            dis.dispatch({
+                action: 'show_right_panel',
+            });
+        }
+        else {
+            dis.dispatch({
+                action: 'hide_right_panel',
+            });
+        }
+    },
+
+    onInviteButtonClick: function() {
+        if (MatrixClientPeg.get().isGuest()) {
+            var NeedToRegisterDialog = sdk.getComponent("dialogs.NeedToRegisterDialog");
+            Modal.createDialog(NeedToRegisterDialog, {
+                title: "Please Register",
+                description: "Guest users can't invite users. Please register to invite."
+            });
+            return;
+        }
+
+        // call ChatInviteDialog
+        dis.dispatch({
+            action: 'view_invite',
+            roomId: this.props.roomId,
+        });
     },
 
     onRoomStateMember: function(ev, state, member) {
@@ -117,20 +170,29 @@ module.exports = React.createClass({
     },
 
     render: function() {
-        var memberListExpandedState =(!this.props.collapsed);
+        var memberListExpandedState =(this.state.phase == this.Phase.MemberList || this.state.phase === this.Phase.MemberInfo);
+        var fileListExpandedState =(this.state.phase == this.Phase.FilePanel);
+        var notificationListExpandedState =(this.state.phase == this.Phase.NotificationPanel);
         var MemberList = sdk.getComponent('rooms.MemberList');
+        var NotificationPanel = sdk.getComponent('structures.NotificationPanel');
+        var FilePanel = sdk.getComponent('structures.FilePanel');
         var TintableSvg = sdk.getComponent("elements.TintableSvg");
         var buttonGroup;
+        var inviteGroup;
         var panel;
 
         var filesHighlight;
         var membersHighlight;
+        var notificationsHighlight;
         if (!this.props.collapsed) {
             if (this.state.phase == this.Phase.MemberList || this.state.phase === this.Phase.MemberInfo) {
                 membersHighlight = <div className="mx_RightPanel_headerButton_highlight"></div>;
             }
-            else if (this.state.phase == this.Phase.FileList) {
+            else if (this.state.phase == this.Phase.FilePanel) {
                 filesHighlight = <div className="mx_RightPanel_headerButton_highlight"></div>;
+            }
+            else if (this.state.phase == this.Phase.NotificationPanel) {
+                notificationsHighlight = <div className="mx_RightPanel_headerButton_highlight"></div>;
             }
         }
 
@@ -138,23 +200,44 @@ module.exports = React.createClass({
         if ((this.state.phase == this.Phase.MemberList || this.state.phase === this.Phase.MemberInfo) && this.props.roomId) {
             var cli = MatrixClientPeg.get();
             var room = cli.getRoom(this.props.roomId);
+            var user_is_in_room;
             if (room) {
-                membersBadge = <div className="mx_RightPanel_headerButton_badge">{ room.getJoinedMembers().length }</div>;
+                membersBadge = room.getJoinedMembers().length;
+                user_is_in_room = room.hasMembershipState(
+                    MatrixClientPeg.get().credentials.userId, 'join'
+                );
             }
+
+            if (user_is_in_room) {
+                inviteGroup =
+                    <div className="mx_RightPanel_invite" onClick={ this.onInviteButtonClick } >
+                        <div className="mx_RightPanel_icon" >
+                            <TintableSvg src="img/icon-invite-people.svg" width="35" height="35" />
+                        </div>
+                        <div className="mx_RightPanel_message">Invite to this room</div>
+                    </div>;
+            }
+
         }
 
         if (this.props.roomId) {
             buttonGroup =
                     <div className="mx_RightPanel_headerButtonGroup">
                         <button className="mx_RightPanel_headerButton" title="Members" tabIndex="0" aria-expanded={memberListExpandedState} onClick={ this.onMemberListButtonClick }>
-                            { membersBadge }
+                            <div className="mx_RightPanel_headerButton_badge">{ membersBadge ? membersBadge : <span>&nbsp;</span>}</div>
                             <TintableSvg src="img/icons-people.svg" width="25" height="25"/>
                             { membersHighlight }
                         </button>
-                        <div className="mx_RightPanel_headerButton mx_RightPanel_filebutton" title="Files">
-                            <TintableSvg src="img/files.svg" width="17" height="22"/>
+                        <button className="mx_RightPanel_headerButton mx_RightPanel_filebutton" title="Files" tabIndex="0" aria-expanded={fileListExpandedState} onClick={ this.onFileListButtonClick }>
+                            <div className="mx_RightPanel_headerButton_badge">&nbsp;</div>
+                            <TintableSvg src="img/icons-files.svg" width="25" height="25"/>
                             { filesHighlight }
-                        </div>
+                        </button>
+                        <button className="mx_RightPanel_headerButton mx_RightPanel_notificationbutton" title="Notifications" tabIndex="0" aria-expanded={notificationListExpandedState} onClick={ this.onNotificationListButtonClick }>
+                            <div className="mx_RightPanel_headerButton_badge">&nbsp;</div>
+                            <TintableSvg src="img/icons-notifications.svg" width="25" height="25"/>
+                            { notificationsHighlight }
+                        </button>
                     </div>;
         }
 
@@ -165,6 +248,12 @@ module.exports = React.createClass({
             else if(this.state.phase == this.Phase.MemberInfo) {
                 var MemberInfo = sdk.getComponent('rooms.MemberInfo');
                 panel = <MemberInfo member={this.state.member} key={this.props.roomId || this.props.userId} />
+            }
+            else if (this.state.phase == this.Phase.NotificationPanel) {
+                panel = <NotificationPanel />
+            }
+            else if (this.state.phase == this.Phase.FilePanel) {
+                panel = <FilePanel roomId={this.props.roomId} />
             }
         }
 
@@ -184,6 +273,7 @@ module.exports = React.createClass({
                 </div>
                 { panel }
                 <div className="mx_RightPanel_footer">
+                    { inviteGroup }
                 </div>
             </aside>
         );

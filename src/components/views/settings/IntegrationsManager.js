@@ -19,6 +19,7 @@ limitations under the License.
 var React = require('react');
 var sdk = require('matrix-react-sdk');
 var MatrixClientPeg = require('matrix-react-sdk/lib/MatrixClientPeg');
+var dis = require('matrix-react-sdk/lib/dispatcher');
 
 module.exports = React.createClass({
     displayName: 'IntegrationsManager',
@@ -31,10 +32,12 @@ module.exports = React.createClass({
     // XXX: keyboard shortcuts for managing dialogs should be done by the modal
     // dialog base class somehow, surely...
     componentDidMount: function() {
+        this.dispatcherRef = dis.register(this.onAction);
         document.addEventListener("keydown", this.onKeyDown);
     },
 
     componentWillUnmount: function() {
+        dis.unregister(this.dispatcherRef);
         document.removeEventListener("keydown", this.onKeyDown);
     },
 
@@ -46,11 +49,15 @@ module.exports = React.createClass({
         }
     },
 
+    onAction: function(payload) {
+        if (payload.action === 'close_scalar') {
+            this.props.onFinished();
+        }
+    },
+
     render: function() {
         return (
-            <div className="mx_IntegrationsManager">
-                <iframe src={ this.props.src }></iframe>
-            </div>
+            <iframe src={ this.props.src }></iframe>
         );
     }
 });

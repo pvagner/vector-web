@@ -22,10 +22,22 @@ limitations under the License.
     height: 34px;
 }
 
+.mx_RoomTile_tooltip {
+    display: inline-block;
+    position: relative;
+    top: -54px;
+    left: -12px;
+}
+
+
 .mx_RoomTile_nameContainer {
     display: inline-block;
     width: 180px;
     height: 24px;
+}
+
+.mx_RoomTile_avatar_container {
+    position: relative;
 }
 
 .mx_RoomTile_avatar {
@@ -39,7 +51,15 @@ limitations under the License.
     vertical-align: middle;
 }
 
-.mx_RoomTile_avatar_container:hover:before,
+.mx_RoomTile_dm {
+    display: block;
+    position: absolute;
+    bottom: 0;
+    right: -5px;
+    z-index: 2;
+}
+
+.mx_RoomTile:hover .mx_RoomTile_avatar_container:before,
 .mx_RoomTile_avatar_container.mx_RoomTile_avatar_roomTagMenu:before {
     display: block;
     position: absolute;
@@ -47,31 +67,30 @@ limitations under the License.
     border-radius: 40px;
     background-image: url("img/icons_ellipsis.svg");
     background-size: 25px;
-    left: 15px;
     width: 24px;
     height: 24px;
     z-index: 4;
 }
 
-.mx_RoomTile_avatar_container:hover:after,
+.mx_RoomTile:hover .mx_RoomTile_avatar_container:after,
 .mx_RoomTile_avatar_container.mx_RoomTile_avatar_roomTagMenu:after {
     display: block;
     position: absolute;
     content: "";
     border-radius: 40px;
     background: #4A4A4A;
-    top: 5px;
+    bottom: 0;
     width: 24px;
     height: 24px;
     opacity: 0.6;
-    z-index: 2;
+    z-index: 1;
 }
 
-.collapsed .mx_RoomTile_avatar_container:hover:before {
+.collapsed .mx_RoomTile:hover .mx_RoomTile_avatar_container:before {
     display: none;
 }
 
-.collapsed .mx_RoomTile_avatar_container:hover:after {
+.collapsed .mx_RoomTile:hover .mx_RoomTile_avatar_container:after {
     display: none;
 }
 
@@ -90,18 +109,12 @@ limitations under the License.
     text-overflow: ellipsis;
 }
 
-.mx_RoomTile_ellipsis .mx_RoomTile_name {
-    font-style: italic;
-    color: #454545;
-}
-
 .mx_RoomTile_invite {
-/*    color: rgba(69, 69, 69, 0.5);
-*/
+/*    color: rgba(69, 69, 69, 0.5); */
 }
 
 .collapsed .mx_RoomTile_nameContainer {
-    height: 0;
+    width: 60px; /* colapsed panel width */
 }
 
 .collapsed .mx_RoomTile_name {
@@ -113,7 +126,7 @@ limitations under the License.
     min-width: 12px;
     border-radius: 16px;
     padding: 0px 4px 0px 4px;
-    z-index: 200;
+    z-index: 3;
 }
 
 /* Hide the bottom of speech bubble */

@@ -34,7 +34,7 @@ module.exports = React.createClass({
             <div className="mx_GuestWarningBar">
                 <img className="mx_GuestWarningBar_warning" src="img/warning.svg" width="24" height="23" alt="/!\"/>
                 <div>
-                    You are using Vector as a guest. <a tabIndex="0" onClick={this.onRegisterClicked}>Register</a> or <a tabIndex="0" onClick={this.onLoginClicked}>log in</a> to access more rooms and features.
+                    You are Rioting as a guest. <a tabIndex="0" onClick={this.onRegisterClicked}>Register</a> or <a tabIndex="0" onClick={this.onLoginClicked}>log in</a> to access more rooms and features.
                 </div>
             </div>
         );

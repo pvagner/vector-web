@@ -29,21 +29,46 @@ var linkify = require('linkifyjs');
 var linkifyString = require('linkifyjs/string');
 var linkifyMatrix = require('matrix-react-sdk/lib/linkify-matrix');
 var sanitizeHtml = require('sanitize-html');
+var q = require('q');
 
 linkifyMatrix(linkify);
 
 module.exports = React.createClass({
     displayName: 'RoomDirectory',
 
+    propTypes: {
+        config: React.PropTypes.object,
+    },
+
+    getDefaultProps: function() {
+        return {
+            config: {
+                networks: [],
+            },
+        }
+    },
+
     getInitialState: function() {
         return {
             publicRooms: [],
-            roomAlias: '',
             loading: true,
+            filterByNetwork: null,
         }
     },
 
     componentWillMount: function() {
+        // precompile Regexps
+        this.networkPatterns = {};
+        if (this.props.config.networkPatterns) {
+            for (const network of Object.keys(this.props.config.networkPatterns)) {
+                this.networkPatterns[network] = new RegExp(this.props.config.networkPatterns[network]);
+            }
+        }
+        this.nextBatch = null;
+        this.filterString = null;
+        this.filterTimeout = null;
+        this.scrollPanel = null;
+
         // dis.dispatch({
         //     action: 'ui_opacity',
         //     sideOpacity: 0.3,
@@ -52,7 +77,7 @@ module.exports = React.createClass({
     },
 
     componentDidMount: function() {
-        this.getPublicRooms();
+        this.refreshRoomList();
     },
 
     componentWillUnmount: function() {
@@ -63,24 +88,50 @@ module.exports = React.createClass({
         // });
     },
 
-    getPublicRooms: function() {
-        var self = this;
-        MatrixClientPeg.get().publicRooms(function (err, data) {
-            if (err) {
-                self.setState({ loading: false });
-                console.error("Failed to get publicRooms: %s", JSON.stringify(err));
-                var ErrorDialog = sdk.getComponent("dialogs.ErrorDialog");
-                Modal.createDialog(ErrorDialog, {
-                    title: "Failed to get public room list",
-                    description: err.message
-                });
+    refreshRoomList: function() {
+        this.nextBatch = null;
+        this.setState({
+            publicRooms: [],
+            loading: true,
+        });
+        this.getMoreRooms().done();
+    },
+
+    getMoreRooms: function() {
+        if (!MatrixClientPeg.get()) return q();
+
+        const my_filter_string = this.filterString;
+        const opts = {limit: 20};
+        if (this.nextBatch) opts.since = this.nextBatch;
+        if (this.filterString) opts.filter = { generic_search_term: my_filter_string } ;
+        return MatrixClientPeg.get().publicRooms(opts).then((data) => {
+            if (my_filter_string != this.filterString) {
+                // if the filter has changed since this request was sent,
+                // throw away the result (don't even clear the busy flag
+                // since we must still have a request in flight)
+                return;
             }
-            else {
-                self.setState({
-                    publicRooms: data.chunk,
-                    loading: false,
-                });
+
+            this.nextBatch = data.next_batch;
+            this.setState((s) => {
+                s.publicRooms.push(...data.chunk);
+                s.loading = false;
+                return s;
+            });
+            return Boolean(data.next_batch);
+        }, (err) => {
+            if (my_filter_string != this.filterString) {
+                // as above: we don't care about errors for old
+                // requests either
+                return;
             }
+            this.setState({ loading: false });
+            console.error("Failed to get publicRooms: %s", JSON.stringify(err));
+            var ErrorDialog = sdk.getComponent("dialogs.ErrorDialog");
+            Modal.createDialog(ErrorDialog, {
+                title: "Failed to get public room list",
+                description: err.message
+            });
         });
     },
 
@@ -121,10 +172,10 @@ module.exports = React.createClass({
                     return MatrixClientPeg.get().deleteAlias(alias);
                 }).done(() => {
                     modal.close();
-                    this.getPublicRooms();
+                    this.refreshRoomList();
                 }, function(err) {
                     modal.close();
-                    this.getPublicRooms();
+                    this.refreshRoomList();
                     Modal.createDialog(ErrorDialog, {
                         title: "Failed to "+step,
                         description: err.toString()
@@ -141,6 +192,56 @@ module.exports = React.createClass({
         } else {
             this.showRoom(room);
         }
+    },
+
+    onNetworkChange: function(network) {
+        this.setState({
+            filterByNetwork: network,
+        }, () => {
+            // we just filtered out a bunch of rooms, so check to see if
+            // we need to fill up the scrollpanel again
+            // NB. Because we filter the results, the HS can keep giving
+            // us more rooms and we'll keep requesting more if none match
+            // the filter, which is pretty terrible. We need a way
+            // to filter by network on the server.
+            if (this.scrollPanel) this.scrollPanel.checkFillState();
+        });
+    },
+
+    onFillRequest: function(backwards) {
+        if (backwards || !this.nextBatch) return q(false);
+
+        return this.getMoreRooms();
+    },
+
+    onFilterChange: function(alias) {
+        this.filterString = alias || null;
+
+        // don't send the request for a little bit,
+        // no point hammering the server with a
+        // request for every keystroke, let the
+        // user finish typing.
+        if (this.filterTimeout) {
+            clearTimeout(this.filterTimeout);
+        }
+        this.filterTimeout = setTimeout(() => {
+            this.filterTimeout = null;
+            this.refreshRoomList();
+        }, 300);
+    },
+
+    onFilterClear: function() {
+        this.filterString = null;
+
+        if (this.filterTimeout) {
+            clearTimeout(this.filterTimeout);
+        }
+        // update immediately
+        this.refreshRoomList();
+    },
+
+    onJoinClick: function(alias) {
+        this.showRoomAlias(alias);
     },
 
     showRoomAlias: function(alias) {
@@ -187,19 +288,17 @@ module.exports = React.createClass({
         dis.dispatch(payload);
     },
 
-    getRows: function(filter) {
+    getRows: function() {
         var BaseAvatar = sdk.getComponent('avatars.BaseAvatar');
 
         if (!this.state.publicRooms) return [];
 
-        var rooms = this.state.publicRooms.filter(function(a) {
-            // FIXME: if incrementally typing, keep narrowing down the search set
-            // incrementally rather than starting over each time.
-            return (((a.name && a.name.toLowerCase().search(filter.toLowerCase()) >= 0) ||
-                     (a.aliases && a.aliases[0].toLowerCase().search(filter.toLowerCase()) >= 0)) &&
-                      a.num_joined_members > 0);
-        }).sort(function(a,b) {
-            return a.num_joined_members - b.num_joined_members;
+        var rooms = this.state.publicRooms.filter((a) => {
+            if (this.state.filterByNetwork) {
+                if (!this._isRoomInNetwork(a, this.state.filterByNetwork)) return false;
+            }
+
+            return true;
         });
         var rows = [];
         var self = this;
@@ -228,7 +327,7 @@ module.exports = React.createClass({
             var topic = rooms[i].topic || '';
             topic = linkifyString(sanitizeHtml(topic));
 
-            rows.unshift(
+            rows.push(
                 <tr key={ rooms[i].room_id }
                     onClick={self.onRoomClicked.bind(self, rooms[i])}
                     // cancel onMouseDown otherwise shift-clicking highlights text
@@ -258,37 +357,63 @@ module.exports = React.createClass({
         return rows;
     },
 
-    onKeyUp: function(ev) {
-        this.forceUpdate();
-        this.setState({ roomAlias : this.refs.roomAlias.value })
-        if (ev.key == "Enter") {
-            this.showRoomAlias(this.refs.roomAlias.value);
+    collectScrollPanel: function(element) {
+        this.scrollPanel = element;
+    },
+
+    /**
+     * Terrible temporary function that guess what network a public room
+     * entry is in, until synapse is able to tell us
+     */
+    _isRoomInNetwork(room, network) {
+        if (room.aliases && this.networkPatterns[network]) {
+            for (const alias of room.aliases) {
+                if (this.networkPatterns[network].test(alias)) return true;
+            }
         }
+
+        return false;
     },
 
     render: function() {
+        let content;
         if (this.state.loading) {
-            var Loader = sdk.getComponent("elements.Spinner");
-            return (
-                <div className="mx_RoomDirectory">
-                    <Loader />
-                </div>
-            );
+            const Loader = sdk.getComponent("elements.Spinner");
+            content = <div className="mx_RoomDirectory">
+                <Loader />
+            </div>;
+        } else {
+            const ScrollPanel = sdk.getComponent("structures.ScrollPanel");
+            content = <ScrollPanel ref={this.collectScrollPanel}
+                className="mx_RoomDirectory_tableWrapper"
+                onFillRequest={ this.onFillRequest }
+                stickyBottom={false}
+                startAtBottom={false}
+                onResize={function(){}}
+            >
+                <table ref="directory_table" className="mx_RoomDirectory_table">
+                    <tbody>
+                        { this.getRows() }
+                    </tbody>
+                </table>
+            </ScrollPanel>;
         }
 
-        var SimpleRoomHeader = sdk.getComponent('rooms.SimpleRoomHeader');
+        const SimpleRoomHeader = sdk.getComponent('rooms.SimpleRoomHeader');
+        const NetworkDropdown = sdk.getComponent('directory.NetworkDropdown');
+        const DirectorySearchBox = sdk.getComponent('elements.DirectorySearchBox');
         return (
             <div className="mx_RoomDirectory">
                 <SimpleRoomHeader title="Directory" />
                 <div className="mx_RoomDirectory_list">
-                    <input ref="roomAlias" placeholder="Join a room (e.g. #foo:domain.com)" className="mx_RoomDirectory_input" size="64" onKeyUp={ this.onKeyUp }/>
-                    <GeminiScrollbar className="mx_RoomDirectory_tableWrapper">
-                        <table ref="directory_table" className="mx_RoomDirectory_table">
-                            <tbody>
-                                { this.getRows(this.state.roomAlias) }
-                            </tbody>
-                        </table>
-                    </GeminiScrollbar>
+                    <div className="mx_RoomDirectory_listheader">
+                        <DirectorySearchBox
+                            className="mx_RoomDirectory_searchbox"
+                            onChange={this.onFilterChange} onClear={this.onFilterClear} onJoinClick={this.onJoinClick}
+                        />
+                        <NetworkDropdown config={this.props.config} onNetworkChange={this.onNetworkChange} />
+                    </div>
+                    {content}
                 </div>
             </div>
         );

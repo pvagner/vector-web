@@ -46,15 +46,15 @@ limitations under the License.
     margin-top: 6px;
     float: left;
     background-color: #fff;
-    margin-left: -4px;
+    margin-left: 0px;
 }
 
 .mx_RightPanel_headerButton {
     cursor: pointer;
     display: table-cell;
-    vertical-align: middle;
-    padding-left: 15px;
-    padding-right: 15px;
+    vertical-align: top;
+    padding-left: 4px;
+    padding-right: 5px;
     text-align: center;
     position: relative;
 }
@@ -86,8 +86,8 @@ limitations under the License.
     -ms-flex-order: 2;
     -webkit-order: 2;
     order: 2;
-    flex: 1;
-    -webkit-flex: 1;
+    flex: 1 1 0;
+    -webkit-flex: 1 1 0;
 }
 
 .mx_RightPanel_footer {
@@ -102,4 +102,31 @@ limitations under the License.
 
     -webkit-flex: 0 0 60px;
     flex: 0 0 60px;
+}
+
+.mx_RightPanel_footer .mx_RightPanel_invite {
+    line-height: 35px;
+    font-size: 14px;
+	color: #4A4A4A;
+    padding-top: 13px;
+    padding-left: 5px;
+    cursor: pointer;
+}
+
+.collapsed .mx_RightPanel_footer .mx_RightPanel_invite {
+    display: none;
+}
+
+.mx_RightPanel_invite .mx_RightPanel_icon {
+    display: inline-block;
+}
+
+.mx_RightPanel_invite .mx_RightPanel_icon object {
+    pointer-events: none;
+}
+
+.mx_RightPanel_invite .mx_RightPanel_message {
+    display: inline-block;
+    vertical-align: top;
+    padding-left: 10px
 }

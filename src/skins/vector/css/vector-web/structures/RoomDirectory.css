@@ -46,15 +46,27 @@ limitations under the License.
     -webkit-flex-direction: column;
 }
 
-.mx_RoomDirectory_input {
-    margin: auto;
-    border-radius: 3px;
-    border: 1px solid #c7c7c7;
-    font-weight: 300;
-    font-size: 13px;
-    padding: 9px;
+.mx_RoomDirectory_list .mx_RoomView_messageListWrapper {
+    justify-content: flex-start;
+    -webkit-justify-content: flex-start;
+}
+
+.mx_RoomDirectory_listheader {
+    display: table;
+    table-layout: fixed;
+    width: 100%;
     margin-top: 12px;
     margin-bottom: 12px;
+    border-spacing: 5px;
+}
+
+.mx_RoomDirectory_searchbox {
+    display: table-cell;
+}
+
+.mx_RoomDirectory_listheader .mx_NetworkDropdown {
+    display: table-cell;
+    width: 200px;
 }
 
 .mx_RoomDirectory_tableWrapper {

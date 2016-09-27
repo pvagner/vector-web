@@ -25,6 +25,7 @@ var dis = require('matrix-react-sdk/lib/dispatcher');
 var Unread = require('matrix-react-sdk/lib/Unread');
 var MatrixClientPeg = require('matrix-react-sdk/lib/MatrixClientPeg');
 var RoomNotifs = require('matrix-react-sdk/lib/RoomNotifs');
+var FormattingUtils = require('matrix-react-sdk/lib/utils/FormattingUtils');
 
 // turn this on for drop & drag console debugging galore
 var debug = false;
@@ -85,8 +86,7 @@ var RoomSubList = React.createClass({
     getInitialState: function() {
         return {
             hidden: this.props.startAsHidden || false,
-            capTruncate: this.props.list.length > TRUNCATE_AT,
-            truncateAt: this.props.list.length > TRUNCATE_AT ? TRUNCATE_AT : -1,
+            truncateAt: TRUNCATE_AT,
             sortedList: [],
         };
     },
@@ -128,41 +128,13 @@ var RoomSubList = React.createClass({
 
     onClick: function(ev) {
         if (this.isCollapsableOnClick()) {
-            // The header iscCollapsable, so the click is to be interpreted as collapse and truncation logic
-            var isHidden = false;
-            var isTruncatable = this.props.list.length > TRUNCATE_AT;
+            // The header isCollapsable, so the click is to be interpreted as collapse and truncation logic
+            var isHidden = !this.state.hidden;
+            this.setState({ hidden : isHidden });
 
-            if (this.state.hidden && (this.state.capTruncate && isTruncatable)) {
-                isHidden = false;
-                this.setState({
-                    hidden : isHidden,
-                    capTruncate : true,
-                    truncateAt : TRUNCATE_AT
-                });
-            } else if ((!this.state.hidden && this.state.capTruncate)
-                        || (this.state.hidden && (this.state.capTruncate && !isTruncatable)))
-            {
-                isHidden = false;
-                this.setState({
-                    hidden : isHidden,
-                    capTruncate : false,
-                    truncateAt : -1
-                });
-            } else if (!this.state.hidden && !this.state.capTruncate) {
-                isHidden = true;
-                this.setState({
-                    hidden : isHidden,
-                    capTruncate : true,
-                    truncateAt : TRUNCATE_AT
-                });
-            } else {
-                // Catch any weird states the system gets into
-                isHidden = false;
-                this.setState({
-                    hidden : isHidden,
-                    capTruncate : true,
-                    truncateAt : TRUNCATE_AT
-                });
+            if (isHidden) {
+                // as good a way as any to reset the truncate state
+                this.setState({ truncateAt : TRUNCATE_AT });
             }
 
             this.props.onShowMoreRooms();
@@ -246,22 +218,30 @@ var RoomSubList = React.createClass({
         return roomNotifState != RoomNotifs.MUTE;
     },
 
-    roomNotificationCount: function() {
+    /**
+     * Total up all the notification counts from the rooms
+     *
+     * @param {Number} If supplied will only total notifications for rooms outside the truncation number
+     * @returns {Array} The array takes the form [total, highlight] where highlight is a bool
+     */
+    roomNotificationCount: function(truncateAt) {
         var self = this;
 
-        return this.props.list.reduce(function(result, room) {
-            var roomNotifState = RoomNotifs.getRoomNotifsState(room.roomId);
-            var highlight = room.getUnreadNotificationCount('highlight') > 0 || self.props.label === 'Invites';
-            var notificationCount = room.getUnreadNotificationCount();
+        return this.props.list.reduce(function(result, room, index) {
+            if (truncateAt === undefined || index >= truncateAt) {
+                var roomNotifState = RoomNotifs.getRoomNotifsState(room.roomId);
+                var highlight = room.getUnreadNotificationCount('highlight') > 0 || self.props.label === 'Invites';
+                var notificationCount = room.getUnreadNotificationCount();
 
-            const notifBadges = notificationCount > 0 && self._shouldShowNotifBadge(roomNotifState);
-            const mentionBadges = highlight && self._shouldShowMentionBadge(roomNotifState);
-            const badges = notifBadges || mentionBadges;
+                const notifBadges = notificationCount > 0 && self._shouldShowNotifBadge(roomNotifState);
+                const mentionBadges = highlight && self._shouldShowMentionBadge(roomNotifState);
+                const badges = notifBadges || mentionBadges;
 
-            if (badges) {
-                result[0] += notificationCount;
-                if (highlight) {
-                    result[1] = true;
+                if (badges) {
+                    result[0] += notificationCount;
+                    if (highlight) {
+                        result[1] = true;
+                    }
                 }
             }
             return result;
@@ -368,12 +348,12 @@ var RoomSubList = React.createClass({
 
     makeRoomTiles: function() {
         var self = this;
-        var RoomTile = sdk.getComponent("rooms.RoomTile");
+        var DNDRoomTile = sdk.getComponent("rooms.DNDRoomTile");
         return this.state.sortedList.map(function(room) {
             var selected = room.roomId == self.props.selectedRoom;
             // XXX: is it evil to pass in self as a prop to RoomTile?
             return (
-                <RoomTile
+                <DNDRoomTile
                     room={ room }
                     roomSubList={ self }
                     key={ room.roomId }
@@ -383,7 +363,7 @@ var RoomSubList = React.createClass({
                     highlight={ room.getUnreadNotificationCount('highlight') > 0 || self.props.label === 'Invites' }
                     isInvite={ self.props.label === 'Invites' }
                     refreshSubList={ self._updateSubListCount }
-                    incomingCall={ self.props.incomingCall && (self.props.incomingCall.roomId === room.roomId) ? self.props.incomingCall : null } />
+                    incomingCall={ null } />
             );
         });
     },
@@ -396,16 +376,11 @@ var RoomSubList = React.createClass({
         var subListNotifHighlight = subListNotifications[1];
 
         var roomCount = this.props.list.length > 0 ? this.props.list.length : '';
-        var isTruncatable = this.props.list.length > TRUNCATE_AT;
-        if (!this.state.hidden && this.state.capTruncate && isTruncatable) {
-            roomCount = TRUNCATE_AT + " of " + roomCount;
-        }
 
         var chevronClasses = classNames({
             'mx_RoomSubList_chevron': true,
-            'mx_RoomSubList_chevronUp': this.state.hidden,
-            'mx_RoomSubList_chevronRight': !this.state.hidden && this.state.capTruncate,
-            'mx_RoomSubList_chevronDown': !this.state.hidden && !this.state.capTruncate,
+            'mx_RoomSubList_chevronRight': this.state.hidden,
+            'mx_RoomSubList_chevronDown': !this.state.hidden,
         });
 
         var badgeClasses = classNames({
@@ -415,22 +390,79 @@ var RoomSubList = React.createClass({
 
         var badge;
         if (subListNotifCount > 0) {
-            badge = <div className={badgeClasses}>{subListNotifCount > 99 ? "99+" : subListNotifCount}</div>;
+            badge = <div className={badgeClasses}>{ FormattingUtils.formatCount(subListNotifCount) }</div>;
+        }
+
+        // When collapsed, allow a long hover on the header to show user
+        // the full tag name and room count
+        var title;
+        if (this.props.collapsed) {
+            title = this.props.label;
+            if (roomCount !== '') {
+                title += " [" + roomCount + "]";
+            }
+        }
+
+        var incomingCall;
+        if (this.props.incomingCall) {
+            var self = this;
+            // Check if the incoming call is for this section
+            var incomingCallRoom = this.state.sortedList.filter(function(room) {
+                return self.props.incomingCall.roomId === room.roomId;
+            });
+
+            if (incomingCallRoom.length === 1) {
+                var IncomingCallBox = sdk.getComponent("voip.IncomingCallBox");
+                incomingCall = <IncomingCallBox className="mx_RoomSubList_incomingCall" incomingCall={ this.props.incomingCall }/>;
+            }
         }
 
         return (
-            <div className="mx_RoomSubList_labelContainer" ref="header">
+            <div className="mx_RoomSubList_labelContainer" title={ title } ref="header">
                 <div onClick={ this.onClick } className="mx_RoomSubList_label">
                     { this.props.collapsed ? '' : this.props.label }
-                    <div className="mx_RoomSubList_roomCount">{roomCount}</div>
+                    <div className="mx_RoomSubList_roomCount">{ roomCount }</div>
                     <div className={chevronClasses}></div>
-                    {badge}
+                    { badge }
+                    { incomingCall }
                 </div>
             </div>
         );
     },
 
-    _createOverflowTile: function() {}, // NOP
+    _createOverflowTile: function(overflowCount, totalCount) {
+        var content = <div className="mx_RoomSubList_chevronDown"></div>;
+
+        var overflowNotifications = this.roomNotificationCount(TRUNCATE_AT);
+        var overflowNotifCount = overflowNotifications[0];
+        var overflowNotifHighlight = overflowNotifications[1];
+        if (overflowNotifCount && !this.props.collapsed) {
+            content = FormattingUtils.formatCount(overflowNotifCount);
+        }
+
+        var badgeClasses = classNames({
+            'mx_RoomSubList_moreBadge': true,
+            'mx_RoomSubList_moreBadgeNotify': overflowNotifCount && !this.props.collapsed,
+            'mx_RoomSubList_moreBadgeHighlight': overflowNotifHighlight && !this.props.collapsed,
+        });
+
+        return (
+            <div className="mx_RoomSubList_ellipsis" onClick={this._showFullMemberList}>
+                <div className="mx_RoomSubList_line"></div>
+                <div className="mx_RoomSubList_more">more</div>
+            <div className={ badgeClasses }>{ content }</div>
+            </div>
+        );
+    },
+
+    _showFullMemberList: function() {
+        this.setState({
+            truncateAt: -1
+        });
+
+        this.props.onShowMoreRooms();
+        this.props.onHeaderClick(false);
+    },
 
     // Fix any undefined order elements of a room in a manual ordered list
     //     room.tag[tagname].order
