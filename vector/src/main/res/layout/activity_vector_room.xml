@@ -212,30 +212,30 @@
                         android:id="@+id/room_start_call_layout"
                         android:layout_width="37dp"
                         android:layout_height="match_parent"
-                        android:visibility="gone"
-                        android:contentDescription="@string/call_connecting">
+                        android:visibility="gone">
 
                         <ImageView
                             android:id="@+id/room_start_call_image_view"
                             android:layout_width="24dp"
                             android:layout_height="match_parent"
                             android:layout_centerInParent="true"
-                            android:src="@drawable/voice_call_start_green"/>
+                            android:src="@drawable/voice_call_start_green"
+                            android:contentDescription="@string/desc_start_call"/>
                     </RelativeLayout>
 
                     <RelativeLayout
                         android:id="@+id/room_end_call_layout"
                         android:layout_width="37dp"
                         android:layout_height="match_parent"
-                        android:visibility="gone"
-                        android:contentDescription="@string/call_ended">
+                        android:visibility="gone">
 
                         <ImageView
                             android:id="@+id/room_end_call_image_view"
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:layout_centerVertical="true"
-                            android:src="@drawable/voice_call_end_fushia"/>
+                            android:src="@drawable/voice_call_end_fushia"
+                            android:contentDescription="@string/hangup"/>
                     </RelativeLayout>
 
                     <View
