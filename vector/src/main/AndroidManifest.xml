@@ -9,7 +9,11 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_LOGS" />
+
+    <!-- universal links management -->
     <uses-permission android:name="android.permission.REORDER_TASKS" />
+    <!-- for android 4.1.* devices, reported by GA -->
+    <uses-permission android:name="android.permission.GET_TASKS" />
 
     <!-- videocall permissions-->
     <uses-permission android:name="android.permission.CAMERA" />
@@ -115,19 +119,6 @@
         </activity>
 
         <activity
-            android:name="im.vector.activity.VectorRoomMessagesSearchActivity"
-            android:label="Vector searches"
-            android:parentActivityName="im.vector.activity.VectorRoomActivity"
-            android:launchMode="singleTop"
-            android:theme="@style/SearchesAppTheme"
-            android:windowSoftInputMode="adjustResize">
-
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="im.vector.activity.VectorRoomActivity"/>
-        </activity>
-
-        <activity
             android:name="im.vector.activity.VectorRoomDetailsActivity"
             android:label="@string/room_details_title"
             android:parentActivityName="im.vector.activity.VectorRoomActivity"
@@ -160,8 +151,18 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="im.vector.activity.VectorRoomActivity"/>
         </activity>
+
         <activity
             android:name="im.vector.activity.LockScreenActivity"
+            android:theme="@android:style/Theme.Holo.Light.Dialog"
+            android:excludeFromRecents="true"
+            android:clearTaskOnLaunch="true"
+            android:taskAffinity=""
+            android:configChanges="orientation|screenSize"
+            android:launchMode="singleTop"/>
+
+        <activity
+            android:name="im.vector.activity.JoinScreenActivity"
             android:theme="@android:style/Theme.Holo.Light.Dialog"
             android:excludeFromRecents="true"
             android:clearTaskOnLaunch="true"
@@ -286,6 +287,7 @@
                 <data android:scheme="http" />
                 <data android:scheme="https" />
                 <data android:host="matrix.to" />
+                <data android:pathPrefix="/#/" />
             </intent-filter>
 
         </activity>
@@ -325,6 +327,7 @@
                 <data android:scheme="http" />
                 <data android:scheme="https" />
                 <data android:host="matrix.to" />
+                <data android:pathPrefix="/#/" />
             </intent-filter>
 
             <intent-filter>
