@@ -995,7 +995,7 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
             int resourceId = isSwitched?R.drawable.ic_material_switch_video_pink_red:R.drawable.ic_material_switch_video_grey;
             mSwitchRearFrontCameraImageView.setImageResource(resourceId);
             resourceId = isSwitched?R.string.desc_rear_camera:R.string.desc_front_camera;
-            mSwichRearFrontCameraImageView.setContentDescription(VectorCallViewActivity.this.getString(resourceId));
+            mSwitchRearFrontCameraImageView.setContentDescription(VectorCallViewActivity.this.getString(resourceId));
         } else {
             Log.d(LOG_TAG,"## refreshSwitchRearFrontCameraButton(): View.INVISIBLE");
             mSwitchRearFrontCameraImageView.setVisibility(View.INVISIBLE);
