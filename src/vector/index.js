@@ -18,11 +18,19 @@ limitations under the License.
 
 // for ES6 stuff like startsWith() that Safari doesn't handle
 // and babel doesn't do by default
+// Note we use this, as well as the babel transform-runtime plugin
+// since transform-runtime does not cover instance methods
+// such as "foobar".includes("foo") which bits of our library
+// code use, but the babel transform-runtime plugin allows the
+// regenerator runtime to be injected early enough in the process
+// (it can't be here as it's too late: the alternative is to put
+// the babel-polyfill as the first 'entry' in the webpack config).
+// https://babeljs.io/docs/plugins/transform-runtime/
 require('babel-polyfill');
 
 // CSS requires: just putting them here for now as CSS is going to be
-// refactored soon anyway
-require('../../vector/components.css');
+// refactored "soon" anyway
+require('../../build/components.css');
 require('gemini-scrollbar/gemini-scrollbar.css');
 require('gfm.css/gfm.css');
 require('highlight.js/styles/github.css');
@@ -39,6 +47,7 @@ if (process.env.NODE_ENV !== 'production') {
 var RunModernizrTests = require("./modernizr"); // this side-effects a global
 var ReactDOM = require("react-dom");
 var sdk = require("matrix-react-sdk");
+var PlatformPeg = require("matrix-react-sdk/lib/PlatformPeg");
 sdk.loadSkin(require('../component-index'));
 var VectorConferenceHandler = require('../VectorConferenceHandler');
 var UpdateChecker = require("./updater");
@@ -49,6 +58,7 @@ import UAParser from 'ua-parser-js';
 import url from 'url';
 
 import {parseQs, parseQsFromFragment} from './url_utils';
+import Platform from './platform';
 
 var lastLocationHashSet = null;
 
@@ -103,10 +113,6 @@ function onHashChange(ev) {
     routeUrl(window.location);
 }
 
-function onVersion(current, latest) {
-    window.matrixChat.onVersion(current, latest);
-}
-
 var loaded = false;
 var lastLoadedScreen = null;
 
@@ -114,6 +120,8 @@ var lastLoadedScreen = null;
 // so a web page can update the URL bar appropriately.
 var onNewScreen = function(screen) {
     console.log("newscreen "+screen);
+    // just remember the most recent screen while we are loading, so that the
+    // user doesn't see the URL bar doing a dance
     if (!loaded) {
         lastLoadedScreen = screen;
     } else {
@@ -150,33 +158,35 @@ function getDefaultDeviceDisplayName() {
 }
 
 window.addEventListener('hashchange', onHashChange);
-window.onload = function() {
-    console.log("window.onload");
-    if (!validBrowser) {
-        return;
-    }
-    UpdateChecker.setVersionListener(onVersion);
-    UpdateChecker.run();
-    routeUrl(window.location);
-    loaded = true;
-    if (lastLoadedScreen) {
-        onNewScreen(lastLoadedScreen);
-        lastLoadedScreen = null;
-    }
-}
 
 function getConfig() {
     let deferred = q.defer();
 
     request(
-        { method: "GET", url: "config.json", json: true },
+        { method: "GET", url: "config.json" },
         (err, response, body) => {
             if (err || response.status < 200 || response.status >= 300) {
+                // Lack of a config isn't an error, we should
+                // just use the defaults.
+                // Also treat a blank config as no config, assuming
+                // the status code is 0, because we don't get 404s
+                // from file: URIs so this is the only way we can
+                // not fail if the file doesn't exist when loading
+                // from a file:// URI.
+                if (response) {
+                    if (response.status == 404 || (response.status == 0 && body == '')) {
+                        deferred.resolve({});
+                    }
+                }
                 deferred.reject({err: err, response: response});
                 return;
             }
 
-            deferred.resolve(body);
+            // We parse the JSON ourselves rather than use the JSON
+            // parameter, since this throws a parse error on empty
+            // which breaks if there's no config.json and we're
+            // loading from the filesystem (see above).
+            deferred.resolve(JSON.parse(body));
         }
     );
 
@@ -202,6 +212,9 @@ async function loadApp() {
     const fragparts = parseQsFromFragment(window.location);
     const params = parseQs(window.location);
 
+    // set the platform for react sdk (our Platform object automatically picks the right one)
+    PlatformPeg.set(new Platform());
+
     // don't try to redirect to the native apps if we're
     // verifying a 3pid
     const preventRedirect = Boolean(fragparts.params.client_secret);
@@ -226,13 +239,7 @@ async function loadApp() {
     try {
         configJson = await getConfig();
     } catch (e) {
-        // On 404 errors, carry on without a config,
-        // but on other errors, fail, otherwise it will
-        // lead to subtle errors where the app runs with
-        // the default config if it fails to fetch config.json.
-        if (e.response.status != 404) {
-            configError = e;
-        }
+        configError = e;
     }
 
     console.log("Vector starting at "+window.location);
@@ -241,6 +248,8 @@ async function loadApp() {
             Unable to load config file: please refresh the page to try again.
         </div>, document.getElementById('matrixchat'));
     } else if (validBrowser) {
+        UpdateChecker.start();
+
         var MatrixChat = sdk.getComponent('structures.MatrixChat');
 
         window.matrixChat = ReactDOM.render(
@@ -257,6 +266,15 @@ async function loadApp() {
             />,
             document.getElementById('matrixchat')
         );
+
+        routeUrl(window.location);
+
+        // we didn't propagate screen changes to the URL bar while we were loading; do it now.
+        loaded = true;
+        if (lastLoadedScreen) {
+            onNewScreen(lastLoadedScreen);
+            lastLoadedScreen = null;
+        }
     }
     else {
         console.error("Browser is missing required features.");
@@ -267,7 +285,6 @@ async function loadApp() {
                 validBrowser = true;
                 console.log("User accepts the compatibility risks.");
                 loadApp();
-                window.onload(); // still do the same code paths for compatible clients
             }} />,
             document.getElementById('matrixchat')
         );

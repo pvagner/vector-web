@@ -214,6 +214,9 @@ textarea {
     cursor: pointer;
     color: #76cfa6;
     background-color: #fff;
+
+    /* align images in buttons (eg spinners) */
+    vertical-align: middle;
 }
 
 .mx_Dialog button.mx_Dialog_primary, .mx_Dialog  input[type="submit"].mx_Dialog_primary {
@@ -284,4 +287,8 @@ textarea {
     padding-right: 1em;
     cursor: pointer;
     display: inline;
+}
+
+.changelog_text {
+    font-family: 'Open Sans', Arial, Helvetica, Sans-Serif;
 }

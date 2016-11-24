@@ -14,17 +14,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import PlatformPeg from 'matrix-react-sdk/lib/PlatformPeg';
+.mx_TextualEvent.mx_MemberEventListSummary_summary {
+    font-size: 14px;
+}
 
-var POKE_RATE_MS = 10 * 60 * 1000; // 10 min
+.mx_MemberEventListSummary_avatars {
+    display: inline-block;
+    margin-right: 8px;
+    padding-top: 8px;
+    line-height: 12px;
+}
 
-module.exports = {
-    start: function() {
-        module.exports.poll();
-        setInterval(module.exports.poll, POKE_RATE_MS);
-    },
+.mx_MemberEventListSummary_avatars .mx_BaseAvatar {
+    margin-right: -4px;
+    cursor: pointer;
+}
 
-    poll: function() {
-        PlatformPeg.get().pollForUpdate();
-    }
-};
+.mx_MemberEventListSummary_toggle {
+    color:#76cfa6;
+    cursor:pointer;
+}

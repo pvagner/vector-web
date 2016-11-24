@@ -1,3 +1,136 @@
+Changes in [0.9.0](https://github.com/vector-im/vector-web/releases/tag/v0.9.0) (2016-11-19)
+============================================================================================
+[Full Changelog](https://github.com/vector-im/vector-web/compare/v0.8.4...v0.9.0)
+
+ * Add a cachebuster to /version
+   [\#2596](https://github.com/vector-im/vector-web/pull/2596)
+ * Add a 'View decrypted source' button
+   [\#2587](https://github.com/vector-im/vector-web/pull/2587)
+ * Fix changelog dialog to  read new version format
+   [\#2577](https://github.com/vector-im/vector-web/pull/2577)
+ * Build all of the vector dir in the build process
+   [\#2558](https://github.com/vector-im/vector-web/pull/2558)
+ * Support for get_app_version
+   [\#2553](https://github.com/vector-im/vector-web/pull/2553)
+ * Add CSS for mlist truncation
+   [\#2565](https://github.com/vector-im/vector-web/pull/2565)
+ * Add menu option for `external_url` if present
+   [\#2560](https://github.com/vector-im/vector-web/pull/2560)
+ * Make auto-update configureable
+   [\#2555](https://github.com/vector-im/vector-web/pull/2555)
+ * Missed files electron windows fixes
+   [\#2556](https://github.com/vector-im/vector-web/pull/2556)
+ * Add some CSS for  scalar error popup
+   [\#2554](https://github.com/vector-im/vector-web/pull/2554)
+ * Catch unhandled errors in the electron process
+   [\#2552](https://github.com/vector-im/vector-web/pull/2552)
+ * Slight grab-bag of fixes for electron on Windows
+   [\#2551](https://github.com/vector-im/vector-web/pull/2551)
+ * Electron app (take 3)
+   [\#2535](https://github.com/vector-im/vector-web/pull/2535)
+ * Use webpack-dev-server instead of http-server
+   [\#2542](https://github.com/vector-im/vector-web/pull/2542)
+ * Better support no-config when loading from file
+   [\#2541](https://github.com/vector-im/vector-web/pull/2541)
+ * Fix loading with no config from HTTP
+   [\#2540](https://github.com/vector-im/vector-web/pull/2540)
+ * Move 'new version' support into Platform
+   [\#2532](https://github.com/vector-im/vector-web/pull/2532)
+ * Add Notification support to the Web Platform
+   [\#2533](https://github.com/vector-im/vector-web/pull/2533)
+ * Use the defaults if given a blank config file
+   [\#2534](https://github.com/vector-im/vector-web/pull/2534)
+ * Implement Platforms
+   [\#2531](https://github.com/vector-im/vector-web/pull/2531)
+
+hanges in [0.8.4](https://github.com/vector-im/vector-web/releases/tag/v0.8.4) (2016-11-04)
+============================================================================================
+[Full Changelog](https://github.com/vector-im/vector-web/compare/v0.8.4-rc.2...v0.8.4)
+
+ * No changes
+
+Changes in [0.8.4-rc.2](https://github.com/vector-im/vector-web/releases/tag/v0.8.4-rc.2) (2016-11-02)
+======================================================================================================
+[Full Changelog](https://github.com/vector-im/vector-web/compare/v0.8.4-rc.1...v0.8.4-rc.2)
+
+ * Fix the version in the generated distribution package
+
+Changes in [0.8.4-rc.1](https://github.com/vector-im/vector-web/releases/tag/v0.8.4-rc.1) (2016-11-02)
+======================================================================================================
+[Full Changelog](https://github.com/vector-im/vector-web/compare/v0.8.3...v0.8.4-rc.1)
+
+Breaking Changes
+----------------
+ * End-to-end encryption now requires one-time keys to be
+   signed, so end-to-end encryption will not interoperate
+   with previous releases of vector-web. End-to-end encryption
+   remains in beta.
+
+Other Changes
+-------------
+ * Rename the package script/output dir to 'dist'
+   [\#2528](https://github.com/vector-im/vector-web/pull/2528)
+ * Avoid errors if olm is missing
+   [\#2518](https://github.com/vector-im/vector-web/pull/2518)
+ * Put a cachebuster in the names of CSS and JS files
+   [\#2515](https://github.com/vector-im/vector-web/pull/2515)
+ * Bump to olm 2.0.0
+   [\#2517](https://github.com/vector-im/vector-web/pull/2517)
+ * Don't include the world in the published packages
+   [\#2516](https://github.com/vector-im/vector-web/pull/2516)
+ * Use webpack to copy olm.js
+   [\#2514](https://github.com/vector-im/vector-web/pull/2514)
+ * Don't include two copies of the CSS in the tarball
+   [\#2513](https://github.com/vector-im/vector-web/pull/2513)
+ * Correct text alignment on room directory search
+   [\#2512](https://github.com/vector-im/vector-web/pull/2512)
+ * Correct spelling of 'rel'
+   [\#2510](https://github.com/vector-im/vector-web/pull/2510)
+ * readme tweaks
+   [\#2507](https://github.com/vector-im/vector-web/pull/2507)
+ * s/vector/riot/ in the readme
+   [\#2491](https://github.com/vector-im/vector-web/pull/2491)
+ * Switch to babel 6, again
+   [\#2480](https://github.com/vector-im/vector-web/pull/2480)
+ * Revert "Switch to babel 6"
+   [\#2472](https://github.com/vector-im/vector-web/pull/2472)
+ * Switch to babel 6
+   [\#2461](https://github.com/vector-im/vector-web/pull/2461)
+
+Changes in [0.8.3](https://github.com/vector-im/vector-web/releases/tag/v0.8.3) (2016-10-12)
+============================================================================================
+[Full Changelog](https://github.com/vector-im/vector-web/compare/v0.8.2...v0.8.3)
+
+ * Centre images in dialog buttons
+   [\#2453](https://github.com/vector-im/vector-web/pull/2453)
+ * Only show quote option if RTE is enabled
+   [\#2448](https://github.com/vector-im/vector-web/pull/2448)
+ * Fix join button for 'matrix' networks
+   [\#2443](https://github.com/vector-im/vector-web/pull/2443)
+ * Don't stop paginating if no rooms match
+   [\#2422](https://github.com/vector-im/vector-web/pull/2422)
+
+Changes in [0.8.2](https://github.com/vector-im/vector-web/releases/tag/v0.8.2) (2016-10-05)
+============================================================================================
+[Full Changelog](https://github.com/vector-im/vector-web/compare/v0.8.1...v0.8.2)
+
+ * Add native joining of 3p networks to room dir
+   [\#2379](https://github.com/vector-im/vector-web/pull/2379)
+ * Update to linkify 2.1.3
+   [\#2406](https://github.com/vector-im/vector-web/pull/2406)
+ * Use 'Sign In' / 'Sign Out' universally
+   [\#2383](https://github.com/vector-im/vector-web/pull/2383)
+ * Prevent network dropdown resizing slightly
+   [\#2382](https://github.com/vector-im/vector-web/pull/2382)
+ * Room directory: indicate when there are no results
+   [\#2380](https://github.com/vector-im/vector-web/pull/2380)
+ * Room dir: New filtering & 3rd party networks
+   [\#2362](https://github.com/vector-im/vector-web/pull/2362)
+ * Update linkify version
+   [\#2359](https://github.com/vector-im/vector-web/pull/2359)
+ * Directory search join button
+   [\#2339](https://github.com/vector-im/vector-web/pull/2339)
+
 Changes in [0.8.1](https://github.com/vector-im/vector-web/releases/tag/v0.8.1) (2016-09-21)
 ============================================================================================
 [Full Changelog](https://github.com/vector-im/vector-web/compare/v0.8.0...v0.8.1)

@@ -1,4 +1,7 @@
+// @flow
+
 /*
+Copyright 2016 Aviral Dasgupta
 Copyright 2016 OpenMarket Ltd
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,17 +17,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import PlatformPeg from 'matrix-react-sdk/lib/PlatformPeg';
+let Platform = null;
 
-var POKE_RATE_MS = 10 * 60 * 1000; // 10 min
+if (window && window.process && window.process && window.process.type === 'renderer') {
+    // we're running inside electron
+    Platform = require('./ElectronPlatform');
+} else {
+    Platform = require('./WebPlatform');
+}
 
-module.exports = {
-    start: function() {
-        module.exports.poll();
-        setInterval(module.exports.poll, POKE_RATE_MS);
-    },
-
-    poll: function() {
-        PlatformPeg.get().pollForUpdate();
-    }
-};
+export default Platform;

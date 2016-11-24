@@ -20,9 +20,10 @@ var React = require('react');
 
 var MatrixClientPeg = require('matrix-react-sdk/lib/MatrixClientPeg');
 var dis = require('matrix-react-sdk/lib/dispatcher');
-var sdk = require('matrix-react-sdk')
+var sdk = require('matrix-react-sdk');
 var Modal = require('matrix-react-sdk/lib/Modal');
 var Resend = require("matrix-react-sdk/lib/Resend");
+import * as UserSettingsStore from 'matrix-react-sdk/lib/UserSettingsStore';
 
 module.exports = React.createClass({
     displayName: 'MessageContextMenu',
@@ -46,7 +47,16 @@ module.exports = React.createClass({
     onViewSourceClick: function() {
         var ViewSource = sdk.getComponent('structures.ViewSource');
         Modal.createDialog(ViewSource, {
-            mxEvent: this.props.mxEvent
+            content: this.props.mxEvent.event,
+        }, 'mx_Dialog_viewsource');
+        if (this.props.onFinished) this.props.onFinished();
+    },
+
+    onViewClearSourceClick: function() {
+        const ViewSource = sdk.getComponent('structures.ViewSource');
+        Modal.createDialog(ViewSource, {
+            // FIXME: _clearEvent is private
+            content: this.props.mxEvent._clearEvent,
         }, 'mx_Dialog_viewsource');
         if (this.props.onFinished) this.props.onFinished();
     },
@@ -73,7 +83,7 @@ module.exports = React.createClass({
         if (this.props.onFinished) this.props.onFinished();
     },
 
-    onPermalinkClick: function() {
+    closeMenu: function() {
         if (this.props.onFinished) this.props.onFinished();
     },
 
@@ -96,10 +106,12 @@ module.exports = React.createClass({
         var eventStatus = this.props.mxEvent.status;
         var resendButton;
         var viewSourceButton;
+        var viewClearSourceButton;
         var redactButton;
         var cancelButton;
         var permalinkButton;
         var unhidePreviewButton;
+        var externalURLButton;
 
         if (eventStatus === 'not_sent') {
             resendButton = (
@@ -131,6 +143,14 @@ module.exports = React.createClass({
             </div>
         );
 
+        if (this.props.mxEvent.getType() !== this.props.mxEvent.getWireType()) {
+            viewClearSourceButton = (
+                <div className="mx_MessageContextMenu_field" onClick={this.onViewClearSourceClick}>
+                    View Decrypted Source
+                </div>
+            );
+        }
+
         if (this.props.eventTileOps) {
             if (this.props.eventTileOps.isWidgetHidden()) {
                 unhidePreviewButton = (
@@ -145,7 +165,7 @@ module.exports = React.createClass({
         permalinkButton = (
             <div className="mx_MessageContextMenu_field">
                 <a href={ "https://matrix.to/#/" + this.props.mxEvent.getRoomId() +"/"+ this.props.mxEvent.getId() }
-                   target="_blank" onClick={ this.onPermalinkClick }>Permalink</a>
+                  target="_blank" rel="noopener" onClick={ this.closeMenu }>Permalink</a>
             </div>
         );
 
@@ -155,15 +175,28 @@ module.exports = React.createClass({
             </div>
         );
 
+        // Bridges can provide a 'external_url' to link back to the source.
+        if( typeof(this.props.mxEvent.event.content.external_url) === "string") {
+          externalURLButton = (
+              <div className="mx_MessageContextMenu_field">
+                  <a href={ this.props.mxEvent.event.content.external_url }
+                    rel="noopener" target="_blank"  onClick={ this.closeMenu }>Source URL</a>
+              </div>
+          );
+        }
+
+
         return (
             <div>
                 {resendButton}
                 {redactButton}
                 {cancelButton}
                 {viewSourceButton}
+                {viewClearSourceButton}
                 {unhidePreviewButton}
                 {permalinkButton}
-                {quoteButton}
+                {UserSettingsStore.isFeatureEnabled('rich_text_editor') ? quoteButton : null}
+                {externalURLButton}
             </div>
         );
     }

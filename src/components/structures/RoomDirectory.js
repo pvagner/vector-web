@@ -52,32 +52,54 @@ module.exports = React.createClass({
         return {
             publicRooms: [],
             loading: true,
-            filterByNetwork: null,
+            network: null,
+            roomServer: null,
+            filterString: null,
         }
     },
 
     componentWillMount: function() {
         // precompile Regexps
-        this.networkPatterns = {};
-        if (this.props.config.networkPatterns) {
-            for (const network of Object.keys(this.props.config.networkPatterns)) {
-                this.networkPatterns[network] = new RegExp(this.props.config.networkPatterns[network]);
+        this.portalRoomPatterns = {};
+        this.nativePatterns = {};
+        if (this.props.config.networks) {
+            for (const network of Object.keys(this.props.config.networks)) {
+                const network_info = this.props.config.networks[network];
+                if (network_info.portalRoomPattern) {
+                    this.portalRoomPatterns[network] = new RegExp(network_info.portalRoomPattern);
+                }
+                if (network_info.nativePattern) {
+                    this.nativePatterns[network] = new RegExp(network_info.nativePattern);
+                }
             }
         }
+
         this.nextBatch = null;
-        this.filterString = null;
         this.filterTimeout = null;
         this.scrollPanel = null;
+        this.protocols = null;
+
+        MatrixClientPeg.get().getThirdpartyProtocols().done((response) => {
+            this.protocols = response;
+        }, (err) => {
+            if (MatrixClientPeg.get().isGuest()) {
+                // Guests currently aren't allowed to use this API, so
+                // ignore this as otherwise this error is literally the
+                // thing you see when loading the client!
+                return;
+            }
+            const ErrorDialog = sdk.getComponent("dialogs.ErrorDialog");
+            Modal.createDialog(ErrorDialog, {
+                title: "Failed to get protocol list from Home Server",
+                description: "The Home Server may be too old to support third party networks",
+            });
+        });
 
         // dis.dispatch({
         //     action: 'ui_opacity',
         //     sideOpacity: 0.3,
         //     middleOpacity: 0.3,
         // });
-    },
-
-    componentDidMount: function() {
-        this.refreshRoomList();
     },
 
     componentWillUnmount: function() {
@@ -100,13 +122,24 @@ module.exports = React.createClass({
     getMoreRooms: function() {
         if (!MatrixClientPeg.get()) return q();
 
-        const my_filter_string = this.filterString;
+        const my_filter_string = this.state.filterString;
+        const my_server = this.state.roomServer;
+        // remember the next batch token when we sent the request
+        // too. If it's changed, appending to the list will corrupt it.
+        const my_next_batch = this.nextBatch;
         const opts = {limit: 20};
+        if (my_server != MatrixClientPeg.getHomeServerName()) {
+            opts.server = my_server;
+        }
         if (this.nextBatch) opts.since = this.nextBatch;
-        if (this.filterString) opts.filter = { generic_search_term: my_filter_string } ;
+        if (my_filter_string) opts.filter = { generic_search_term: my_filter_string } ;
         return MatrixClientPeg.get().publicRooms(opts).then((data) => {
-            if (my_filter_string != this.filterString) {
-                // if the filter has changed since this request was sent,
+            if (
+                my_filter_string != this.state.filterString ||
+                my_server != this.state.roomServer ||
+                my_next_batch != this.nextBatch)
+            {
+                // if the filter or server has changed since this request was sent,
                 // throw away the result (don't even clear the busy flag
                 // since we must still have a request in flight)
                 return;
@@ -120,7 +153,11 @@ module.exports = React.createClass({
             });
             return Boolean(data.next_batch);
         }, (err) => {
-            if (my_filter_string != this.filterString) {
+            if (
+                my_filter_string != this.state.filterString ||
+                my_server != this.state.roomServer ||
+                my_next_batch != this.nextBatch)
+            {
                 // as above: we don't care about errors for old
                 // requests either
                 return;
@@ -194,18 +231,23 @@ module.exports = React.createClass({
         }
     },
 
-    onNetworkChange: function(network) {
+    onOptionChange: function(server, network) {
+        // clear next batch so we don't try to load more rooms
+        this.nextBatch = null;
         this.setState({
-            filterByNetwork: network,
-        }, () => {
-            // we just filtered out a bunch of rooms, so check to see if
-            // we need to fill up the scrollpanel again
-            // NB. Because we filter the results, the HS can keep giving
-            // us more rooms and we'll keep requesting more if none match
-            // the filter, which is pretty terrible. We need a way
-            // to filter by network on the server.
-            if (this.scrollPanel) this.scrollPanel.checkFillState();
-        });
+            // Clear the public rooms out here otherwise we needlessly
+            // spend time filtering lots of rooms when we're about to
+            // to clear the list anyway.
+            publicRooms: [],
+            roomServer: server,
+            network: network,
+        }, this.refreshRoomList);
+        // We also refresh the room list each time even though this
+        // filtering is client-side. It hopefully won't be client side
+        // for very long, and we may have fetched a thousand rooms to
+        // find the five gitter ones, at which point we do not want
+        // to render all those rooms when switching back to 'all networks'.
+        // Easiest to just blow away the state & re-fetch.
     },
 
     onFillRequest: function(backwards) {
@@ -215,7 +257,9 @@ module.exports = React.createClass({
     },
 
     onFilterChange: function(alias) {
-        this.filterString = alias || null;
+        this.setState({
+            filterString: alias || null,
+        });
 
         // don't send the request for a little bit,
         // no point hammering the server with a
@@ -231,17 +275,52 @@ module.exports = React.createClass({
     },
 
     onFilterClear: function() {
-        this.filterString = null;
+        // update immediately
+        this.setState({
+            filterString: null,
+        }, this.refreshRoomList);
 
         if (this.filterTimeout) {
             clearTimeout(this.filterTimeout);
         }
-        // update immediately
-        this.refreshRoomList();
     },
 
     onJoinClick: function(alias) {
-        this.showRoomAlias(alias);
+        // If we're on the 'Matrix' network (or all networks),
+        // just show that rooms alias
+        if (this.state.network == null || this.state.network == '_matrix') {
+            this.showRoomAlias(alias);
+        } else {
+            // This is a 3rd party protocol. Let's see if we
+            // can join it
+            const fields = this._getFieldsForThirdPartyLocation(alias, this.state.network);
+            if (!fields) {
+                const ErrorDialog = sdk.getComponent("dialogs.ErrorDialog");
+                Modal.createDialog(ErrorDialog, {
+                    title: "Unable to join network",
+                    description: "Riot does not know how to join a room on this network",
+                });
+                return;
+            }
+            const protocol = this._protocolForThirdPartyNetwork(this.state.network);
+            MatrixClientPeg.get().getThirdpartyLocation(protocol, fields).done((resp) => {
+                if (resp.length > 0 && resp[0].alias) {
+                    this.showRoomAlias(resp[0].alias);
+                } else {
+                    const ErrorDialog = sdk.getComponent("dialogs.ErrorDialog");
+                    Modal.createDialog(ErrorDialog, {
+                        title: "Room not found",
+                        description: "Couldn't find a matching Matrix room",
+                    });
+                }
+            }, (e) => {
+                const ErrorDialog = sdk.getComponent("dialogs.ErrorDialog");
+                Modal.createDialog(ErrorDialog, {
+                    title: "Fetching third party location failed",
+                    description: "Unable to look up room ID from server",
+                });
+            });
+        }
     },
 
     showRoomAlias: function(alias) {
@@ -294,8 +373,8 @@ module.exports = React.createClass({
         if (!this.state.publicRooms) return [];
 
         var rooms = this.state.publicRooms.filter((a) => {
-            if (this.state.filterByNetwork) {
-                if (!this._isRoomInNetwork(a, this.state.filterByNetwork)) return false;
+            if (this.state.network) {
+                if (!this._isRoomInNetwork(a, this.state.roomServer, this.state.network)) return false;
             }
 
             return true;
@@ -365,14 +444,109 @@ module.exports = React.createClass({
      * Terrible temporary function that guess what network a public room
      * entry is in, until synapse is able to tell us
      */
-    _isRoomInNetwork(room, network) {
-        if (room.aliases && this.networkPatterns[network]) {
-            for (const alias of room.aliases) {
-                if (this.networkPatterns[network].test(alias)) return true;
+    _isRoomInNetwork: function(room, server, network) {
+        // We carve rooms into two categories here. 'portal' rooms are
+        // rooms created by a user joining a bridge 'portal' alias to
+        // participate in that room or a foreign network. A room is a
+        // portal room if it has exactly one alias and that alias matches
+        // a pattern defined in the config. Its network is the key
+        // of the pattern that it matches.
+        // All other rooms are considered 'native matrix' rooms, and
+        // go into the special '_matrix' network.
+
+        let roomNetwork = '_matrix';
+        if (room.aliases && room.aliases.length == 1) {
+            if (this.props.config.serverConfig && this.props.config.serverConfig[server] && this.props.config.serverConfig[server].networks) {
+                for (const n of this.props.config.serverConfig[server].networks) {
+                    const pat = this.portalRoomPatterns[n];
+                    if (pat && pat.test(room.aliases[0])) {
+                        roomNetwork = n;
+                    }
+                }
+            }
+        }
+        return roomNetwork == network;
+    },
+
+    _stringLooksLikeId: function(s, network) {
+        let pat = /^#[^\s]+:[^\s]/;
+        if (
+            network && network != '_matrix' &&
+            this.nativePatterns[network]
+        ) {
+            pat = this.nativePatterns[network];
+        }
+
+        return pat.test(s);
+    },
+
+    _protocolForThirdPartyNetwork: function(network) {
+        if (
+            this.props.config.networks &&
+            this.props.config.networks[network] &&
+            this.props.config.networks[network].protocol
+        ) {
+            return this.props.config.networks[network].protocol;
+        }
+    },
+
+    _getFieldsForThirdPartyLocation: function(user_input, network) {
+        if (!this.props.config.networks || !this.props.config.networks[network]) return null;
+
+        const network_info = this.props.config.networks[network];
+        if (!network_info.protocol) return null;
+
+        if (!this.protocols) return null;
+
+        let matched_instance;
+        // Try to find which instance in the 'protocols' response
+        // matches this network. We look for a matching protocol
+        // and the existence of a 'domain' field and if present,
+        // its value.
+        if (
+            this.protocols[network_info.protocol] &&
+            this.protocols[network_info.protocol].instances &&
+            this.protocols[network_info.protocol].instances.length == 1
+        ) {
+            const the_instance = this.protocols[network_info.protocol].instances[0];
+            // If there's only one instance in this protocol, use it
+            // as long as it has no domain (which we assume to mean it's
+            // there is only one possible instance).
+            if (
+                (
+                    the_instance.fields.domain === undefined &&
+                    network_info.domain === undefined
+                ) ||
+                (
+                    the_instance.fields.domain !== undefined &&
+                    the_instance.fields.domain == network_info.domain
+                )
+            ) {
+                matched_instance = the_instance;
+            }
+        } else if (network_info.domain) {
+            // otherwise, we look for one with a matching domain.
+            for (const this_instance of this.protocols[network_info.protocol].instances) {
+                if (this_instance.fields.domain == network_info.domain) {
+                    matched_instance = this_instance;
+                }
             }
         }
 
-        return false;
+        if (matched_instance === undefined) return null;
+
+        // now make an object with the fields specified by that protocol. We
+        // require that the values of all but the last field come from the
+        // instance. The last is the user input.
+        const required_fields = this.protocols[network_info.protocol].location_fields;
+        const fields = {};
+        for (let i = 0; i < required_fields.length - 1; ++i) {
+            const this_field = required_fields[i];
+            if (matched_instance.fields[this_field] === undefined) return null;
+            fields[this_field] = matched_instance.fields[this_field];
+        }
+        fields[required_fields[required_fields.length - 1]] = user_input;
+        return fields;
     },
 
     render: function() {
@@ -383,6 +557,20 @@ module.exports = React.createClass({
                 <Loader />
             </div>;
         } else {
+            const rows = this.getRows();
+            // we still show the scrollpanel, at least for now, because
+            // otherwise we don't fetch more because we don't get a fill
+            // request from the scrollpanel because there isn't one
+            let scrollpanel_content;
+            if (rows.length == 0) {
+                scrollpanel_content = <i>No rooms to show</i>;
+            } else {
+                scrollpanel_content = <table ref="directory_table" className="mx_RoomDirectory_table">
+                    <tbody>
+                        { this.getRows() }
+                    </tbody>
+                </table>;
+            }
             const ScrollPanel = sdk.getComponent("structures.ScrollPanel");
             content = <ScrollPanel ref={this.collectScrollPanel}
                 className="mx_RoomDirectory_tableWrapper"
@@ -391,12 +579,27 @@ module.exports = React.createClass({
                 startAtBottom={false}
                 onResize={function(){}}
             >
-                <table ref="directory_table" className="mx_RoomDirectory_table">
-                    <tbody>
-                        { this.getRows() }
-                    </tbody>
-                </table>
+                { scrollpanel_content }
             </ScrollPanel>;
+        }
+
+        let placeholder = 'Search for a room';
+        if (this.state.network === null || this.state.network === '_matrix') {
+            placeholder = '#example:' + this.state.roomServer;
+        } else if (
+            this.props.config.networks &&
+            this.props.config.networks[this.state.network] &&
+            this.props.config.networks[this.state.network].example &&
+            this._getFieldsForThirdPartyLocation(this.state.filterString, this.state.network)
+        ) {
+            placeholder = this.props.config.networks[this.state.network].example;
+        }
+
+        let showJoinButton = this._stringLooksLikeId(this.state.filterString, this.state.network);
+        if (this.state.network && this.state.network != '_matrix') {
+            if (this._getFieldsForThirdPartyLocation(this.state.filterString, this.state.network) === null) {
+                showJoinButton = false;
+            }
         }
 
         const SimpleRoomHeader = sdk.getComponent('rooms.SimpleRoomHeader');
@@ -410,8 +613,9 @@ module.exports = React.createClass({
                         <DirectorySearchBox
                             className="mx_RoomDirectory_searchbox"
                             onChange={this.onFilterChange} onClear={this.onFilterClear} onJoinClick={this.onJoinClick}
+                            placeholder={placeholder} showJoinButton={showJoinButton}
                         />
-                        <NetworkDropdown config={this.props.config} onNetworkChange={this.onNetworkChange} />
+                        <NetworkDropdown config={this.props.config} onOptionChange={this.onOptionChange} />
                     </div>
                     {content}
                 </div>

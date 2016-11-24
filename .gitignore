@@ -1,12 +1,12 @@
+/build
 /cert.pem
+/dist
 /karma-reports
 /key.pem
 /lib
 /node_modules
 /packages/
-/vector/bundle.*
-/vector/components.css
-/vector/emojione/
-/vector/config.json
-/vector/olm.js
+/webapp
 .DS_Store
+npm-debug.log
+electron/dist
