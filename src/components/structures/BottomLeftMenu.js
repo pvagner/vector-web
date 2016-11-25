@@ -101,19 +101,19 @@ module.exports = React.createClass({
         return (
             <div className="mx_BottomLeftMenu">
                 <div className="mx_BottomLeftMenu_options">
-                    <button className="mx_BottomLeftMenu_people" onClick={ this.onPeopleClick } onMouseEnter={ this.onPeopleMouseEnter } onMouseLeave={ this.onPeopleMouseLeave } >
+                    <button className="mx_BottomLeftMenu_people" onClick={ this.onPeopleClick } onMouseEnter={ this.onPeopleMouseEnter } onMouseLeave={ this.onPeopleMouseLeave } aria-label="Start chat" >
                         <TintableSvg src="img/icons-people.svg" width="25" height="25" />
                         { this.getLabel("Start chat", this.state.peopleHover) }
                     </button>
-                    <button className="mx_BottomLeftMenu_directory" onClick={ this.onDirectoryClick } onMouseEnter={ this.onDirectoryMouseEnter } onMouseLeave={ this.onDirectoryMouseLeave } >
+                    <button className="mx_BottomLeftMenu_directory" onClick={ this.onDirectoryClick } onMouseEnter={ this.onDirectoryMouseEnter } onMouseLeave={ this.onDirectoryMouseLeave } aria-label="Room directory" >
                         <TintableSvg src="img/icons-directory.svg" width="25" height="25"/>
                         { this.getLabel("Room directory", this.state.directoryHover) }
                     </button>
-                    <button className="mx_BottomLeftMenu_createRoom" onClick={ this.onRoomsClick } onMouseEnter={ this.onRoomsMouseEnter } onMouseLeave={ this.onRoomsMouseLeave } >
+                    <button className="mx_BottomLeftMenu_createRoom" onClick={ this.onRoomsClick } onMouseEnter={ this.onRoomsMouseEnter } onMouseLeave={ this.onRoomsMouseLeave } aria-label="Create new room" >
                         <TintableSvg src="img/icons-create-room.svg" width="25" height="25" />
                         { this.getLabel("Create new room", this.state.roomsHover) }
                     </button>
-                    <button className="mx_BottomLeftMenu_settings" onClick={ this.onSettingsClick } onMouseEnter={ this.onSettingsMouseEnter } onMouseLeave={ this.onSettingsMouseLeave } >
+                    <button className="mx_BottomLeftMenu_settings" onClick={ this.onSettingsClick } onMouseEnter={ this.onSettingsMouseEnter } onMouseLeave={ this.onSettingsMouseLeave } aria-label="Settings" >
                         <TintableSvg src="img/icons-settings.svg" width="25" height="25" />
                         { this.getLabel("Settings", this.state.settingsHover) }
                     </button>
