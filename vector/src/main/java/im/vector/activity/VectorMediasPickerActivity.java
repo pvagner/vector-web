@@ -529,10 +529,13 @@ public class VectorMediasPickerActivity extends MXCActionBarActivity implements 
             }
             mCamera.release();
 
+            int stringId;
             if (mCameraId == Camera.CameraInfo.CAMERA_FACING_BACK) {
                 mCameraId = Camera.CameraInfo.CAMERA_FACING_FRONT;
+                stringId =R.string.desc_rear_camera;
             } else {
                 mCameraId = Camera.CameraInfo.CAMERA_FACING_BACK;
+                stringId =R.string.desc_front_camera;
             }
 
             try {
@@ -547,6 +550,7 @@ public class VectorMediasPickerActivity extends MXCActionBarActivity implements 
                     Log.e(LOG_TAG, "## onSwitchCamera(): setPreviewTexture EXCEPTION Msg=" + e.getMessage());
                 }
 
+                mSwitchCameraImageView.setContentDescription(getString(stringId));
                 mCamera.startPreview();
             } catch (Exception e) {
                 Log.e(LOG_TAG, "## onSwitchCamera(): cannot init the other camera");
@@ -2071,6 +2075,7 @@ public class VectorMediasPickerActivity extends MXCActionBarActivity implements 
             recentMediaView = new RecentMediaLayout(this);
             recentMediaView.setThumbnailScaleType(scaleType);
             recentMediaView.setThumbnailByResource(R.drawable.ic_material_folder_green_vector);
+            recentMediaView.setContentDescription(getString(R.string.desc_open_gallery));
             recentMediaView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

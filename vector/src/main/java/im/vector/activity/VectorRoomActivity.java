@@ -916,6 +916,7 @@ public class VectorRoomActivity extends MXCActionBarActivity implements MatrixMe
 
             boolean canSendEncryptedEvent = mRoom.isEncrypted() && mSession.isCryptoEnabled();
             mE2eImageView.setImageResource(canSendEncryptedEvent ? R.drawable.e2e_verified :  R.drawable.e2e_unencrypted);
+            mE2eImageView.setContentDescription(getString(canSendEncryptedEvent ? R.string.desc_encrypted_room :  R.string.desc_unencrypted_room));
             mVectorMessageListFragment.setIsRoomEncrypted(mRoom.isEncrypted());
         }
 

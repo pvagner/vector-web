@@ -31,7 +31,8 @@
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true"
             android:src="@drawable/ic_material_play_circle"
-            android:background="#77777777" />
+            android:background="#77777777"
+            android:contentDescription="@string/desc_play" />
     </RelativeLayout>
 
 
