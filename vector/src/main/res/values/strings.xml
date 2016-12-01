@@ -494,6 +494,7 @@
     <string name="room_participants_action_unignore">Show all messages from this user</string>
     <string name="room_participants_invite_search_another_user">Search/invite by name, email, id</string>
     <string name="room_participants_action_mention">Mention</string>
+    <string name="room_participants_action_devices_list">Show Devices List</string>
     <string name="room_participants_power_level_prompt">You will not be able to undo this change as you are promoting the user to have the same power level as yourself.\nAre you sure?</string>
 
     <!-- Presence status-->
@@ -678,6 +679,7 @@
     <string name="devices_details_last_seen_title">Last seen</string>
     <string name="devices_details_last_seen_format">%1$s @ %2$s</string>
     <string name="devices_details_date_time_format">yyyy/MM/dd, HH:mm:ss</string>
+    <string name="devices_details_time_format">HH:mm:ss</string>
     <string name="devices_delete_dialog_text">This operation requires additional authentication.\nTo continue, please enter your password.</string>
     <string name="devices_delete_dialog_title">Authentication</string>
     <string name="devices_delete_pswd">Password:</string>
@@ -775,7 +777,7 @@
     <string name="room_settings_addresses_e2e_enable">Encryption is enabled in this room.</string>
     <string name="room_settings_addresses_e2e_disable">Enable encryption \n(warning: cannot be disabled again!)</string>
     <string name="room_settings_addresses_e2e_prompt_title">Warning!</string>
-    <string name="room_settings_addresses_e2e_prompt_message">End-to-end encryption is experimental and may not be reliable.\n\nYou should not yet trust it to secure data. File transfers are not yet encrypted.\n\nDevices will not yet be able to decrypt history from before they joined the room.\n\nOnce encryption is enabled for a room it cannot be turned off again (for now).\n\nEncrypted messages will not be visible on clients that do not yet implement encryption.</string>
+    <string name="room_settings_addresses_e2e_prompt_message">End-to-end encryption is experimental and may not be reliable.\n\nYou should not yet trust it to secure data.\n\nDevices will not yet be able to decrypt history from before they joined the room.\n\nOnce encryption is enabled for a room it cannot be turned off again (for now).\n\nEncrypted messages will not be visible on clients that do not yet implement encryption.</string>
 
     <!-- Directory -->
     <string name="directory_title">Directory</string>
