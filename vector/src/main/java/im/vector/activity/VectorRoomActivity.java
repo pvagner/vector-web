@@ -475,6 +475,10 @@ public class VectorRoomActivity extends MXCActionBarActivity implements MatrixMe
             // and play a lovely sound
             VectorCallSoundManager.startEndCallSound();
         }
+
+        @Override
+        public void onPreviewSizeChanged(int width, int height) {
+        }
     };
 
     //================================================================================
@@ -863,6 +867,10 @@ public class VectorRoomActivity extends MXCActionBarActivity implements MatrixMe
     public void onDestroy() {
         if (null != mVectorMessageListFragment) {
             mVectorMessageListFragment.onDestroy();
+        }
+
+        if (null != mVectorOngoingConferenceCallView) {
+            mVectorOngoingConferenceCallView.setCallClickListener(null);
         }
 
         super.onDestroy();

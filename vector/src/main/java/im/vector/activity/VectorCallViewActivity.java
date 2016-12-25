@@ -23,12 +23,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.AudioManager;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -37,6 +39,7 @@ import android.util.TypedValue;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -49,11 +52,13 @@ import android.widget.Toast;
 import org.matrix.androidsdk.MXSession;
 import org.matrix.androidsdk.call.IMXCall;
 
+import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import im.vector.Matrix;
 import im.vector.R;
+import im.vector.VectorApp;
 import im.vector.receiver.HeadsetConnectionReceiver;
 import im.vector.services.EventStreamService;
 import im.vector.util.VectorCallSoundManager;
@@ -76,12 +81,15 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
     public static final String EXTRA_MATRIX_ID = "CallViewActivity.EXTRA_MATRIX_ID";
     public static final String EXTRA_CALL_ID = "CallViewActivity.EXTRA_CALL_ID";
     public static final String EXTRA_AUTO_ACCEPT = "CallViewActivity.EXTRA_AUTO_ACCEPT";
-    private static final String KEY_MIC_MUTE_STATUS = "KEY_MIC_MUTE_STATUS";
-    private static final String KEY_SPEAKER_STATUS = "KEY_SPEAKER_STATUS";
+
+    private static final String EXTRA_MIC_MUTE_STATUS = "EXTRA_MIC_MUTE_STATUS";
+    private static final String EXTRA_SPEAKER_STATUS = "EXTRA_SPEAKER_STATUS";
+    private static final String EXTRA_LOCAL_FRAME_LAYOUT = "EXTRA_LOCAL_FRAME_LAYOUT";
 
     private static VectorCallViewActivity instance = null;
 
     private static View mSavedCallView = null;
+    private static IMXCall.VideoLayoutConfiguration mSavedLocalVideoLayoutConfig = null;
     private static IMXCall mCall = null;
 
     private View mCallView;
@@ -115,6 +123,10 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
 
     // video display size
     private IMXCall.VideoLayoutConfiguration mLocalVideoLayoutConfig;
+
+    // true when the user moves the preview
+    private boolean mIsCustomLocalVideoLayoutConfig;
+
     // hard coded values are taken from specs:
     // - 585 as screen height reference
     // - 18 as space between the local video and the container view containing the setting buttons
@@ -122,9 +134,9 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
     private static final float VIDEO_TO_BUTTONS_VERTICAL_SPACE = (float) (18.0/585.0);
     /**  local user video height is set as percent of the total screen height **/
     private static final int PERCENT_LOCAL_USER_VIDEO_SIZE = 25;
-    private static final float RATIO_LOCAL_USER_VIDEO_HEIGHT = ((float)(PERCENT_LOCAL_USER_VIDEO_SIZE))/100;
-    //private static final float RATIO_LOCAL_USER_VIDEO_WIDTH = ((float)(PERCENT_LOCAL_USER_VIDEO_SIZE))/100;
-    private static final float RATIO_LOCAL_USER_VIDEO_ASPECT = 0.65f;
+
+    private int mSourceVideoWidth = 0;
+    private int mSourceVideoHeight = 0;
 
     // sensor
     private SensorManager mSensorMgr;
@@ -133,6 +145,10 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
     // activity life cycle management
     private boolean mSavedSpeakerValue;
     private boolean mIsSpeakerForcedFromLifeCycle;
+
+    // on Samsung devices, the application is suspended when the screen is turned off
+    // so the call must not be suspended
+    private boolean mIsScreenOff = false;
 
     private final IMXCall.MXCallListener mListener = new IMXCall.MXCallListener() {
         private String mLastCallState = null;
@@ -254,6 +270,107 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
                     VectorCallViewActivity.this.finish();
                 }
             });
+        }
+
+        @Override
+        public void onPreviewSizeChanged(int width, int height) {
+            Log.d(LOG_TAG, "## onPreviewSizeChanged : " + width + " * " + height);
+
+            mSourceVideoWidth = width;
+            mSourceVideoHeight = height;
+
+            if ((null != mCall) && mCall.isVideo() && mCall.getCallState().equals(IMXCall.CALL_STATE_CONNECTED)) {
+                computeVideoUiLayout();
+                mCall.updateLocalVideoRendererPosition(mLocalVideoLayoutConfig);
+            }
+        }
+    };
+
+    // to drag the local video preview
+    private final View.OnTouchListener mMainViewTouchListener =  new View.OnTouchListener() {
+
+        // fields
+        private Rect mPreviewRect = null;
+        private int mStartX = 0;
+        private int mStartY = 0;
+
+        /**
+         * @return the local preview rect in pixels
+         */
+        private Rect computePreviewRect() {
+            // get the height of the screen
+            DisplayMetrics metrics = new DisplayMetrics();
+            getWindowManager().getDefaultDisplay().getMetrics(metrics);
+            int screenHeight = metrics.heightPixels;
+            int screenWidth = metrics.widthPixels;
+
+            int left = mLocalVideoLayoutConfig.mX * screenWidth / 100;
+            int right = (mLocalVideoLayoutConfig.mX + mLocalVideoLayoutConfig.mWidth) * screenWidth / 100;
+            int top = mLocalVideoLayoutConfig.mY * screenHeight / 100;
+            int bottom = (mLocalVideoLayoutConfig.mY + mLocalVideoLayoutConfig.mHeight) * screenHeight / 100;
+
+            return new Rect(left, top, right, bottom);
+        }
+
+        private void updatePreviewFrame(int deltaX, int deltaY) {
+            DisplayMetrics metrics = new DisplayMetrics();
+            getWindowManager().getDefaultDisplay().getMetrics(metrics);
+            int screenHeight = metrics.heightPixels;
+            int screenWidth = metrics.widthPixels;
+            int width = mPreviewRect.width();
+            int height = mPreviewRect.height();
+
+            // top left
+            mPreviewRect.left = Math.max(0, mPreviewRect.left + deltaX);
+            mPreviewRect.right = mPreviewRect.left + width;
+            mPreviewRect.top = Math.max(0, mPreviewRect.top + deltaY);
+            mPreviewRect.bottom = mPreviewRect.top + height;
+
+            // right margin
+            if (mPreviewRect.right > screenWidth) {
+                mPreviewRect.right = screenWidth;
+                mPreviewRect.left = mPreviewRect.right - width;
+            }
+
+            if (mPreviewRect.bottom > screenHeight) {
+                mPreviewRect.bottom = screenHeight;
+                mPreviewRect.top = screenHeight - height;
+            }
+
+            mLocalVideoLayoutConfig.mX = mPreviewRect.left * 100 / screenWidth;
+            mLocalVideoLayoutConfig.mY = mPreviewRect.top * 100 / screenHeight;
+
+            mIsCustomLocalVideoLayoutConfig = true;
+            mCall.updateLocalVideoRendererPosition(mLocalVideoLayoutConfig);
+        }
+
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            // call management
+            if ((null != mCall) && mCall.isVideo() && TextUtils.equals(IMXCall.CALL_STATE_CONNECTED, mCall.getCallState())) {
+                final int action = event.getAction();
+                final int x = (int) event.getX();
+                final int y = (int) event.getY();
+
+                if (action == MotionEvent.ACTION_DOWN) {
+                    Rect rect = computePreviewRect();
+
+                    if (rect.contains(x, y)) {
+                        mPreviewRect = rect;
+                        mStartX = x;
+                        mStartY = y;
+                        return true;
+                    }
+                } else if ((null != mPreviewRect) && (action == MotionEvent.ACTION_MOVE)) {
+                    updatePreviewFrame(x - mStartX, y - mStartY);
+                    mStartX = x;
+                    mStartY = y;
+                    return true;
+                } else {
+                    mPreviewRect = null;
+                }
+            }
+            return false;
         }
     };
 
@@ -433,10 +550,21 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
             }
         });
 
+        mainContainerLayoutView.setOnTouchListener(mMainViewTouchListener);
+
         ImageView roomLinkImageView = (ImageView)VectorCallViewActivity.this.findViewById(R.id.room_chat_link);
         roomLinkImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // simulate a back button press
+                if (!canCallBeResumed()) {
+                    if (null != mCall) {
+                        mCall.hangup(HANGUP_MSG_HEADER_UI_CALL);
+                    }
+                } else {
+                    saveCallView();
+                }
+                VectorCallViewActivity.this.finish();
                 startRoomActivity();
             }
         });
@@ -489,12 +617,31 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
 
         // life cycle management
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        if((null != savedInstanceState) && (null != audioManager)) {
-            // restore mic status
-            audioManager.setMicrophoneMute(savedInstanceState.getBoolean(KEY_MIC_MUTE_STATUS, false));
-            // restore speaker status (Cf. manageSubViews())
-            mIsSpeakerForcedFromLifeCycle = true;
-            mSavedSpeakerValue = savedInstanceState.getBoolean(KEY_SPEAKER_STATUS, mCall.isVideo());
+
+        if (null != savedInstanceState)  {
+
+            if (null != audioManager) {
+                // restore mic status
+                audioManager.setMicrophoneMute(savedInstanceState.getBoolean(EXTRA_MIC_MUTE_STATUS, false));
+                // restore speaker status (Cf. manageSubViews())
+                mIsSpeakerForcedFromLifeCycle = true;
+                mSavedSpeakerValue = savedInstanceState.getBoolean(EXTRA_SPEAKER_STATUS, mCall.isVideo());
+            }
+
+            mLocalVideoLayoutConfig = (IMXCall.VideoLayoutConfiguration)savedInstanceState.getSerializable(EXTRA_LOCAL_FRAME_LAYOUT);
+
+            // check if the layout is not out of bounds
+            if (null != mLocalVideoLayoutConfig) {
+                boolean isPortrait = (Configuration.ORIENTATION_LANDSCAPE != getResources().getConfiguration().orientation);
+
+                // do not keep the custom layout if the device orientation has been updated
+                if (mLocalVideoLayoutConfig.mIsPortrait != isPortrait) {
+                    mLocalVideoLayoutConfig = null;
+                }
+            }
+
+            mIsCustomLocalVideoLayoutConfig = (null != mLocalVideoLayoutConfig);
+
         } else if (null != audioManager) {
             // mic default value: enabled
             audioManager.setMicrophoneMute(false);
@@ -508,10 +655,23 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
         if ((null != mSavedCallView) && (null == mSavedCallView.getParent())) {
             mCallView = mSavedCallView;
             insertCallView();
+
+            if (null != mSavedLocalVideoLayoutConfig) {
+                boolean isPortrait = (Configuration.ORIENTATION_LANDSCAPE != getResources().getConfiguration().orientation);
+
+                // do not keep the custom layout if the device orientation has been updated
+                if (mSavedLocalVideoLayoutConfig.mIsPortrait == isPortrait) {
+                    mLocalVideoLayoutConfig = mSavedLocalVideoLayoutConfig;
+                    mIsCustomLocalVideoLayoutConfig = true;
+                }
+
+                mSavedLocalVideoLayoutConfig = null;
+            }
         } else {
             Log.d(LOG_TAG, "## onCreate(): Hide the call notifications");
             EventStreamService.getInstance().hideCallNotifications();
             mSavedCallView = null;
+            mSavedLocalVideoLayoutConfig = null;
 
             // create the callview asap
             this.runOnUiThread(new Runnable() {
@@ -523,7 +683,6 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
         }
 
         setupHeaderPendingCallView();
-        initBackLightManagement();
         Log.d(LOG_TAG,"## onCreate(): OUT");
     }
 
@@ -577,10 +736,18 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
                 Log.d(LOG_TAG,"## initBackLightManagement(): backlight is ON");
                 getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); // same as android:keepScreenOn="true" in layout
             } else {
-                // voice call: use the proximity sensor
-                mSensorMgr = (SensorManager) getSystemService(SENSOR_SERVICE);
-                if(null == (mProximitySensor = mSensorMgr.getDefaultSensor(Sensor.TYPE_PROXIMITY))) {
-                    Log.w(LOG_TAG,"## initBackLightManagement(): Warning - proximity sensor not supported");
+                if ((null == mSensorMgr) && (null != mCall) && TextUtils.equals(mCall.getCallState(), IMXCall.CALL_STATE_CONNECTED)) {
+
+                    // voice call: use the proximity sensor
+                    mSensorMgr = (SensorManager) getSystemService(SENSOR_SERVICE);
+
+                    // listener the proximity update
+                    if (null == (mProximitySensor = mSensorMgr.getDefaultSensor(Sensor.TYPE_PROXIMITY))) {
+                        Log.w(LOG_TAG, "## initBackLightManagement(): Warning - proximity sensor not supported");
+                    } else {
+                        // define the
+                        mSensorMgr.registerListener(this, mProximitySensor, SensorManager.SENSOR_DELAY_NORMAL);
+                    }
                 }
             }
         }
@@ -686,18 +853,29 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
         super.finish();
         VectorCallSoundManager.stopRinging();
         instance = null;
+
+        // do not release the proximity sensor while pausing the activity
+        // when the screen is turned off, the activity is paused.
+        if ((null != mProximitySensor) && (null != mSensorMgr)) {
+            mSensorMgr.unregisterListener(this);
+            mProximitySensor = null;
+            mSensorMgr = null;
+        }
+
+        turnScreenOn();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
 
-        if (null != mCall) {
-            if(null != mProximitySensor) {
-                mSensorMgr.unregisterListener(this);
+        // on Samsung devices, the application is suspended when the screen is turned off
+        // so the call must not be suspended
+        if (!mIsScreenOff) {
+            if (null != mCall) {
+                mCall.onPause();
+                mCall.removeListener(mListener);
             }
-            mCall.onPause();
-            mCall.removeListener(mListener);
         }
     }
 
@@ -714,13 +892,12 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
         }
 
         if (null != mCall) {
-            if(null != mProximitySensor) {
-                // proximity sensor only used for voice call (see initBackLightManagement())
-                mSensorMgr.registerListener(this, mProximitySensor, SensorManager.SENSOR_DELAY_NORMAL);
+            if (!mIsScreenOff) {
+                mCall.onResume();
+                mCall.addListener(mListener);
             }
-            mCall.onResume();
 
-            mCall.addListener(mListener);
+            mIsScreenOff = false;
 
             final String fState = mCall.getCallState();
 
@@ -735,6 +912,10 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
 
             // speaker phone state
             initSpeakerPhoneState();
+
+            // restore the backlight management
+            initBackLightManagement();
+
         } else {
             this.finish();
         }
@@ -770,6 +951,11 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
      * Start the video fading timer.
      */
     private void startVideoFadingEdgesScreenTimer() {
+        // do not hide the overlay during a voice call
+        if ((null == mCall) || !mCall.isVideo()) {
+            return;
+        }
+
         // stop current timer in progress
         stopVideoFadingEdgesScreenTimer();
 
@@ -846,20 +1032,15 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
      * the height screen.
      */
     private void computeVideoUiLayout() {
-        String msgDebug="## computeVideoUiLayout():";
-
-        mLocalVideoLayoutConfig = new IMXCall.VideoLayoutConfiguration();
-        mLocalVideoLayoutConfig.mWidth = PERCENT_LOCAL_USER_VIDEO_SIZE;
-        mLocalVideoLayoutConfig.mHeight = PERCENT_LOCAL_USER_VIDEO_SIZE;
-
-        // get screen orientation:
-        int screenOrientation = getResources().getConfiguration().orientation;
+        if (null == mLocalVideoLayoutConfig) {
+            mLocalVideoLayoutConfig = new IMXCall.VideoLayoutConfiguration();
+        }
 
         // get the height of the screen
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        float screenHeight = (float)(metrics.heightPixels);
-        float screenWidth = (float)(metrics.widthPixels);
+        int screenHeight = metrics.heightPixels;
+        int screenWidth = metrics.widthPixels;
 
         // compute action bar size: the video Y component starts below the action bar
         int actionBarHeight;
@@ -871,42 +1052,52 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
 
         View mMenuButtonsContainerView = VectorCallViewActivity.this.findViewById(R.id.hang_up_button);
         ViewGroup.LayoutParams layout = mMenuButtonsContainerView.getLayoutParams();
-        float buttonsContainerHeight = (float)(layout.height);
 
-        // base formula:
-        // screenHeight = actionBarHeight + topMarginHeightLocalUserVideo + localVideoHeight + "height between video bottom & buttons" + buttonsContainerHeight
-        //float topMarginHeightNormalized = 1 - RATIO_LOCAL_USER_VIDEO_HEIGHT - VIDEO_TO_BUTTONS_VERTICAL_SPACE;
+        if (0 == mLocalVideoLayoutConfig.mWidth) {
+            mLocalVideoLayoutConfig.mWidth = PERCENT_LOCAL_USER_VIDEO_SIZE;
+        }
 
-        float topMarginHeightNormalized; // range [0;1]
-        float ratioVideoHeightNormalized; // range [0;1]
-        float localVideoWidth = Math.min(screenHeight,screenWidth/*portrait is ref*/)*RATIO_LOCAL_USER_VIDEO_HEIGHT; // value effectively applied by the SDK
-        float estimatedLocalVideoHeight = ((localVideoWidth)/(RATIO_LOCAL_USER_VIDEO_ASPECT)); // 0.65 => to adapt
+        if (0 == mLocalVideoLayoutConfig.mHeight) {
+            mLocalVideoLayoutConfig.mHeight = PERCENT_LOCAL_USER_VIDEO_SIZE;
+        }
 
-        if(Configuration.ORIENTATION_LANDSCAPE == screenOrientation){
-            // take the video width as height
-            ratioVideoHeightNormalized = (localVideoWidth/screenHeight);
+        if ((0 != mSourceVideoWidth) && (0 != mSourceVideoHeight)) {
+            int previewWidth = screenWidth * mLocalVideoLayoutConfig.mWidth / 100;
+            int previewHeight = screenHeight * mLocalVideoLayoutConfig.mHeight / 100;
+
+            int sourceRatio = mSourceVideoWidth * 100 / mSourceVideoHeight;
+            int previewRatio = previewWidth * 100 / previewHeight;
+
+            // there is an aspect ratio update
+            if (sourceRatio != previewRatio) {
+                int maxPreviewWidth = screenWidth * PERCENT_LOCAL_USER_VIDEO_SIZE / 100;
+                int maxPreviewHeight = screenHeight * PERCENT_LOCAL_USER_VIDEO_SIZE / 100;
+
+                if ((maxPreviewHeight * sourceRatio / 100) > maxPreviewWidth) {
+                    mLocalVideoLayoutConfig.mHeight = maxPreviewWidth * 100 * 100 / sourceRatio / screenHeight;
+                    mLocalVideoLayoutConfig.mWidth = PERCENT_LOCAL_USER_VIDEO_SIZE;
+                } else {
+                    mLocalVideoLayoutConfig.mWidth = maxPreviewHeight * sourceRatio / screenWidth;
+                    mLocalVideoLayoutConfig.mHeight = PERCENT_LOCAL_USER_VIDEO_SIZE;
+                }
+            }
         } else {
-            mLocalVideoLayoutConfig.mIsPortrait = true;
-            // take the video height as height
-            ratioVideoHeightNormalized = estimatedLocalVideoHeight/screenHeight;
-        }
-        Log.d(LOG_TAG,"## computeVideoUiLayout(): orientation = PORTRAIT");
-
-        // the video is displayed:
-        // - X axis: centered horizontally
-        mLocalVideoLayoutConfig.mX = (100 - PERCENT_LOCAL_USER_VIDEO_SIZE) / 2;
-
-        // - Y axis: above the video buttons
-        topMarginHeightNormalized = 1 - ratioVideoHeightNormalized - VIDEO_TO_BUTTONS_VERTICAL_SPACE - (buttonsContainerHeight/screenHeight);
-        if(topMarginHeightNormalized >= 0) {
-            mLocalVideoLayoutConfig.mY = (int) (topMarginHeightNormalized * 100);
-        }
-        else { // set the video at the top of the screen
-            mLocalVideoLayoutConfig.mY = 0;
+            mLocalVideoLayoutConfig.mWidth = PERCENT_LOCAL_USER_VIDEO_SIZE;
+            mLocalVideoLayoutConfig.mHeight = PERCENT_LOCAL_USER_VIDEO_SIZE;
         }
 
-        msgDebug+= " VideoHeightRadio="+ratioVideoHeightNormalized+" screenHeight="+screenHeight+" containerHeight="+(int)buttonsContainerHeight+" TopMarginRatio="+mLocalVideoLayoutConfig.mY;
-        Log.d(LOG_TAG,msgDebug);
+        if (!mIsCustomLocalVideoLayoutConfig) {
+            int buttonsContainerHeight = (mButtonsContainerView.getVisibility() == View.VISIBLE) ? layout.height * 100 / screenHeight : 0;
+            int bottomLeftMargin = (int) (VIDEO_TO_BUTTONS_VERTICAL_SPACE * screenHeight * 100 / screenHeight);
+
+            mLocalVideoLayoutConfig.mX = bottomLeftMargin * screenHeight / screenWidth;
+            mLocalVideoLayoutConfig.mY = 100 - bottomLeftMargin - buttonsContainerHeight - mLocalVideoLayoutConfig.mHeight;
+        }
+
+        mLocalVideoLayoutConfig.mIsPortrait = (getResources().getConfiguration().orientation != Configuration.ORIENTATION_LANDSCAPE);
+
+        Log.d(LOG_TAG, "## computeVideoUiLayout() : x " + mLocalVideoLayoutConfig.mX + " y " +  mLocalVideoLayoutConfig.mY);
+        Log.d(LOG_TAG, "## computeVideoUiLayout() : mWidth " + mLocalVideoLayoutConfig.mWidth + " mHeight " +  mLocalVideoLayoutConfig.mHeight);
     }
 
     /**
@@ -916,10 +1107,17 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
         if(null != mCall) {
             String roomId = mCall.getRoom().getRoomId();
 
-            Intent intent = new Intent(getApplicationContext(), VectorRoomActivity.class);
-            intent.putExtra(VectorRoomActivity.EXTRA_ROOM_ID, roomId);
-            intent.putExtra(VectorRoomActivity.EXTRA_MATRIX_ID, mMatrixId);
-            startActivity(intent);
+            if (null != VectorApp.getCurrentActivity()) {
+                HashMap<String, Object> params = new HashMap<>();
+                params.put(VectorRoomActivity.EXTRA_MATRIX_ID, mMatrixId);
+                params.put(VectorRoomActivity.EXTRA_ROOM_ID, roomId);
+                CommonActivityUtils.goToRoomPage(VectorApp.getCurrentActivity(), mSession, params);
+            } else {
+                Intent intent = new Intent(getApplicationContext(), VectorRoomActivity.class);
+                intent.putExtra(VectorRoomActivity.EXTRA_ROOM_ID, roomId);
+                intent.putExtra(VectorRoomActivity.EXTRA_MATRIX_ID, mMatrixId);
+                startActivity(intent);
+            }
         }
     }
 
@@ -1007,6 +1205,7 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
      */
     private void onHangUp(String hangUpMsg) {
         mSavedCallView = null;
+        mSavedLocalVideoLayoutConfig = null;
         mHangUpReason = hangUpMsg;
 
         if (null != mCall) {
@@ -1043,6 +1242,7 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
                 mHangUpImageView.setVisibility(View.INVISIBLE);
                 break;
             case IMXCall.CALL_STATE_CONNECTED:
+                initBackLightManagement();
                 mHangUpImageView.setVisibility(View.VISIBLE);
                 break;
             default:
@@ -1127,9 +1327,20 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
 
     private void saveCallView() {
         if ((null != mCall) && !mCall.getCallState().equals(IMXCall.CALL_STATE_ENDED) && (null != mCallView) && (null != mCallView.getParent())) {
+
+            // warn the call that the activity is going to be paused.
+            // as the rendering is DSA, it saves time to close the activity while removing mCallView
+            mCall.onPause();
+
             ViewGroup parent = (ViewGroup) mCallView.getParent();
             parent.removeView(mCallView);
             mSavedCallView = mCallView;
+
+            mSavedLocalVideoLayoutConfig = mLocalVideoLayoutConfig;
+
+            // remove the call layout to avoid having a black screen
+            RelativeLayout layout = (RelativeLayout)findViewById(R.id.call_layout);
+            layout.setVisibility(View.GONE);
 
             EventStreamService.getInstance().displayCallInProgressNotification(mSession, mCall.getRoom(), mCall.getCallId());
             mCallView = null;
@@ -1146,8 +1357,12 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
         // save audio settings
         AudioManager audioManager = (AudioManager) VectorCallViewActivity.this.getSystemService(Context.AUDIO_SERVICE);
         if (null != audioManager) {
-            savedInstanceState.putBoolean(KEY_MIC_MUTE_STATUS, audioManager.isMicrophoneMute());
-            savedInstanceState.putBoolean(KEY_SPEAKER_STATUS, audioManager.isSpeakerphoneOn());
+            savedInstanceState.putBoolean(EXTRA_MIC_MUTE_STATUS, audioManager.isMicrophoneMute());
+            savedInstanceState.putBoolean(EXTRA_SPEAKER_STATUS, audioManager.isSpeakerphoneOn());
+        }
+
+        if (mIsCustomLocalVideoLayoutConfig) {
+            savedInstanceState.putSerializable(EXTRA_LOCAL_FRAME_LAYOUT, mLocalVideoLayoutConfig);
         }
     }
 
@@ -1178,6 +1393,75 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
     }
 
     // ************* SensorEventListener *************
+    private PowerManager.WakeLock mWakeLock;
+    private int mField = 0x00000020;
+
+    /**
+     * Init the screen management to be able to turn the screen on/off
+     */
+    private void initScreenManagement() {
+        try {
+            try {
+                mField = PowerManager.class.getClass().getField("PROXIMITY_SCREEN_OFF_WAKE_LOCK").getInt(null);
+            } catch (Throwable ignored) {
+                Log.e(LOG_TAG, "## initScreenManagement " + ignored.getMessage());
+            }
+
+            PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+            mWakeLock = powerManager.newWakeLock(mField, getLocalClassName());
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "## initScreenManagement() : failed " + e.getMessage());
+        }
+    }
+
+    /**
+     * Turn the screen off
+     */
+    private void turnScreenOff() {
+        if (null == mWakeLock) {
+            initScreenManagement();
+        }
+
+        try {
+            if ((null != mWakeLock) && !mWakeLock.isHeld()) {
+                mWakeLock.acquire();
+                mIsScreenOff = true;
+            }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "## turnScreenOff() failed");
+        }
+
+        // set the back light level to the minimum
+        // fallback if the previous trick does not work
+        if (null != getWindow() && (null != getWindow().getAttributes())) {
+            WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
+            layoutParams.screenBrightness = 0;
+            getWindow().setAttributes(layoutParams);
+        }
+    }
+
+    /**
+     * Turn the screen on
+     */
+    private void turnScreenOn() {
+        try {
+            if (null != mWakeLock) {
+                mWakeLock.release();
+            }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "## turnScreenOn() failed");
+        }
+
+        mWakeLock = null;
+
+        // restore previous brightness (whatever it was)
+        if (null != getWindow() && (null != getWindow().getAttributes())) {
+            WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
+            layoutParams.screenBrightness = -1;
+            getWindow().setAttributes(layoutParams);
+        }
+    }
+
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (null != event) {
@@ -1189,20 +1473,11 @@ public class VectorCallViewActivity extends Activity implements SensorEventListe
             if (audioManager.isSpeakerphoneOn()) {
                 Log.d(LOG_TAG, "## onSensorChanged(): Skipped due speaker ON");
             } else {
-                WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
-
                 if (distanceCentimeters <= PROXIMITY_THRESHOLD) {
-                    layoutParams.screenBrightness = 0;
-                    getWindow().setAttributes(layoutParams);
-
-                    //getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    turnScreenOff();
                     Log.d(LOG_TAG, "## onSensorChanged(): force screen OFF");
                 } else {
-                    // restore previous brightness (whatever it was)
-                    layoutParams.screenBrightness = -1;
-                    getWindow().setAttributes(layoutParams);
-
-                    //getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    turnScreenOn();
                     Log.d(LOG_TAG, "## onSensorChanged(): force screen ON");
                 }
             }

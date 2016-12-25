@@ -153,6 +153,8 @@ public class VectorHomeActivity extends AppCompatActivity implements VectorRecen
     // calls
     private VectorPendingCallView mVectorPendingCallView;
 
+    private View mSyncInProgressView;
+
     private boolean mStorePermissionCheck = false;
 
     // manage the previous first displayed item
@@ -229,6 +231,7 @@ public class VectorHomeActivity extends AppCompatActivity implements VectorRecen
 
         mWaitingView = findViewById(R.id.listView_spinner_views);
         mVectorPendingCallView = (VectorPendingCallView) findViewById(R.id.listView_pending_callview);
+        mSyncInProgressView =  findViewById(R.id.home_recents_sync_in_progress);
 
         mVectorPendingCallView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -507,7 +510,11 @@ public class VectorHomeActivity extends AppCompatActivity implements VectorRecen
 
         // Unregister Broadcast receiver
         stopWaitingView();
-        unregisterReceiver(mBrdRcvStopWaitingView);
+        try {
+            unregisterReceiver(mBrdRcvStopWaitingView);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "## onPause() : unregisterReceiver fails " + e.getMessage());
+        }
 
         if (mSession.isAlive()) {
             mSession.getDataHandler().removeListener(mEventsListener);
@@ -560,6 +567,11 @@ public class VectorHomeActivity extends AppCompatActivity implements VectorRecen
             @Override
             public void onAccountInfoUpdate(MyUser myUser) {
                 refreshSlidingMenu();
+            }
+
+            @Override
+            public void onLiveEventsChunkProcessed() {
+                mSyncInProgressView.setVisibility(View.GONE);
             }
         };
 
@@ -627,6 +639,49 @@ public class VectorHomeActivity extends AppCompatActivity implements VectorRecen
             mRecentsListFragment.setFirstVisiblePosition(mScrollToIndex);
             // reinit in the fragment scrolllistener
             //mScrollToIndex = -1;
+        }
+
+        mSyncInProgressView.setVisibility(VectorApp.isSessionSyncing(mSession) ? View.VISIBLE : View.GONE);
+
+        displayCryptoCorruption();
+    }
+
+    /**
+     * Display an alert to warn the user that some crypto data is corrupted.
+     */
+    private void displayCryptoCorruption() {
+        if ((null != mSession) && (null != mSession.getCrypto()) && mSession.getCrypto().isCorrupted()) {
+            final String isFirstCryptoAlertKey = "isFirstCryptoAlertKey";
+
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+            if (preferences.getBoolean(isFirstCryptoAlertKey, true)) {
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.putBoolean(isFirstCryptoAlertKey, false);
+                editor.commit();
+
+                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+                alertDialogBuilder.setMessage(getString(R.string.e2e_need_log_in_again));
+
+                // set dialog message
+                alertDialogBuilder
+                        .setCancelable(true)
+                        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                            }
+                        })
+                        .setPositiveButton(R.string.ok,
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int id) {
+                                        CommonActivityUtils.logout(VectorApp.getCurrentActivity(), true);
+                                    }
+                                });
+                // create alert dialog
+                AlertDialog alertDialog = alertDialogBuilder.create();
+                // show it
+                alertDialog.show();
+            }
         }
     }
 
@@ -753,6 +808,7 @@ public class VectorHomeActivity extends AppCompatActivity implements VectorRecen
                     }
                 });
             }
+
 
             private void onError(final String message) {
                 mWaitingView.post(new Runnable() {
@@ -978,9 +1034,32 @@ public class VectorHomeActivity extends AppCompatActivity implements VectorRecen
                         break;
                     }
 
-                    case R.id.sliding_menu_logout: {
-                        VectorHomeActivity.this.showWaitingView();
-                        CommonActivityUtils.logout(VectorHomeActivity.this);
+                    case R.id.sliding_menu_sign_out: {
+                        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(VectorHomeActivity.this);
+                        alertDialogBuilder.setMessage(getString(R.string.action_sign_out_confirmation));
+
+                        // set dialog message
+                        alertDialogBuilder
+                                .setCancelable(false)
+                                .setPositiveButton(R.string.ok,
+                                        new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dialog, int id) {
+                                                VectorHomeActivity.this.showWaitingView();
+                                                CommonActivityUtils.logout(VectorHomeActivity.this);
+                                            }
+                                        })
+                                .setNegativeButton(R.string.cancel,
+                                        new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dialog, int id) {
+                                                dialog.cancel();
+                                            }
+                                        });
+
+                        // create alert dialog
+                        AlertDialog alertDialog = alertDialogBuilder.create();
+                        // show it
+                        alertDialog.show();
+
                         break;
                     }
 

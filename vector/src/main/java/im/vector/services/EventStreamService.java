@@ -43,6 +43,7 @@ import org.matrix.androidsdk.call.MXCallsManager;
 import org.matrix.androidsdk.data.store.IMXStore;
 import org.matrix.androidsdk.data.Room;
 import org.matrix.androidsdk.data.RoomState;
+import org.matrix.androidsdk.data.store.MXStoreListener;
 import org.matrix.androidsdk.listeners.MXEventListener;
 import org.matrix.androidsdk.rest.model.Event;
 import org.matrix.androidsdk.rest.model.RoomMember;
@@ -243,6 +244,10 @@ public class EventStreamService extends Service {
                 public void onCallEnd(final int aReasonId) {
                     Log.d(LOG_TAG, "dispatchOnCallEnd " + call.getCallId());
                     manageHangUpEvent(call.getCallId());
+                }
+
+                @Override
+                public void onPreviewSizeChanged(int width, int height) {
                 }
             };
 
@@ -496,30 +501,15 @@ public class EventStreamService extends Service {
             } else {
                 final MXSession fSession = session;
                 // wait that the store is ready  before starting the events listener
-                store.addMXStoreListener(new IMXStore.MXStoreListener() {
-                    @Override
-                    public void postProcess(String accountId) {
-                    }
-
+                store.addMXStoreListener(new MXStoreListener() {
                     @Override
                     public void onStoreReady(String accountId) {
-                        if (fSession.isCryptoEnabled() && fSession.getCrypto().isCorrupted()) {
-                            Log.e(LOG_TAG, "## start : accountId " + accountId + "'s crypto is corrupted");
-                            CommonActivityUtils.logout(VectorApp.getCurrentActivity(), true);
-                        } else {
-                            startEventStream(fSession, store);
-                        }
+                        startEventStream(fSession, store);
                     }
 
                     @Override
                     public void onStoreCorrupted(String accountId, String description) {
-                        if (fSession.isCryptoEnabled() && fSession.getCrypto().isCorrupted()) {
-                            Log.e(LOG_TAG, "## start : accountId " + accountId + "'s crypto is corrupted");
-                            CommonActivityUtils.logout(VectorApp.getCurrentActivity(), true);
-                        } else {
-                            // the sync will start from scratch
-                            startEventStream(fSession, store);
-                        }
+                        startEventStream(fSession, store);
                     }
 
                     @Override
@@ -676,6 +666,11 @@ public class EventStreamService extends Service {
 
         if (null == session) {
             Log.e(LOG_TAG, "## updateServiceForegroundState(): no session");
+            return;
+        }
+
+        // GA issue
+        if (null == mGcmRegistrationManager) {
             return;
         }
 
