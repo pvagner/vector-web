@@ -75,7 +75,9 @@
 
     </PreferenceCategory>
 
-    <im.vector.preference.VectorDividerCategory />
+    <im.vector.preference.VectorDividerCategory
+        android:key="notifications_targets_divider"
+        android:title="notifications_targets_divider"/>
 
     <PreferenceCategory
         android:title="@string/settings_notifications_targets"
@@ -105,6 +107,12 @@
         <im.vector.preference.VectorSwitchPreference
             android:title="@string/room_settings_labs_end_to_end"
             android:key="@string/room_settings_labs_end_to_end"/>
+
+        <im.vector.preference.VectorCustomActionEditTextPreference
+            android:key="@string/room_settings_labs_end_to_end_is_active"
+            android:focusable="false"
+            android:title="@string/room_settings_labs_end_to_end_is_active" />
+
     </im.vector.preference.VectorPreferenceCategory>
     
     <im.vector.preference.VectorDividerCategory />
@@ -132,7 +140,18 @@
         <im.vector.preference.VectorCustomActionEditTextPreference
             android:key="@string/encryption_information_device_key"
             android:title="@string/encryption_information_device_key"/>
+
+        <im.vector.preference.VectorCustomActionEditTextPreference
+            android:key="@string/encryption_export_e2e_room_keys"
+            android:title="@string/encryption_export_e2e_room_keys"
+            android:summary="@string/encryption_export_room_keys_summary" />
+
+        <im.vector.preference.VectorCustomActionEditTextPreference
+            android:key="@string/encryption_import_e2e_room_keys"
+            android:title="@string/encryption_import_e2e_room_keys"
+            android:summary="@string/encryption_import_room_keys_summary" />
     </PreferenceCategory>
+
     <im.vector.preference.VectorDividerCategory android:key="@string/cryptography_divider" />
     <!-- ************************************************ -->
 

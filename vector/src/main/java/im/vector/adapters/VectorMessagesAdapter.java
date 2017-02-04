@@ -23,7 +23,7 @@ import android.os.Build;
 import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
-import android.util.Log;
+import org.matrix.androidsdk.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -34,8 +34,6 @@ import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-
-import com.google.gson.JsonObject;
 
 import org.matrix.androidsdk.MXSession;
 import org.matrix.androidsdk.adapters.MessageRow;
@@ -730,7 +728,12 @@ public class VectorMessagesAdapter extends MessagesAdapter {
             }
         });
 
-        popup.show();
+        // fix an issue reported by GA
+        try {
+            popup.show();
+        } catch (Exception e) {
+            Log.e(LOG_TAG, " popup.show failed " + e.getMessage());
+        }
     }
 
     /**

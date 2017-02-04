@@ -43,7 +43,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
-import android.util.Log;
+import org.matrix.androidsdk.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -131,8 +131,8 @@ public class CommonActivityUtils {
     // room details members:
     public static final String KEY_GROUPS_EXPANDED_STATE = "KEY_GROUPS_EXPANDED_STATE";
     public static final String KEY_SEARCH_PATTERN = "KEY_SEARCH_PATTERN";
-    public static final Boolean GROUP_IS_EXPANDED = true;
-    public static final Boolean GROUP_IS_COLLAPSED = false;
+    public static final boolean GROUP_IS_EXPANDED = true;
+    public static final boolean GROUP_IS_COLLAPSED = false;
 
     // power levels
     public static final float UTILS_POWER_LEVEL_ADMIN = 100;
@@ -355,7 +355,7 @@ public class CommonActivityUtils {
         Matrix.getInstance(context).clearTmpStoresList();
 
         // reset the contacts
-        PIDsRetriever.getIntance().reset();
+        PIDsRetriever.getInstance().reset();
         ContactsManager.reset();
 
         MXMediasCache.clearThumbnailsCache(context);
@@ -1813,10 +1813,33 @@ public class CommonActivityUtils {
         builder.setPositiveButton(R.string.encryption_information_verify_key_match, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                session.getCrypto().setDeviceVerification(MXDeviceInfo.DEVICE_VERIFICATION_VERIFIED, deviceInfo.deviceId, sender);
-                if(null != adapter) {
-                    adapter.notifyDataSetChanged();
-                }
+                session.getCrypto().setDeviceVerification(MXDeviceInfo.DEVICE_VERIFICATION_VERIFIED, deviceInfo.deviceId, sender, new ApiCallback<Void>() {
+                    private void onDone() {
+                        if(null != adapter) {
+                            adapter.notifyDataSetChanged();
+                        }
+                    }
+
+                    @Override
+                    public void onSuccess(Void info) {
+                        onDone();
+                    }
+
+                    @Override
+                    public void onNetworkError(Exception e) {
+                        onDone();
+                    }
+
+                    @Override
+                    public void onMatrixError(MatrixError e) {
+                        onDone();
+                    }
+
+                    @Override
+                    public void onUnexpectedError(Exception e) {
+                        onDone();
+                    }
+                });
             }
         });
 

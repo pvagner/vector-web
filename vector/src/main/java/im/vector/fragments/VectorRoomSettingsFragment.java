@@ -18,13 +18,16 @@ package im.vector.fragments;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-//
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
+import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -32,13 +35,8 @@ import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
-import android.preference.SwitchPreference;
-import android.content.Intent;
-import android.net.Uri;
-import android.os.Bundle;
 import android.text.Html;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -63,6 +61,7 @@ import org.matrix.androidsdk.rest.model.MatrixError;
 import org.matrix.androidsdk.rest.model.PowerLevels;
 import org.matrix.androidsdk.rest.model.RoomMember;
 import org.matrix.androidsdk.util.BingRulesManager;
+import org.matrix.androidsdk.util.Log;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -82,7 +81,6 @@ import im.vector.preference.RoomAvatarPreference;
 import im.vector.preference.VectorCustomActionEditTextPreference;
 import im.vector.preference.VectorListPreference;
 import im.vector.preference.VectorSwitchPreference;
-import im.vector.util.BugReporter;
 import im.vector.util.ResourceUtils;
 import im.vector.util.VectorUtils;
 
@@ -150,8 +148,8 @@ public class VectorRoomSettingsFragment extends PreferenceFragment implements Sh
     private RoomAvatarPreference mRoomPhotoAvatar;
     private EditTextPreference mRoomNameEditTxt;
     private EditTextPreference mRoomTopicEditTxt;
-    private SwitchPreference mRoomDirectoryVisibilitySwitch;
-    private SwitchPreference mRoomMuteNotificationsSwitch;
+    private CheckBoxPreference mRoomDirectoryVisibilitySwitch;
+    private CheckBoxPreference mRoomMuteNotificationsSwitch;
     private ListPreference mRoomTagListPreference;
     private VectorListPreference mRoomAccessRulesListPreference;
     private ListPreference mRoomHistoryReadabilityRulesListPreference;
@@ -325,8 +323,8 @@ public class VectorRoomSettingsFragment extends PreferenceFragment implements Sh
         mRoomPhotoAvatar = (RoomAvatarPreference)findPreference(PREF_KEY_ROOM_PHOTO_AVATAR);
         mRoomNameEditTxt = (EditTextPreference)findPreference(PREF_KEY_ROOM_NAME);
         mRoomTopicEditTxt = (EditTextPreference)findPreference(PREF_KEY_ROOM_TOPIC);
-        mRoomDirectoryVisibilitySwitch = (SwitchPreference)findPreference(PREF_KEY_ROOM_DIRECTORY_VISIBILITY_SWITCH);
-        mRoomMuteNotificationsSwitch = (SwitchPreference)findPreference(PREF_KEY_ROOM_MUTE_NOTIFICATIONS_SWITCH);
+        mRoomDirectoryVisibilitySwitch = (CheckBoxPreference)findPreference(PREF_KEY_ROOM_DIRECTORY_VISIBILITY_SWITCH);
+        mRoomMuteNotificationsSwitch = (CheckBoxPreference)findPreference(PREF_KEY_ROOM_MUTE_NOTIFICATIONS_SWITCH);
         mRoomTagListPreference = (ListPreference)findPreference(PREF_KEY_ROOM_TAG_LIST);
         mRoomAccessRulesListPreference = (VectorListPreference)findPreference(PREF_KEY_ROOM_ACCESS_RULES_LIST);
         mRoomHistoryReadabilityRulesListPreference = (ListPreference)findPreference(PREF_KEY_ROOM_HISTORY_READABILITY_LIST);
@@ -1575,7 +1573,7 @@ public class VectorRoomSettingsFragment extends PreferenceFragment implements Sh
 
                             // ignore empty alias
                             if (!TextUtils.isEmpty(newAddress)) {
-                                if (!MXSession.PATTERN_CONTAIN_MATRIX_ALIAS.matcher(newAddress).matches()) {
+                                if (!MXSession.isRoomAlias(newAddress)) {
                                     AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                                     builder.setTitle(R.string.room_settings_addresses_invalid_format_dialog_title);
                                     builder.setMessage(getString(R.string.room_settings_addresses_invalid_format_dialog_body, newAddress));

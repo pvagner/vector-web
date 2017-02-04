@@ -18,7 +18,7 @@ package im.vector.fragments;
 
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
+import org.matrix.androidsdk.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -34,8 +34,6 @@ import org.matrix.androidsdk.util.JsonUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import im.vector.activity.VectorBaseSearchActivity;
 
 public class VectorSearchRoomFilesListFragment extends VectorSearchRoomsFilesListFragment {
 
@@ -79,18 +77,6 @@ public class VectorSearchRoomFilesListFragment extends VectorSearchRoomsFilesLis
     public void onPause() {
         super.onPause(); // Fix memory leak: VectorRoomDetailsActivity() instances leak
         cancelCatchingRequests();
-    }
-
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        if (getActivity() instanceof VectorBaseSearchActivity.IVectorSearchActivity) {
-            ((VectorBaseSearchActivity.IVectorSearchActivity)getActivity()).refreshSearch();
-        } else {
-            startFilesSearch(null);
-        }
     }
 
     /**

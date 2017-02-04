@@ -18,6 +18,7 @@ package im.vector;
 
 import android.app.Activity;
 import android.app.Application;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageInfo;
@@ -26,7 +27,9 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
+import android.text.TextUtils;
+
+import org.matrix.androidsdk.util.Log;
 
 import org.matrix.androidsdk.MXSession;
 
@@ -38,13 +41,13 @@ import im.vector.ga.GAHelper;
 import im.vector.gcm.GcmRegistrationManager;
 import im.vector.receiver.HeadsetConnectionReceiver;
 import im.vector.services.EventStreamService;
-import im.vector.util.LogUtilities;
 import im.vector.util.RageShake;
 import im.vector.util.VectorCallSoundManager;
 import im.vector.util.VectorMarkdownParser;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -111,6 +114,11 @@ public class VectorApp extends Application {
         return instance;
     }
 
+    /**
+     * The directory in which the logs are stored
+     */
+    public static File mLogsDirectoryFile = null;
+
     @Override
     public void onCreate() {
         Log.d(LOG_TAG, "onCreate");
@@ -137,8 +145,20 @@ public class VectorApp extends Application {
             SDK_VERSION_STRING = "";
         }
 
-        LogUtilities.setLogDirectory(new File(getCacheDir().getAbsolutePath() + "/logs"));
-        LogUtilities.storeLogcat();
+        mLogsDirectoryFile = new File(getCacheDir().getAbsolutePath() + "/logs");
+
+        org.matrix.androidsdk.util.Log.setLogDirectory(mLogsDirectoryFile);
+        org.matrix.androidsdk.util.Log.init("RiotLog");
+
+        // log the application version to trace update
+        // useful to track backward compatibility issues
+
+        Log.d(LOG_TAG, "----------------------------------------------------------------");
+        Log.d(LOG_TAG, "----------------------------------------------------------------");
+        Log.d(LOG_TAG, " Application version: " + VECTOR_VERSION_STRING);
+        Log.d(LOG_TAG, " SDK version: " + SDK_VERSION_STRING);
+        Log.d(LOG_TAG, "----------------------------------------------------------------");
+        Log.d(LOG_TAG, "----------------------------------------------------------------\n\n\n\n");
 
         GAHelper.initGoogleAnalytics(getApplicationContext());
 
@@ -246,7 +266,7 @@ public class VectorApp extends Application {
             }
         }
 
-        PIDsRetriever.getIntance().onAppBackgrounded();
+        PIDsRetriever.getInstance().onAppBackgrounded();
 
         MyPresenceManager.advertiseAllUnavailable();
     }
@@ -328,7 +348,8 @@ public class VectorApp extends Application {
             }
 
             // get the contact update at application launch
-            ContactsManager.refreshLocalContactsSnapshot(this);
+            ContactsManager.clearSnapshot();
+            ContactsManager.refreshLocalContactsSnapshot(VectorApp.this);
 
             boolean hasActiveCall = false;
 
@@ -346,6 +367,10 @@ public class VectorApp extends Application {
             if (VectorCallSoundManager.isRinging() && !hasActiveCall && (null != EventStreamService.getInstance())) {
                 Log.e(LOG_TAG, "## suspendApp() : fix an infinite ringing");
                 EventStreamService.getInstance().hideCallNotifications();
+                
+                if (VectorCallSoundManager.isRinging()) {
+                    VectorCallSoundManager.stopRinging();
+                }
             }
         }
 
@@ -518,6 +543,66 @@ public class VectorApp extends Application {
         }
 
         return isSyncing;
+    }
+
+    //==============================================================================================================
+    // GA management
+    //==============================================================================================================
+    /**
+     * GA tags
+     */
+    public static final String GOOGLE_ANALYTICS_STATS_CATEGORY = "stats";
+
+    public static final String GOOGLE_ANALYTICS_STATS_ROOMS_ACTION = "rooms";
+    public static final String GOOGLE_ANALYTICS_STARTUP_INITIAL_SYNC_ACTION = "initialSync";
+    public static final String GOOGLE_ANALYTICS_STARTUP_INCREMENTAL_SYNC_ACTION = "incrementalSync";
+    public static final String GOOGLE_ANALYTICS_STARTUP_STORE_PRELOAD_ACTION = "storePreload";
+    public static final String GOOGLE_ANALYTICS_STARTUP_MOUNT_DATA_ACTION = "mountData";
+    public static final String GOOGLE_ANALYTICS_STARTUP_LAUNCH_SCREEN_ACTION = "launchScreen";
+    public static final String GOOGLE_ANALYTICS_STARTUP_CONTACTS_ACTION = "Contacts";
+
+    // keep track of the GA events
+    private static HashMap<String, String> mGAStatsMap = new HashMap<>();
+
+    /**
+     * Send a GA stats
+     * @param context the context
+     * @param category the category
+     * @param action the action
+     * @param label the label
+     * @param value the value
+     */
+    public static void sendGAStats(Context context, String category, String action, String label, long value) {
+        try {
+            String key = "[" + category + "] " + action;
+            String mapValue = "" ;
+
+            if (!TextUtils.isEmpty(label)) {
+                mapValue += label;
+            } else {
+                mapValue += value + " ms";
+            }
+
+            mGAStatsMap.put(key, mapValue);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "## sendGAStats() failed " + e.getMessage());
+        }
+
+        GAHelper.sendGAStats(context, category, action, label, value);
+    }
+
+    /**
+     * Provide the GA stats.
+     * @return the GA stats.
+     */
+    public static String getGAStats() {
+        String stats = "";
+
+        for(String k : mGAStatsMap.keySet()) {
+            stats += k + " : " + mGAStatsMap.get(k) + "\n";
+        }
+
+        return stats;
     }
 }
 

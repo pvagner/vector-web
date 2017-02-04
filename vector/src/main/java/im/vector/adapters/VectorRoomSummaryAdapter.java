@@ -23,7 +23,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.text.TextUtils;
-import android.util.Log;
+import org.matrix.androidsdk.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -42,7 +42,6 @@ import org.matrix.androidsdk.data.RoomState;
 import org.matrix.androidsdk.data.RoomSummary;
 import org.matrix.androidsdk.data.RoomTag;
 import org.matrix.androidsdk.rest.model.Event;
-import org.matrix.androidsdk.rest.model.PublicRoom;
 import org.matrix.androidsdk.rest.model.User;
 import org.matrix.androidsdk.util.BingRulesManager;
 import org.matrix.androidsdk.util.EventDisplay;
@@ -636,7 +635,7 @@ public class VectorRoomSummaryAdapter extends BaseExpandableListAdapter {
         if (mIsSearchMode) {
             imageView.setVisibility(View.GONE);
         } else {
-            if (!isExpanded) {
+            if (isExpanded) {
                 imageView.setImageResource(R.drawable.ic_material_expand_less_black);
             } else {
                 imageView.setImageResource(R.drawable.ic_material_expand_more_black);

@@ -1,3 +1,51 @@
+Changes in Riot 0.6.8 (2017-01-27)
+===================================================
+ 
+Improvements:
+ * The members list activity design has been improved.
+ * Add some google analytics stats.
+ * Trigger the email lookup on demand to save data connection use.
+ * Improve the settings screens to have the material design for the device with API < 21.
+  
+Bugfixes:
+ * Fix crypto backward compatibility issue (< 0.6.4).
+ * Fix an invite contacts permission request loop if it was not granted (room members invitation screen).
+ * #878 : Room activity : the very long member name overlaps the time 
+ * #636 : Log in button is not enabled when internet connection comes back.
+ * #891 : Infinite contacts permission request dialog if it is rejected
+ * #894 : matrix user id regex does not allow underscore in the name.
+
+Changes in Vector 0.6.7 (2017-01-23)
+===================================================
+ 
+Improvements:
+ * The room invitation activity design has been improved.
+  
+Bugfixes:
+ * Fix a crash when a contact with a thumbnail was invited.
+ * The users were not saved after a login.
+ * Fix several issues reported by Google Analytics.
+ * #868 : Add Leave Room Confirmation.	
+ 
+Changes in Vector 0.6.6 (2016-01-17)
+===================================================
+ 
+Improvements:
+ * Improve the camera activity management.
+ * Improve the e2e management.
+ * Improve the people invitation activity. 
+  
+Bugfixes:
+ * Fix several issues reported by Google Analytics.
+ * #791 : [UI bug] Room encryption slider remains on after rejecting the popup window by clicking outside of it.
+ * #806 : Please remove End-to-End Encryption toggle from user settings.
+ * #807 : /mefoo is turned into /me foo.
+ * #816 : Custom server URL bug.
+ * #821 : Room creation with a matrix user from the contacts list creates several empty rooms.
+ * #841 : Infinite call ringing.
+ * #842 : rageshake should prompt you to enter an explicit problem report before trying to send a report.
+ * #851 : fix_device_verify_not_displayed 
+
 Changes in Vector 0.6.5 (2016-12-19)
 ===================================================
 

@@ -243,4 +243,29 @@
         <item name="colorControlNormal">@color/vector_green_color</item>
     </style>
 
+    <style name="VectorPeopleSearches.TabLayout" parent="Widget.Design.TabLayout">
+        <item name="tabGravity">fill</item>
+        <item name="tabMode">fixed</item>
+        <item name="tabPaddingStart">0dp</item>
+        <item name="tabPaddingEnd">0dp</item>
+        <item name="tabBackground">@color/vector_green_color</item>
+        <item name="tabTextColor">@android:color/white</item>
+        <item name="tabSelectedTextColor">@android:color/white</item>
+        <item name="tabIndicatorColor">@android:color/white</item>
+        <item name="tabMaxWidth">0dp</item>
+    </style>
+
+    <style name="VectorUnifiedSearches.TabLayout" parent="Widget.Design.TabLayout">
+        <item name="tabGravity">fill</item>
+        <item name="tabMode">fixed</item>
+        <item name="tabPaddingStart">0dp</item>
+        <item name="tabPaddingEnd">0dp</item>
+        <item name="tabBackground">@color/vector_tabbar_background_color</item>
+        <item name="tabTextColor">@color/vector_green_color</item>
+        <item name="tabSelectedTextColor">@color/vector_green_color</item>
+        <item name="tabIndicatorColor">@color/vector_green_color</item>
+        <item name="tabMaxWidth">0dp</item>
+    </style>
+
+
 </resources>

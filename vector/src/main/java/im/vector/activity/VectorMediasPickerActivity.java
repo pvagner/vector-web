@@ -55,7 +55,7 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
-import android.util.Log;
+import org.matrix.androidsdk.util.Log;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.TextureView;
@@ -528,6 +528,7 @@ public class VectorMediasPickerActivity extends MXCActionBarActivity implements 
                 mCamera.stopPreview();
             }
             mCamera.release();
+            mCamera = null;
 
             int stringId;
             if (mCameraId == Camera.CameraInfo.CAMERA_FACING_BACK) {
@@ -1380,8 +1381,12 @@ public class VectorMediasPickerActivity extends MXCActionBarActivity implements 
 
         } catch (Exception e) {
             if (null != mCamera) {
-                mCamera.stopPreview();
-                mCamera.release();
+                try {
+                    mCamera.stopPreview();
+                    mCamera.release();
+                } catch (Exception e2) {
+                    Log.e(LOG_TAG, "## onSurfaceTextureAvailable() : " + e2.getMessage());
+                }
                 mCamera = null;
             }
         }

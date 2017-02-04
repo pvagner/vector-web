@@ -21,11 +21,12 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.text.TextUtils;
-import android.util.Log;
+import org.matrix.androidsdk.util.Log;
 
 import org.matrix.androidsdk.rest.model.User;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -50,12 +51,12 @@ public class Contact implements java.io.Serializable {
         public User mUser;
 
         /**
-         * Contstructor
+         * Constructor
          * @param matrixId the matrix id
          * @param accountId the account id
          */
         public MXID(String matrixId, String accountId) {
-            mMatrixId = matrixId;
+            mMatrixId = (null == matrixId) ? "" : matrixId;
             mAccountId = accountId;
             mUser = null;
         }
@@ -69,7 +70,7 @@ public class Contact implements java.io.Serializable {
     // the thumbnail uri
     private String mThumbnailUri;
     // the thumbnail image
-    private Bitmap mThumbnail;
+    private transient Bitmap mThumbnail;
 
     // phone numbers list
     private final ArrayList<String> mPhoneNumbers = new ArrayList<>();
@@ -78,7 +79,7 @@ public class Contact implements java.io.Serializable {
     private final ArrayList<String> mEmails = new ArrayList<>();
 
     // MXID by email address
-    private HashMap<String, MXID> mMXIDsByElement;
+    private HashMap<String, MXID> mMXIDsByElement = new HashMap<>();
 
     /**
      * Constructor
@@ -107,6 +108,13 @@ public class Contact implements java.io.Serializable {
     public void addEmailAdress(String anEmailAddress) {
         if (mEmails.indexOf(anEmailAddress) < 0) {
             mEmails.add(anEmailAddress);
+
+            // test if the email address also matches to a matrix ID
+            MXID mxid =  PIDsRetriever.getInstance().getMXID(anEmailAddress);
+
+            if (null != mxid) {
+                mMXIDsByElement.put(anEmailAddress, mxid);
+            }
         }
     }
 
@@ -144,22 +152,20 @@ public class Contact implements java.io.Serializable {
     }
 
     /**
-     * Check if some matrix IDs are linked to emails
-     * @return true if some matrix IDs have been retrieved
+     * Refresh the matched matrix from each emails
      */
-    public boolean hasMatridIds(Context context) {
-        boolean localUpdateOnly = (null != mMXIDsByElement);
+    public void refreshMatridIds() {
+        mMXIDsByElement.clear();
 
-        // the PIDs are not yet retrieved
-        if (null == mMXIDsByElement) {
-            mMXIDsByElement = new HashMap<>();
+        PIDsRetriever pidRetriever = PIDsRetriever.getInstance();
+
+        for (String email : getEmails()) {
+            Contact.MXID mxid = pidRetriever.getMXID(email);
+
+            if (null != mxid) {
+                put(email, mxid);
+            }
         }
-
-        if (couldContainMatridIds()) {
-            PIDsRetriever.getIntance().retrieveMatrixIds(context, this, localUpdateOnly);
-        }
-
-        return (mMXIDsByElement.size() != 0);
     }
 
     /**
@@ -265,7 +271,7 @@ public class Contact implements java.io.Serializable {
      * @return the medias set which could match to a matrix Id.
      */
     public Set<String> getMatrixIdMedias() {
-        return mMXIDsByElement.keySet();
+        return mMXIDsByElement != null ? mMXIDsByElement.keySet() : Collections.<String>emptySet();
     }
 
     /**
@@ -339,7 +345,6 @@ public class Contact implements java.io.Serializable {
      * @return the contact thumbnail bitmap.
      */
     public Bitmap getThumbnail(Context context) {
-
         if ((null == mThumbnail) && (null != mThumbnailUri)) {
             try {
                 mThumbnail = MediaStore.Images.Media.getBitmap(context.getContentResolver(), Uri.parse(mThumbnailUri));

@@ -17,10 +17,14 @@
 package im.vector.activity;
 
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -29,7 +33,7 @@ import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.util.Log;
+import org.matrix.androidsdk.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -43,14 +47,11 @@ import android.widget.Toast;
 
 import org.matrix.androidsdk.HomeserverConnectionConfig;
 import org.matrix.androidsdk.MXSession;
-import org.matrix.androidsdk.listeners.IMXNetworkEventListener;
 import org.matrix.androidsdk.rest.callback.ApiCallback;
 import org.matrix.androidsdk.rest.callback.SimpleApiCallback;
 import org.matrix.androidsdk.rest.client.LoginRestClient;
 import org.matrix.androidsdk.rest.client.ProfileRestClient;
-import org.matrix.androidsdk.rest.client.ThirdPidRestClient;
 import org.matrix.androidsdk.rest.model.MatrixError;
-import org.matrix.androidsdk.rest.model.RequestEmailValidationResponse;
 import org.matrix.androidsdk.rest.model.ThreePid;
 import org.matrix.androidsdk.rest.model.login.Credentials;
 import org.matrix.androidsdk.rest.model.login.LoginFlow;
@@ -68,8 +69,6 @@ import im.vector.UnrecognizedCertHandler;
 import im.vector.receiver.VectorRegistrationReceiver;
 import im.vector.receiver.VectorUniversalLinkReceiver;
 import im.vector.services.EventStreamService;
-import retrofit.http.Body;
-import retrofit.http.POST;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -233,16 +232,29 @@ public class LoginActivity extends MXCActionBarActivity {
     private HashMap<String, String> mForgotPid = null;
 
     // network state notification
-    private final IMXNetworkEventListener mNetworkListener = new IMXNetworkEventListener() {
+    private final BroadcastReceiver mNetworkReceiver = new BroadcastReceiver() {
         @Override
-        public void onNetworkConnectionUpdate(boolean isConnected) {
-            if(isConnected){
-                refreshDisplay();
-            } else {
-                Log.w(LOG_TAG,"## onNetworkConnectionUpdate(): network disconected notification");
+        public void onReceive(Context context, Intent intent) {
+            try {
+                ConnectivityManager connMgr = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+
+                if ((networkInfo != null) && networkInfo.isConnected()) {
+                    // refresh only once
+                    if (mIsWaitingNetworkConnection) {
+                        refreshDisplay();
+                    } else {
+                        removeNetworkStateNotificationListener();
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "## BroadcastReceiver onReceive failed " + e.getMessage());
             }
         }
     };
+
+    private boolean mIsWaitingNetworkConnection = false;
+
     /**
      Tell whether the password has been reseted with success.
      Used to return on login screen on submit button pressed.
@@ -431,7 +443,7 @@ public class LoginActivity extends MXCActionBarActivity {
             @Override
             public boolean onEditorAction(TextView view, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    onHomeserverUrlUpdate();
+                    onHomeServerUrlUpdate();
                     return true;
                 }
 
@@ -443,7 +455,7 @@ public class LoginActivity extends MXCActionBarActivity {
         mHomeServerText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             public void onFocusChange(View v, boolean hasFocus) {
                 if (!hasFocus) {
-                    onHomeserverUrlUpdate();
+                    onHomeServerUrlUpdate();
                 }
             }
         });
@@ -489,7 +501,7 @@ public class LoginActivity extends MXCActionBarActivity {
                         mHomeServerUrl = null;
                         mIdentityServerUrl = null;
                         onIdentityserverUrlUpdate();
-                        onHomeserverUrlUpdate();
+                        onHomeServerUrlUpdate();
                         refreshDisplay();
                     }
                 });
@@ -512,7 +524,7 @@ public class LoginActivity extends MXCActionBarActivity {
                 SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(LoginActivity.this);
                 SharedPreferences.Editor editor = preferences.edit();
                 editor.putString(HOME_SERVER_URL_PREF, mHomeServerText.getText().toString().trim());
-                editor.commit();
+                editor.apply();
             }
 
             @Override
@@ -532,7 +544,7 @@ public class LoginActivity extends MXCActionBarActivity {
                 SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(LoginActivity.this);
                 SharedPreferences.Editor editor = preferences.edit();
                 editor.putString(IDENTITY_SERVER_URL_PREF, mIdentityServerText.getText().toString().trim());
-                editor.commit();
+                editor.apply();
             }
 
             @Override
@@ -550,22 +562,34 @@ public class LoginActivity extends MXCActionBarActivity {
      * @return the home server Url according to custom HS checkbox
      */
     private String getHomeServerUrl() {
+        String url = getResources().getString(R.string.default_hs_server_url);
+
         if (mUseCustomHomeServersCheckbox.isChecked()) {
-            return mHomeServerText.getText().toString().trim();
-        } else {
-            return getResources().getString(R.string.default_hs_server_url);
+            url = mHomeServerText.getText().toString().trim();
+
+            if (url.endsWith("/")) {
+                url = url.substring(0, url.length() - 1);
+            }
         }
+
+        return url;
     }
 
     /**
      * @return the identity server URL according to custom HS checkbox
      */
     private String getIdentityServerUrl() {
+        String url = getResources().getString(R.string.default_identity_server_url);
+
         if (mUseCustomHomeServersCheckbox.isChecked()) {
-            return mIdentityServerText.getText().toString().trim();
-        } else {
-            return getResources().getString(R.string.default_identity_server_url);
+            url = mIdentityServerText.getText().toString().trim();
+
+            if (url.endsWith("/")) {
+                url = url.substring(0, url.length() - 1);
+            }
         }
+
+        return url;
     }
 
     /**
@@ -574,9 +598,13 @@ public class LoginActivity extends MXCActionBarActivity {
      * See {@link #removeNetworkStateNotificationListener()}
      */
     private void addNetworkStateNotificationListener() {
-        if(null != Matrix.getInstance(getApplicationContext())) {
-            Matrix.getInstance(this).removeNetworkEventListener(mNetworkListener);
-            Matrix.getInstance(this).addNetworkEventListener(mNetworkListener);
+        if (null != Matrix.getInstance(getApplicationContext()) && !mIsWaitingNetworkConnection) {
+            try {
+                registerReceiver(mNetworkReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+                mIsWaitingNetworkConnection = true;
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "## addNetworkStateNotificationListener : " + e.getMessage());
+            }
         }
     }
 
@@ -584,8 +612,13 @@ public class LoginActivity extends MXCActionBarActivity {
      * Remove the network listener set in {@link #addNetworkStateNotificationListener()}.
      */
     private void removeNetworkStateNotificationListener() {
-        if(null != Matrix.getInstance(getApplicationContext())) {
-            Matrix.getInstance(this).removeNetworkEventListener(mNetworkListener);
+        if (null != Matrix.getInstance(getApplicationContext()) && mIsWaitingNetworkConnection) {
+            try {
+                unregisterReceiver(mNetworkReceiver);
+                mIsWaitingNetworkConnection = false;
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "## removeNetworkStateNotificationListener : " + e.getMessage());
+            }
         }
     }
 
@@ -593,7 +626,7 @@ public class LoginActivity extends MXCActionBarActivity {
      * Check if the home server url has been updated
      * @return true if the HS url has been updated
      */
-    private boolean onHomeserverUrlUpdate() {
+    private boolean onHomeServerUrlUpdate() {
         if (!TextUtils.equals(mHomeServerUrl, getHomeServerUrl())) {
             mHomeServerUrl = getHomeServerUrl();
             mRegistrationResponse = null;
@@ -1915,7 +1948,7 @@ public class LoginActivity extends MXCActionBarActivity {
      */
     private void onClick() {
         onIdentityserverUrlUpdate();
-        onHomeserverUrlUpdate();
+        onHomeServerUrlUpdate();
 
         InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(mHomeServerText.getWindowToken(), 0);
@@ -1930,7 +1963,7 @@ public class LoginActivity extends MXCActionBarActivity {
      * @param password the user password
      */
     private void onLoginClick(final HomeserverConnectionConfig hsConfig, final String hsUrlString, final String identityUrlString, final String username, final String password) {
-        if (onHomeserverUrlUpdate() || onIdentityserverUrlUpdate()) {
+        if (onHomeServerUrlUpdate() || onIdentityserverUrlUpdate()) {
             mIsPendingLogin = true;
             Log.d(LOG_TAG, "## onLoginClick() : The user taps on login but the IS/HS did not loos the focus");
             return;

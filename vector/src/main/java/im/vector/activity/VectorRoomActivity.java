@@ -33,11 +33,15 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentManager;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.text.ParcelableSpan;
 import android.text.SpannableString;
+import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.text.style.UnderlineSpan;
-import android.util.Log;
+import org.matrix.androidsdk.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -326,8 +330,6 @@ public class VectorRoomActivity extends MXCActionBarActivity implements MatrixMe
                 }
             });
         }
-
-
 
         @Override
         public void onLiveEvent(final Event event, RoomState roomState) {
@@ -902,7 +904,7 @@ public class VectorRoomActivity extends MXCActionBarActivity implements MatrixMe
         ViewedRoomTracker.getInstance().setViewedRoomId(null);
         ViewedRoomTracker.getInstance().setMatrixId(null);
     }
-    
+
     @Override
     protected void onResume() {
         Log.d(LOG_TAG, "++ Resume the activity");
@@ -935,7 +937,8 @@ public class VectorRoomActivity extends MXCActionBarActivity implements MatrixMe
             EventStreamService.cancelNotificationsForRoomId(mSession.getCredentials().userId, mRoom.getRoomId());
         }
 
-        if (null != mRoom) {
+        // sanity checks
+        if ((null != mRoom) && (null != Matrix.getInstance(this).getDefaultLatestChatMessageCache())) {
             String cachedText = Matrix.getInstance(this).getDefaultLatestChatMessageCache().getLatestText(this, mRoom.getRoomId());
 
             if (!cachedText.equals(mEditText.getText().toString())) {
@@ -1169,37 +1172,53 @@ public class VectorRoomActivity extends MXCActionBarActivity implements MatrixMe
         } else if (id == R.id.ic_action_room_leave) {
             if (null != mRoom) {
                 Log.d(LOG_TAG, "Leave the room " + mRoom.getRoomId());
+                new AlertDialog.Builder(VectorApp.getCurrentActivity())
+                        .setTitle(R.string.room_participants_leave_prompt_title)
+                        .setMessage(R.string.room_participants_leave_prompt_msg)
+                        .setPositiveButton(R.string.leave, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                setProgressVisibility(View.VISIBLE);
 
-                setProgressVisibility(View.VISIBLE);
+                                mRoom.leave(new ApiCallback<Void>() {
+                                    @Override
+                                    public void onSuccess(Void info) {
+                                        Log.d(LOG_TAG, "The room " + mRoom.getRoomId() + " is left");
+                                        // close the activity
+                                        finish();
+                                    }
 
-                mRoom.leave(new ApiCallback<Void>() {
-                    @Override
-                    public void onSuccess(Void info) {
-                        Log.d(LOG_TAG, "The room " + mRoom.getRoomId() + " is left");
-                        // close the activity
-                        finish();
-                    }
+                                    private void onError(String errorMessage) {
+                                        setProgressVisibility(View.GONE);
+                                        Log.e(LOG_TAG, "Cannot leave the room " + mRoom.getRoomId() + " : " + errorMessage);
+                                    }
 
-                    private void onError(String errorMessage) {
-                        setProgressVisibility(View.GONE);
-                        Log.e(LOG_TAG, "Cannot leave the room " + mRoom.getRoomId() + " : " + errorMessage);
-                    }
+                                    @Override
+                                    public void onNetworkError(Exception e) {
+                                        onError(e.getLocalizedMessage());
+                                    }
 
-                    @Override
-                    public void onNetworkError(Exception e) {
-                        onError(e.getLocalizedMessage());
-                    }
+                                    @Override
+                                    public void onMatrixError(MatrixError e) {
+                                        onError(e.getLocalizedMessage());
+                                    }
 
-                    @Override
-                    public void onMatrixError(MatrixError e) {
-                        onError(e.getLocalizedMessage());
-                    }
-
-                    @Override
-                    public void onUnexpectedError(Exception e) {
-                        onError(e.getLocalizedMessage());
-                    }
-                });
+                                    @Override
+                                    public void onUnexpectedError(Exception e) {
+                                        onError(e.getLocalizedMessage());
+                                    }
+                                });
+                            }
+                        })
+                        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        })
+                        .create()
+                        .show();
             }
         }
 
@@ -1326,13 +1345,13 @@ public class VectorRoomActivity extends MXCActionBarActivity implements MatrixMe
                 });
             }
 
-            private void onError() {
+            private void onError(final String errorMessage) {
                 VectorRoomActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         setProgressVisibility(View.GONE);
                         Activity activity = VectorRoomActivity.this;
-                        CommonActivityUtils.displayToastOnUiThread(activity, activity.getString(R.string.cannot_start_call));
+                        CommonActivityUtils.displayToastOnUiThread(activity, activity.getString(R.string.cannot_start_call) + " (" + errorMessage + ")");
                     }
                 });
             }
@@ -1340,19 +1359,19 @@ public class VectorRoomActivity extends MXCActionBarActivity implements MatrixMe
             @Override
             public void onNetworkError(Exception e) {
                 Log.e(LOG_TAG,"## startIpCall(): onNetworkError Msg="+e.getMessage());
-                onError();
+                onError(e.getLocalizedMessage());
             }
 
             @Override
             public void onMatrixError(MatrixError e) {
                 Log.e(LOG_TAG,"## startIpCall(): onMatrixError Msg="+e.getLocalizedMessage());
-                onError();
+                onError(e.getLocalizedMessage());
             }
 
             @Override
             public void onUnexpectedError(Exception e) {
                 Log.e(LOG_TAG,"## startIpCall(): onUnexpectedError Msg="+e.getLocalizedMessage());
-                onError();
+                onError(e.getLocalizedMessage());
             }
         });
     }
@@ -1779,10 +1798,19 @@ public class VectorRoomActivity extends MXCActionBarActivity implements MatrixMe
      */
     public void insertUserDisplayNameInTextEditor(String text) {
         if (null != text) {
-            if (TextUtils.isEmpty(mEditText.getText())) {
-                mEditText.append(sanitizeDisplayname(text) + ": ");
+            if (TextUtils.equals(mSession.getMyUser().displayname, text)) {
+                // current user
+                if (TextUtils.isEmpty(mEditText.getText())) {
+                    mEditText.setText(String.format("%s ", SlashComandsParser.CMD_EMOTE));
+                    mEditText.setSelection(mEditText.getText().length());
+                }
             } else {
-                mEditText.getText().insert(mEditText.getSelectionStart(), sanitizeDisplayname(text) + " ");
+                // another user
+                if (TextUtils.isEmpty(mEditText.getText())) {
+                    mEditText.append(sanitizeDisplayname(text) + ": ");
+                } else {
+                    mEditText.getText().insert(mEditText.getSelectionStart(), sanitizeDisplayname(text) + " ");
+                }
             }
         }
     }
@@ -1805,6 +1833,44 @@ public class VectorRoomActivity extends MXCActionBarActivity implements MatrixMe
     //================================================================================
     // Notifications area management (... is typing and so on)
     //================================================================================
+
+    /**
+     * Track the cancel all click.
+     */
+    private class cancelAllClickableSpan extends ClickableSpan {
+        @Override
+        public void onClick(View widget) {
+            mVectorMessageListFragment.deleteUnsentMessages();
+            refreshNotificationsArea();
+        }
+
+        @Override
+        public void updateDrawState(TextPaint ds) {
+            super.updateDrawState(ds);
+            ds.setColor(getResources().getColor(R.color.vector_fuchsia_color));
+            ds.bgColor = 0;
+            ds.setUnderlineText(true);
+        }
+    }
+
+    /**
+     * Track the resend all click.
+     */
+    private class resendAllClickableSpan extends ClickableSpan {
+        @Override
+        public void onClick(View widget) {
+            mVectorMessageListFragment.resendUnsentMessages();
+            refreshNotificationsArea();
+        }
+
+        @Override
+        public void updateDrawState(TextPaint ds) {
+            super.updateDrawState(ds);
+            ds.setColor(getResources().getColor(R.color.vector_fuchsia_color));
+            ds.bgColor = 0;
+            ds.setUnderlineText(true);
+        }
+    }
 
     /**
      * Refresh the notifications area.
@@ -1839,20 +1905,28 @@ public class VectorRoomActivity extends MXCActionBarActivity implements MatrixMe
                 isAreaVisible = true;
                 iconId = R.drawable.error;
 
-                String part1 = getResources().getString(R.string.room_unsent_messages_notification);
-                String part2 = getResources().getString(R.string.room_prompt_resent);
+                String cancelAll = getResources().getString(R.string.room_prompt_cancel);
+                String resendAll = getResources().getString(R.string.room_prompt_resend);
+                String message = getResources().getString(R.string.room_unsent_messages_notification, resendAll, cancelAll);
 
-                text = new SpannableString(part1 + " " + part2);
-                text.setSpan(new UnderlineSpan(), part1.length() + 1, part1.length() + part2.length() + 1, 0);
+                int cancelAllPos = message.indexOf(cancelAll);
+                int resendAllPos = message.indexOf(resendAll);
+
+                text = new SpannableString(message);
+
+                // cancelAllPos should always be > 0 but a GA crash reported here
+                if (cancelAllPos >= 0) {
+                    text.setSpan(new cancelAllClickableSpan(), cancelAllPos, cancelAllPos + cancelAll.length(), 0);
+                }
+
+                // resendAllPos should always be > 0 but a GA crash reported here
+                if (resendAllPos >= 0) {
+                    text.setSpan(new resendAllClickableSpan(), resendAllPos, resendAllPos + resendAll.length(), 0);
+                }
+                
+                mNotificationTextView.setMovementMethod(LinkMovementMethod.getInstance());
                 textColor = R.color.vector_fuchsia_color;
 
-                mNotificationTextView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        mVectorMessageListFragment.resendUnsentMessages();
-                        refreshNotificationsArea();
-                    }
-                });
             } else if ((null != mIsScrolledToTheBottom) && (!mIsScrolledToTheBottom)) {
                 isAreaVisible = true;
 
