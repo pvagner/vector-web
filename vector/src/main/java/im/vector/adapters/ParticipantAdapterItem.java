@@ -136,11 +136,7 @@ public class ParticipantAdapterItem implements java.io.Serializable {
         }
 
         if (!TextUtils.isEmpty(mUserId)) {
-            int sepPos = mUserId.indexOf(":");
-
-            if (sepPos > 0) {
-                mLowerCaseMatrixId = mUserId.substring(0, sepPos).toLowerCase();
-            }
+            mLowerCaseMatrixId = mUserId.toLowerCase();
         }
     }
 
@@ -255,9 +251,9 @@ public class ParticipantAdapterItem implements java.io.Serializable {
                 }
             }
         }
-
+        
         // test user id
-        if (!TextUtils.isEmpty(mUserId) && mUserId.startsWith((prefix.startsWith("@") ? "" : "@") + prefix)) {
+        if (!TextUtils.isEmpty(mLowerCaseMatrixId) && mLowerCaseMatrixId.startsWith((prefix.startsWith("@") ? "" : "@") + prefix)) {
             return true;
         }
 
@@ -356,7 +352,7 @@ public class ParticipantAdapterItem implements java.io.Serializable {
                 displayname += " (" + mUserId + ")";
             }
         } else {
-            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(mUserId).matches()) {
+            if (MXSession.PATTERN_CONTAIN_MATRIX_USER_IDENTIFIER.matcher(mUserId).matches()) {
                 displayname += " (" + mUserId + ")";
             }
         }
