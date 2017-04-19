@@ -254,7 +254,7 @@
                             android:layout_height="24dp"
                             android:layout_centerVertical="true"
                             android:src="@drawable/voice_call_end_fushia"
-                            android:contentDescription="@string/hangup"/>
+                            android:contentDescription="@string/desc_hangup"/>
                     </RelativeLayout>
 
                     <View

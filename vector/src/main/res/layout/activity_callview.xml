@@ -38,7 +38,7 @@
                 android:layout_weight="14"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_material_message_grey"
-                android:contentDescription="@string/chat"/>
+                android:contentDescription="@string/desc_chat"/>
 
             <ImageView
                 android:id="@+id/call_speaker_view"
@@ -65,7 +65,7 @@
                 android:layout_weight="16"
                 android:layout_height="48dp"
                 android:src="@drawable/ic_material_call_end_black"
-                android:contentDescription="@string/hangup"/>
+                android:contentDescription="@string/desc_hangup"/>
 
             <!-- for further use: for now we cannot switch from audio to video -->
             <ImageView

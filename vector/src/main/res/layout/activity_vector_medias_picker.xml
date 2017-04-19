@@ -58,7 +58,7 @@
                     android:layout_centerHorizontal="true"
                     android:layout_marginBottom="30dp"
                     android:src="@drawable/ic_take_picture_vector_green"
-                    android:contentDescription="@string/media_picker_picture_capture_title" />
+                    android:contentDescription="@string/media_picker_both_capture_title" />
 
                 <!-- toggle button to swap between front/rear camera-->
                 <RelativeLayout
@@ -94,7 +94,7 @@
                         android:layout_height="22dp"
                         android:layout_centerInParent="true"
                         android:src="@drawable/ic_exit_media_picker_vector_green"
-                        android:contentDescription="@string/back" />
+                        android:contentDescription="@string/desc_back" />
                 </RelativeLayout>
 
             </RelativeLayout>

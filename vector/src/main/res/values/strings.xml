@@ -647,7 +647,7 @@
     <string name="desc_rear_camera">Rear camera</string>
     <string name="desc_speaker_phone">Loud speaker</string>
     <string name="desc_earpiece">Ear speaker</string>
-    <string name="hangup">End call</string>
+    <string name="desc_hangup">End call</string>
     <string name="desc_mute_camera">Mute camera</string>
     <string name="desc_unmute_camera">Unmute camera</string>
     <string name="desc_mute_microphone">Mute microphone</string>
@@ -663,4 +663,6 @@
     <string name="desc_unencrypted_room">Unenncrypted room</string>
     <string name="desc_open_gallery">Open gallery</string>
     <string name="desc_room_avatar">Room avatar</string>
+    <string name="desc_chat">Chat</string>
+    <string name="desc_back">Back</string>
 </resources>
