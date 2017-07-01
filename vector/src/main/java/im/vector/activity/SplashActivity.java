@@ -100,6 +100,7 @@ public class SplashActivity extends MXCActionBarActivity {
             // launch from a shared files menu
             if (getIntent().hasExtra(VectorHomeActivity.EXTRA_SHARED_INTENT_PARAMS)) {
                 intent.putExtra(VectorHomeActivity.EXTRA_SHARED_INTENT_PARAMS, getIntent().getParcelableExtra(VectorHomeActivity.EXTRA_SHARED_INTENT_PARAMS));
+                getIntent().removeExtra(VectorHomeActivity.EXTRA_SHARED_INTENT_PARAMS);
             }
 
             if (getIntent().hasExtra(EXTRA_ROOM_ID) && getIntent().hasExtra(EXTRA_MATRIX_ID)) {
@@ -141,7 +142,6 @@ public class SplashActivity extends MXCActionBarActivity {
 
         for(final MXSession session : mSessions) {
             final MXSession fSession = session;
-            session.getDataHandler().getStore().open();
 
             final IMXEventListener eventListener = new MXEventListener() {
                 private void onReady() {
@@ -237,6 +237,8 @@ public class SplashActivity extends MXCActionBarActivity {
             };
 
             if (!fSession.getDataHandler().isInitialSyncComplete()) {
+                session.getDataHandler().getStore().open();
+
                 mListeners.put(fSession, eventListener);
                 fSession.getDataHandler().addListener(eventListener);
 

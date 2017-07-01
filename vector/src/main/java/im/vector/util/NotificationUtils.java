@@ -298,33 +298,29 @@ public class NotificationUtils {
      * @param context the context
      * @param builder the notification builder
      * @param notifiedEventsByRoomId the notified events by room ids
-     * @return true if there is a noisy notification
      */
-    private static boolean addTextStyleWithSeveralRooms(Context context,
-                                                  android.support.v7.app.NotificationCompat.Builder builder,
-                                                  Map<String, List<NotifiedEvent>> notifiedEventsByRoomId) {
+    private static void addTextStyleWithSeveralRooms(Context context,
+                                                     android.support.v7.app.NotificationCompat.Builder builder,
+                                                     NotifiedEvent eventToNotify,
+                                                     boolean isInvitationEvent,
+                                                     Map<String, List<NotifiedEvent>> notifiedEventsByRoomId) {
         // TODO manage multi accounts
         MXSession session = Matrix.getInstance(context).getDefaultSession();
         IMXStore store = session.getDataHandler().getStore();
         android.support.v7.app.NotificationCompat.InboxStyle inboxStyle = new android.support.v7.app.NotificationCompat.InboxStyle();
 
         int sum = 0;
+        int roomsCount = 0;
 
-        List<NotificationDisplay> noisyNotifiedList = new ArrayList<>();
-        List<NotificationDisplay> notifiedList = new ArrayList<>();
+
+        List<NotificationDisplay> notificationsList = new ArrayList<>();
 
         for (String roomId : notifiedEventsByRoomId.keySet()) {
             Room room = session.getDataHandler().getRoom(roomId);
             String roomName = getRoomName(context, session, room, null);
 
-            Event latestEvent = null;
-            boolean isNoisyNotified = false;
             List<NotifiedEvent> notifiedEvents = notifiedEventsByRoomId.get(roomId);
-
-            for (NotifiedEvent notifiedEvent : notifiedEvents) {
-                isNoisyNotified |= notifiedEvent.mBingRule.isDefaultNotificationSound(notifiedEvent.mBingRule.notificationSound());
-                latestEvent = store.getEvent(notifiedEvent.mEventId, roomId);
-            }
+            Event latestEvent = store.getEvent(notifiedEvents.get(notifiedEvents.size()-1).mEventId, roomId);
 
             String text;
             String header;
@@ -334,68 +330,136 @@ public class NotificationUtils {
 
             if (room.isInvited()) {
                 header = roomName + ": ";
-                text = eventDisplay.getTextualDisplay().toString();
+                CharSequence textualDisplay = eventDisplay.getTextualDisplay();
+                text = !TextUtils.isEmpty(textualDisplay) ? textualDisplay.toString() : "";
             } else if (1 == notifiedEvents.size()) {
                 eventDisplay = new EventDisplay(context, latestEvent, room.getLiveState());
                 eventDisplay.setPrependMessagesWithAuthor(false);
 
                 header = roomName + ": " + room.getLiveState().getMemberName(latestEvent.getSender()) + " ";
-                text = eventDisplay.getTextualDisplay().toString();
+
+                CharSequence textualDisplay = eventDisplay.getTextualDisplay();
+
+                // the event might have been redacted
+                if (!TextUtils.isEmpty(textualDisplay)) {
+                    text = textualDisplay.toString();
+                } else {
+                    text = "";
+                }
             } else {
                 header = roomName + ": ";
-                text = context.getString(R.string.notification_unread_messages, session.getDataHandler().getStore().unreadEvents(roomId, null).size());
+                text = context.getString(R.string.notification_unread_notified_messages, notifiedEvents.size());
             }
 
-            SpannableString notifiedLine = new SpannableString(header + text);
-            notifiedLine.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 0, header.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-            if (isNoisyNotified) {
-                noisyNotifiedList.add(new NotificationDisplay(latestEvent.getOriginServerTs(), notifiedLine));
-            } else {
-                notifiedList.add(new NotificationDisplay(latestEvent.getOriginServerTs(), notifiedLine));
+            // ad the line if it makes sense
+            if (!TextUtils.isEmpty(text)) {
+                SpannableString notifiedLine = new SpannableString(header + text);
+                notifiedLine.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 0, header.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                notificationsList.add(new NotificationDisplay(latestEvent.getOriginServerTs(), notifiedLine));
+                sum += notifiedEvents.size();
+                roomsCount++;
             }
-
-            sum += session.getDataHandler().getStore().unreadEvents(roomId, null).size();
         }
 
-        Collections.sort(noisyNotifiedList, mNotificationDisplaySort);
-        Collections.sort(notifiedList, mNotificationDisplaySort);
+        Collections.sort(notificationsList, mNotificationDisplaySort);
 
-        List<NotificationDisplay> mergedNotificationDisplaysList = new ArrayList<>();
-        mergedNotificationDisplaysList.addAll(noisyNotifiedList);
-        mergedNotificationDisplaysList.addAll(notifiedList);
-
-        if (mergedNotificationDisplaysList.size() > MAX_NUMBER_NOTIFICATION_LINES) {
-            mergedNotificationDisplaysList = mergedNotificationDisplaysList.subList(0, MAX_NUMBER_NOTIFICATION_LINES);
+        if (notificationsList.size() > MAX_NUMBER_NOTIFICATION_LINES) {
+            notificationsList = notificationsList.subList(0, MAX_NUMBER_NOTIFICATION_LINES);
         }
 
-        for (NotificationDisplay notificationDisplay : mergedNotificationDisplaysList) {
-            SpannableString notifiedLine = notificationDisplay.mMessage;
-
-            if (noisyNotifiedList.contains(notificationDisplay)) {
-                notifiedLine.setSpan(new ForegroundColorSpan(ContextCompat.getColor(context, R.color.vector_fuchsia_color)), 0, notifiedLine.length(), 0);
-            }
-            inboxStyle.addLine(notifiedLine);
+        for (NotificationDisplay notificationDisplay : notificationsList) {
+            inboxStyle.addLine(notificationDisplay.mMessage);
         }
 
         inboxStyle.setBigContentTitle(context.getString(R.string.riot_app_name));
-        inboxStyle.setSummaryText(context.getString(R.string.notification_unread_messages_in_room, sum, notifiedEventsByRoomId.keySet().size()));
+        inboxStyle.setSummaryText(context.getString(R.string.notification_unread_notified_messages_in_room, sum, roomsCount));
         builder.setStyle(inboxStyle);
 
-        // Build the pending intent for when the notification is clicked
+        TaskStackBuilder stackBuilderTap = TaskStackBuilder.create(context);
         Intent roomIntentTap;
-        roomIntentTap = new Intent(context, VectorHomeActivity.class);
+        // sanity check
+        if ((null == eventToNotify) || TextUtils.isEmpty(eventToNotify.mRoomId)) {
+            // Build the pending intent for when the notification is clicked
+            roomIntentTap = new Intent(context, VectorHomeActivity.class);
+        } else {
+            // add the home page the activity stack
+            stackBuilderTap.addNextIntentWithParentStack(new Intent(context, VectorHomeActivity.class));
+
+            if (isInvitationEvent) {
+                // for invitation the room preview must be displayed
+                roomIntentTap = CommonActivityUtils.buildIntentPreviewRoom(session.getMyUserId(), eventToNotify.mRoomId, context, VectorFakeRoomPreviewActivity.class);
+            } else {
+                roomIntentTap = new Intent(context, VectorRoomActivity.class);
+                roomIntentTap.putExtra(VectorRoomActivity.EXTRA_ROOM_ID, eventToNotify.mRoomId);
+            }
+        }
+
         // the action must be unique else the parameters are ignored
         roomIntentTap.setAction(TAP_TO_VIEW_ACTION + ((int) (System.currentTimeMillis())));
-
-        // Recreate the back stack
-        TaskStackBuilder stackBuilderTap = TaskStackBuilder.create(context)
-                .addParentStack(VectorHomeActivity.class)
-                .addNextIntent(roomIntentTap);
-
+        stackBuilderTap.addNextIntent(roomIntentTap);
         builder.setContentIntent(stackBuilderTap.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT));
 
-        return noisyNotifiedList.size() > 0;
+        // offer to open the rooms list
+        {
+            Intent openIntentTap = new Intent(context, VectorHomeActivity.class);
+
+            // Recreate the back stack
+            TaskStackBuilder viewAllTask = TaskStackBuilder.create(context)
+                    .addNextIntent(openIntentTap);
+
+            builder.addAction(
+                    R.drawable.ic_home_black_24dp,
+                    context.getString(R.string.bottom_action_home),
+                    viewAllTask.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT));
+        }
+
+        // wearable
+        try {
+            long ts = 0;
+            Event latestEvent = null;
+
+            // search the oldest message
+            for (String roomId : notifiedEventsByRoomId.keySet()) {
+                List<NotifiedEvent> notifiedEvents = notifiedEventsByRoomId.get(roomId);
+                Event event = store.getEvent(notifiedEvents.get(notifiedEvents.size() - 1).mEventId, roomId);
+
+                if ((null != event) && (event.getOriginServerTs() > ts)) {
+                    ts = event.getOriginServerTs();
+                    latestEvent = event;
+                }
+            }
+
+            // if there is a valid latest message
+            if (null != latestEvent) {
+                Room room = store.getRoom(latestEvent.roomId);
+
+                if (null != room) {
+                    EventDisplay eventDisplay = new EventDisplay(context, latestEvent, room.getLiveState());
+                    eventDisplay.setPrependMessagesWithAuthor(false);
+                    String roomName = getRoomName(context, session, room, null);
+
+                    String message = roomName + ": " + room.getLiveState().getMemberName(latestEvent.getSender()) + " ";
+
+                    CharSequence textualDisplay = eventDisplay.getTextualDisplay();
+
+                    // the event might have been redacted
+                    if (!TextUtils.isEmpty(textualDisplay)) {
+                        message += textualDisplay.toString();
+                    }
+
+                    NotificationCompat.WearableExtender wearableExtender = new NotificationCompat.WearableExtender();
+                    NotificationCompat.Action action =
+                            new NotificationCompat.Action.Builder(R.drawable.message_notification_transparent,
+                                    message,
+                                    stackBuilderTap.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT))
+                                    .build();
+                    wearableExtender.addAction(action);
+                    builder.extend(wearableExtender);
+                }
+            }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "## addTextStyleWithSeveralRooms() : WearableExtender failed " + e.getMessage());
+        }
     }
 
     /**
@@ -418,17 +482,22 @@ public class NotificationUtils {
      * @param eventToNotify the latest notified event
      * @param isInvitationEvent true if the notified event is an invitation
      * @param notifiedEventsByRoomId the notified events by room ids
-     * @return true if there is a noisy notified events
      */
-    private static boolean addTextStyle(Context context,
+    private static void addTextStyle(Context context,
                                                   android.support.v7.app.NotificationCompat.Builder builder,
                                                   NotifiedEvent eventToNotify,
                                                   boolean isInvitationEvent,
                                                   Map<String, List<NotifiedEvent>> notifiedEventsByRoomId) {
 
+        // nothing to do
+        if (0 == notifiedEventsByRoomId.size()) {
+            return;
+        }
+
         // when there are several rooms, the text style is not the same
         if (notifiedEventsByRoomId.size() > 1) {
-            return addTextStyleWithSeveralRooms(context, builder, notifiedEventsByRoomId);
+            addTextStyleWithSeveralRooms(context, builder, eventToNotify, isInvitationEvent, notifiedEventsByRoomId);
+            return;
         }
 
         // TODO manage multi accounts
@@ -441,13 +510,8 @@ public class NotificationUtils {
         Room room = session.getDataHandler().getRoom(roomId);
         String roomName = getRoomName(context, session, room, null);
 
-        boolean isNoisyNotified = false;
         List<NotifiedEvent> notifiedEvents = notifiedEventsByRoomId.get(roomId);
         int unreadCount = notifiedEvents.size();
-
-        for (NotifiedEvent notifiedEvent : notifiedEvents) {
-            isNoisyNotified |= notifiedEvent.mBingRule.isDefaultNotificationSound(notifiedEvent.mBingRule.notificationSound());
-        }
 
         // the messages are sorted from the oldest to the latest
         Collections.reverse(notifiedEvents);
@@ -456,25 +520,30 @@ public class NotificationUtils {
             notifiedEvents = notifiedEvents.subList(0, MAX_NUMBER_NOTIFICATION_LINES);
         }
 
+        SpannableString latestText = null;
+
         for (NotifiedEvent notifiedEvent : notifiedEvents) {
             Event event = store.getEvent(notifiedEvent.mEventId, notifiedEvent.mRoomId);
             EventDisplay eventDisplay = new EventDisplay(context, event, room.getLiveState());
             eventDisplay.setPrependMessagesWithAuthor(true);
+            CharSequence textualDisplay = eventDisplay.getTextualDisplay();
 
-            SpannableString notifiedLine = new SpannableString(eventDisplay.getTextualDisplay().toString());
-            if (notifiedEvent.mBingRule.isDefaultNotificationSound(notifiedEvent.mBingRule.notificationSound())) {
-                notifiedLine.setSpan(new ForegroundColorSpan(ContextCompat.getColor(context, R.color.vector_fuchsia_color)), 0, notifiedLine.length(), 0);
+            if (!TextUtils.isEmpty(textualDisplay)) {
+                inboxStyle.addLine(latestText = new SpannableString(textualDisplay));
             }
-            inboxStyle.addLine(notifiedLine);
         }
-
         inboxStyle.setBigContentTitle(roomName);
 
-        if (unreadCount > MAX_NUMBER_NOTIFICATION_LINES) {
-            inboxStyle.setSummaryText(context.getString(R.string.notification_unread_messages, unreadCount));
-        }
+        // adapt the notification display to the number of notified messages
+        if ((1 == notifiedEvents.size()) && (null != latestText)) {
+            builder.setStyle(new android.support.v7.app.NotificationCompat.BigTextStyle().bigText(latestText));
+        } else {
+            if (unreadCount > MAX_NUMBER_NOTIFICATION_LINES) {
+                inboxStyle.setSummaryText(context.getString(R.string.notification_unread_notified_messages, unreadCount));
+            }
 
-        builder.setStyle(inboxStyle);
+            builder.setStyle(inboxStyle);
+        }
 
         // do not offer to quick respond if the user did not dismiss the previous one
         if (!LockScreenActivity.isDisplayingALockScreenActivity()) {
@@ -489,7 +558,8 @@ public class NotificationUtils {
 
                 EventDisplay eventDisplay = new EventDisplay(context, event, room.getLiveState());
                 eventDisplay.setPrependMessagesWithAuthor(false);
-                String body = eventDisplay.getTextualDisplay().toString();
+                CharSequence textualDisplay = eventDisplay.getTextualDisplay();
+                String body = !TextUtils.isEmpty(textualDisplay) ? textualDisplay.toString() : "";
 
                 quickReplyIntent.putExtra(LockScreenActivity.EXTRA_MESSAGE_BODY, body);
 
@@ -549,7 +619,7 @@ public class NotificationUtils {
 
             // Recreate the back stack
             TaskStackBuilder stackBuilderTap = TaskStackBuilder.create(context)
-                    .addParentStack(VectorRoomActivity.class)
+                    .addNextIntentWithParentStack(new Intent(context, VectorHomeActivity.class))
                     .addNextIntent(roomIntentTap);
 
             builder.setContentIntent(stackBuilderTap.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT));
@@ -558,10 +628,40 @@ public class NotificationUtils {
                     R.drawable.vector_notification_open,
                     context.getString(R.string.action_open),
                     stackBuilderTap.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT));
+
+            // wearable
+            if (!isInvitationEvent) {
+                try {
+                    Event latestEvent = store.getEvent(notifiedEvents.get(notifiedEvents.size() - 1).mEventId, roomId);
+
+                    // if there is a valid latest message
+                    if (null != latestEvent) {
+                        EventDisplay eventDisplay = new EventDisplay(context, latestEvent, room.getLiveState());
+                        eventDisplay.setPrependMessagesWithAuthor(false);
+
+                        String message = roomName + ": " + room.getLiveState().getMemberName(latestEvent.getSender()) + " ";
+
+                        CharSequence textualDisplay = eventDisplay.getTextualDisplay();
+
+                        // the event might have been redacted
+                        if (!TextUtils.isEmpty(textualDisplay)) {
+                            message += textualDisplay.toString();
+                        }
+
+                        NotificationCompat.WearableExtender wearableExtender = new NotificationCompat.WearableExtender();
+                        NotificationCompat.Action action =
+                                new NotificationCompat.Action.Builder(R.drawable.message_notification_transparent,
+                                        message,
+                                        stackBuilderTap.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT))
+                                        .build();
+                        wearableExtender.addAction(action);
+                        builder.extend(wearableExtender);
+                    }
+                } catch (Exception e) {
+                    Log.e(LOG_TAG, "## addTextStyleWithSeveralRooms() : WearableExtender failed " + e.getMessage());
+                }
+            }
         }
-
-
-        return isNoisyNotified;
     }
 
     /**
@@ -576,20 +676,31 @@ public class NotificationUtils {
                                                          Map<String, List<NotifiedEvent>> notifiedEventsByRoomId,
                                                          NotifiedEvent eventToNotify,
                                                          boolean isBackground) {
-
         // TODO manage multi accounts
         MXSession session = Matrix.getInstance(context).getDefaultSession();
         IMXStore store = session.getDataHandler().getStore();
 
         Room room = store.getRoom(eventToNotify.mRoomId);
         Event event = store.getEvent(eventToNotify.mEventId, eventToNotify.mRoomId);
+
+        // sanity check
+        if ((null == room) || (null == event)) {
+            if (null == room) {
+                Log.e(LOG_TAG, "## buildMessageNotification() : null room " + eventToNotify.mRoomId);
+            } else {
+                Log.e(LOG_TAG, "## buildMessageNotification() : null event " + eventToNotify.mEventId + " " + eventToNotify.mRoomId);
+            }
+            return null;
+        }
+
         BingRule bingRule = eventToNotify.mBingRule;
 
         boolean isInvitationEvent = false;
 
         EventDisplay eventDisplay = new EventDisplay(context, event, room.getLiveState());
         eventDisplay.setPrependMessagesWithAuthor(true);
-        String body = eventDisplay.getTextualDisplay().toString();
+        CharSequence textualDisplay = eventDisplay.getTextualDisplay();
+        String body = !TextUtils.isEmpty(textualDisplay) ? textualDisplay.toString() : "";
 
         if (Event.EVENT_TYPE_STATE_ROOM_MEMBER.equals(event.getType())) {
             try {
@@ -637,7 +748,11 @@ public class NotificationUtils {
         builder.setGroup(context.getString(R.string.riot_app_name));
         builder.setGroupSummary(true);
 
-        boolean hasNoisyNotifications = addTextStyle(context, builder, eventToNotify, isInvitationEvent, notifiedEventsByRoomId); //addMultiRoomsTextStyle(context, builder, notifiedEventsByRoomId);
+        try {
+            addTextStyle(context, builder, eventToNotify, isInvitationEvent, notifiedEventsByRoomId);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "## buildMessageNotification() : addTextStyle failed " + e.getMessage());
+        }
 
         // only one room : display the large bitmap (it should be the room avatar
         // several rooms : display the Riot avatar
@@ -657,7 +772,7 @@ public class NotificationUtils {
 
         if (isBackground) {
             builder.setPriority(android.support.v7.app.NotificationCompat.PRIORITY_DEFAULT);
-            builder.setColor(hasNoisyNotifications ? highlightColor : defaultColor);
+            builder.setColor(defaultColor);
         } else if (is_bing) {
             builder.setPriority(android.support.v7.app.NotificationCompat.PRIORITY_HIGH);
             builder.setColor(highlightColor);
@@ -665,6 +780,7 @@ public class NotificationUtils {
             builder.setPriority(android.support.v7.app.NotificationCompat.PRIORITY_DEFAULT);
             builder.setColor(Color.TRANSPARENT);
         }
+
 
         Notification n = builder.build();
 

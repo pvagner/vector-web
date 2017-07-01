@@ -26,6 +26,8 @@ import org.matrix.androidsdk.ssl.CertUtil;
 import org.matrix.androidsdk.ssl.Fingerprint;
 import org.matrix.androidsdk.ssl.UnrecognizedCertificateException;
 
+import java.util.Arrays;
+
 import im.vector.activity.CommonActivityUtils;
 import im.vector.store.LoginStorage;
 
@@ -73,7 +75,8 @@ public class ErrorListener implements ApiFailureCallback {
 
                         @Override
                         public void onReject() {
-                            CommonActivityUtils.logout(mActivity, mSession, true);
+                            Log.d(LOG_TAG, "Found fingerprint: reject fingerprint");
+                            CommonActivityUtils.logout(mActivity, Arrays.asList(mSession), true, null);
                         }
                     });
                 }

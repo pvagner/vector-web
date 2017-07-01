@@ -40,6 +40,7 @@ import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
@@ -60,6 +61,7 @@ import org.matrix.androidsdk.data.RoomSummary;
 import org.matrix.androidsdk.data.store.IMXStore;
 import org.matrix.androidsdk.db.MXMediasCache;
 import org.matrix.androidsdk.rest.callback.ApiCallback;
+import org.matrix.androidsdk.rest.callback.SimpleApiCallback;
 import org.matrix.androidsdk.rest.model.Event;
 import org.matrix.androidsdk.rest.model.MatrixError;
 import org.matrix.androidsdk.rest.model.PowerLevels;
@@ -76,6 +78,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -160,7 +163,37 @@ public class CommonActivityUtils {
     public static final int REQUEST_CODE_PERMISSION_HOME_ACTIVITY = PERMISSION_WRITE_EXTERNAL_STORAGE;
     public static final int REQUEST_CODE_PERMISSION_BY_PASS = PERMISSION_BYPASSED;
 
-    public static void logout(Context context, MXSession session, boolean clearCredentials) {
+    /**
+     * Logout a sessions list
+     *
+     * @param context the context
+     * @param sessions the sessions list
+     * @param clearCredentials  true to clear the credentials
+     * @param callback the asynchronous callback
+     */
+    public static void logout(Context context, List<MXSession> sessions, boolean clearCredentials, final SimpleApiCallback<Void> callback) {
+        logout(context, sessions.iterator(), clearCredentials, callback);
+    }
+
+    /**
+     * Internal method to logout a sessions list
+     *
+     * @param context the context
+     * @param sessions the sessions iterator
+     * @param clearCredentials  true to clear the credentials
+     * @param callback the asynchronous callback
+     */
+    private static void logout(final Context context, final Iterator<MXSession> sessions, final boolean clearCredentials, final SimpleApiCallback<Void> callback) {
+        if (!sessions.hasNext()) {
+            if (null != callback) {
+                callback.onSuccess(null);
+            }
+
+            return;
+        }
+
+        MXSession session = sessions.next();
+
         if (session.isAlive()) {
             // stop the service
             EventStreamService eventStreamService = EventStreamService.getInstance();
@@ -179,7 +212,12 @@ public class CommonActivityUtils {
             Matrix.getInstance(context).getSharedGCMRegistrationManager().unregister(session, null);
 
             // clear credentials
-            Matrix.getInstance(context).clearSession(context, session, clearCredentials);
+            Matrix.getInstance(context).clearSession(context, session, clearCredentials, new SimpleApiCallback<Void>() {
+                @Override
+                public void onSuccess(Void info) {
+                    logout(context, sessions, clearCredentials, callback);
+                }
+            });
         }
     }
 
@@ -309,7 +347,9 @@ public class CommonActivityUtils {
      * @param activity      the caller activity
      * @param goToLoginPage true to jump to the login page
      */
-    public static void logout(final Activity activity, boolean goToLoginPage) {
+    public static void logout(final Activity activity, final boolean goToLoginPage) {
+        Log.d(LOG_TAG, "## logout() : from " + activity + " goToLoginPage " + goToLoginPage);
+
         // if no activity is provided, use the application context instead.
         final Context context = (null == activity) ? VectorApp.getInstance().getApplicationContext() : activity;
 
@@ -348,38 +388,41 @@ public class CommonActivityUtils {
         }
 
         // reset the GCM
-        Matrix.getInstance(context).getSharedGCMRegistrationManager().resetGCMRegistration(false);
+        Matrix.getInstance(context).getSharedGCMRegistrationManager().resetGCMRegistration();
         // clear the preferences when the application goes to the login screen.
         if (goToLoginPage) {
             Matrix.getInstance(context).getSharedGCMRegistrationManager().clearPreferences();
         }
 
         // clear credentials
-        Matrix.getInstance(context).clearSessions(context, true);
+        Matrix.getInstance(context).clearSessions(context, true, new SimpleApiCallback<Void>() {
+            @Override
+            public void onSuccess(Void info) {
+                // ensure that corrupted values are cleared
+                Matrix.getInstance(context).getLoginStorage().clear();
 
-        // ensure that corrupted values are cleared
-        Matrix.getInstance(context).getLoginStorage().clear();
+                // clear the tmp store list
+                Matrix.getInstance(context).clearTmpStoresList();
 
-        // clear the tmp store list
-        Matrix.getInstance(context).clearTmpStoresList();
+                // reset the contacts
+                PIDsRetriever.getInstance().reset();
+                ContactsManager.getInstance().reset();
 
-        // reset the contacts
-        PIDsRetriever.getInstance().reset();
-        ContactsManager.getInstance().reset();
+                MXMediasCache.clearThumbnailsCache(context);
 
-        MXMediasCache.clearThumbnailsCache(context);
-
-        if (goToLoginPage) {
-            if (null != activity) {
-                // go to login page
-                activity.startActivity(new Intent(activity, LoginActivity.class));
-                activity.finish();
-            } else {
-                Intent intent = new Intent(context, LoginActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                context.startActivity(intent);
+                if (goToLoginPage) {
+                    if (null != activity) {
+                        // go to login page
+                        activity.startActivity(new Intent(activity, LoginActivity.class));
+                        activity.finish();
+                    } else {
+                        Intent intent = new Intent(context, LoginActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        context.startActivity(intent);
+                    }
+                }
             }
-        }
+        });
     }
 
     /**
@@ -517,13 +560,18 @@ public class CommonActivityUtils {
             Collection<MXSession> sessions = Matrix.getInstance(context.getApplicationContext()).getSessions();
 
             if ((null != sessions) && (sessions.size() > 0)) {
-                Log.d(LOG_TAG, "restart EventStreamService");
+                Log.e(LOG_TAG, "## startEventStreamService() : restart EventStreamService");
 
                 for (MXSession session : sessions) {
                     boolean isSessionReady = session.getDataHandler().getStore().isReady();
 
                     if (!isSessionReady) {
+                        Log.e(LOG_TAG, "## startEventStreamService() : the session " + session.getMyUserId() + " is not opened");
                         session.getDataHandler().getStore().open();
+                    } else {
+                        // it seems that the crypto is not always restarted properly after a crash
+                        Log.e(LOG_TAG, "## startEventStreamService() : check if the crypto of the session " + session.getMyUserId());
+                        session.checkCrypto();
                     }
 
                     // session to activate
@@ -575,10 +623,11 @@ public class CommonActivityUtils {
      * explain why vector needs the corresponding permission.
      *
      * @param aPermissionsToBeGrantedBitMap the permissions bit map to be granted
-     * @param aCallingActivity              the calling Activity that is requesting the permissions
+     * @param aCallingActivity              the calling Activity that is requesting the permissions (or fragment parent)
+     * @param fragment                      the calling fragment that is requesting the permissions
      * @return true if the permissions are granted (synchronous flow), false otherwise (asynchronous flow)
      */
-    public static boolean checkPermissions(final int aPermissionsToBeGrantedBitMap, final Activity aCallingActivity) {
+    private static boolean checkPermissions(final int aPermissionsToBeGrantedBitMap, final Activity aCallingActivity, final Fragment fragment) {
         boolean isPermissionGranted = false;
 
         // sanity check
@@ -641,7 +690,6 @@ public class CommonActivityUtils {
             finalPermissionsListToBeGranted = permissionsListToBeGranted;
 
             // if some permissions were already denied: display a dialog to the user before asking again..
-            // if some permissions were already denied: display a dialog to the user before asking again..
             if(!permissionListAlreadyDenied.isEmpty()) {
                 if (null != resource) {
                     // add the user info text to be displayed to explain why the permission is required by the App
@@ -694,15 +742,20 @@ public class CommonActivityUtils {
                 // display the dialog with the info text
                 AlertDialog.Builder permissionsInfoDialog = new AlertDialog.Builder(aCallingActivity);
                 if(null != resource) {
-                    permissionsInfoDialog.setTitle(resource.getString(R.string.permissions_rationale_popup_title));
+                    permissionsInfoDialog.setTitle(R.string.permissions_rationale_popup_title);
                 }
 
                 permissionsInfoDialog.setMessage(explanationMessage);
-                permissionsInfoDialog.setPositiveButton(aCallingActivity.getString(R.string.ok), new DialogInterface.OnClickListener() {
+                permissionsInfoDialog.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         if (!finalPermissionsListToBeGranted.isEmpty()) {
-                            ActivityCompat.requestPermissions(aCallingActivity, finalPermissionsListToBeGranted.toArray(new String[finalPermissionsListToBeGranted.size()]), aPermissionsToBeGrantedBitMap);
+                            if (fragment != null) {
+                                fragment.requestPermissions(finalPermissionsListToBeGranted.toArray(new String[finalPermissionsListToBeGranted.size()]), aPermissionsToBeGrantedBitMap);
+                            } else {
+                                ActivityCompat.requestPermissions(aCallingActivity,
+                                        finalPermissionsListToBeGranted.toArray(new String[finalPermissionsListToBeGranted.size()]), aPermissionsToBeGrantedBitMap);
+                            }
                         }
                     }
                 });
@@ -737,7 +790,11 @@ public class CommonActivityUtils {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 ContactsManager.getInstance().setIsContactBookAccessAllowed(true);
-                                ActivityCompat.requestPermissions(aCallingActivity, fPermissionsArrayToBeGranted, aPermissionsToBeGrantedBitMap);
+                                if (fragment != null) {
+                                    fragment.requestPermissions(fPermissionsArrayToBeGranted, aPermissionsToBeGrantedBitMap);
+                                } else {
+                                    ActivityCompat.requestPermissions(aCallingActivity, fPermissionsArrayToBeGranted, aPermissionsToBeGrantedBitMap);
+                                }
                             }
                         });
 
@@ -746,14 +803,22 @@ public class CommonActivityUtils {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 ContactsManager.getInstance().setIsContactBookAccessAllowed(false);
-                                ActivityCompat.requestPermissions(aCallingActivity, fPermissionsArrayToBeGranted, aPermissionsToBeGrantedBitMap);
+                                if (fragment != null) {
+                                    fragment.requestPermissions(fPermissionsArrayToBeGranted, aPermissionsToBeGrantedBitMap);
+                                } else {
+                                    ActivityCompat.requestPermissions(aCallingActivity, fPermissionsArrayToBeGranted, aPermissionsToBeGrantedBitMap);
+                                }
                             }
                         });
 
                         permissionsInfoDialog.show();
 
                     } else {
-                        ActivityCompat.requestPermissions(aCallingActivity, fPermissionsArrayToBeGranted, aPermissionsToBeGrantedBitMap);
+                        if (fragment != null) {
+                            fragment.requestPermissions(fPermissionsArrayToBeGranted, aPermissionsToBeGrantedBitMap);
+                        } else {
+                            ActivityCompat.requestPermissions(aCallingActivity, fPermissionsArrayToBeGranted, aPermissionsToBeGrantedBitMap);
+                        }
                     }
                 } else {
                     // permissions were granted, start now..
@@ -762,6 +827,28 @@ public class CommonActivityUtils {
             }
         }
         return isPermissionGranted;
+    }
+
+    /**
+     * See {@link #checkPermissions(int, Activity, Fragment)}
+     *
+     * @param aPermissionsToBeGrantedBitMap
+     * @param aCallingActivity
+     * @return true if the permissions are granted (synchronous flow), false otherwise (asynchronous flow)
+     */
+    public static boolean checkPermissions(final int aPermissionsToBeGrantedBitMap, final Activity aCallingActivity) {
+        return checkPermissions(aPermissionsToBeGrantedBitMap, aCallingActivity, null);
+    }
+
+    /**
+     * See {@link #checkPermissions(int, Activity, Fragment)}
+     *
+     * @param aPermissionsToBeGrantedBitMap
+     * @param fragment
+     * @return true if the permissions are granted (synchronous flow), false otherwise (asynchronous flow)
+     */
+    public static boolean checkPermissions(final int aPermissionsToBeGrantedBitMap, final Fragment fragment) {
+        return checkPermissions(aPermissionsToBeGrantedBitMap, fragment.getActivity(), fragment);
     }
 
     /**
@@ -1308,7 +1395,7 @@ public class CommonActivityUtils {
      */
     private static void sendFilesTo(final Activity fromActivity, final Intent intent, final MXSession session) {
         // sanity check
-        if ((null == session) || !session.isAlive()) {
+        if ((null == session) || !session.isAlive() || fromActivity.isFinishing()) {
             return;
         }
 

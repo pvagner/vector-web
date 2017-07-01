@@ -51,7 +51,7 @@ import im.vector.receiver.HeadsetConnectionReceiver;
  */
 public class VectorCallSoundManager {
     /** Observer pattern class to notify sound events.
-     *  Clients listen to events by calling {@link #addSoundListener(IVectorCallSoundListener)}**/
+     *  Clients listen to events **/
     public interface IVectorCallSoundListener {
         /**
          * Call back indicating new focus events (ex: {@link AudioManager#AUDIOFOCUS_GAIN},
@@ -585,16 +585,21 @@ public class VectorCallSoundManager {
 
         backupAudioConfig();
 
-        AudioManager audioManager = getAudioManager();
+        try {
+            AudioManager audioManager = getAudioManager();
 
-        int audioMode = isInCall ? AudioManager.MODE_IN_COMMUNICATION : AudioManager.MODE_RINGTONE;
+            int audioMode = isInCall ? AudioManager.MODE_IN_COMMUNICATION : AudioManager.MODE_RINGTONE;
 
-        if (audioManager.getMode() != audioMode) {
-            audioManager.setMode(audioMode);
-        }
+            if (audioManager.getMode() != audioMode) {
+                audioManager.setMode(audioMode);
+            }
 
-        if (isSpeakerOn != audioManager.isSpeakerphoneOn()) {
-            audioManager.setSpeakerphoneOn(isSpeakerOn);
+            if (isSpeakerOn != audioManager.isSpeakerphoneOn()) {
+                audioManager.setSpeakerphoneOn(isSpeakerOn);
+            }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "## setSpeakerphoneOn() failed " + e.getMessage());
+            restoreAudioConfig();
         }
     }
 

@@ -26,7 +26,9 @@ import android.text.TextUtils;
 
 import org.matrix.androidsdk.crypto.data.MXDeviceInfo;
 import org.matrix.androidsdk.crypto.data.MXUsersDevicesMap;
+import org.matrix.androidsdk.rest.callback.ApiCallback;
 import org.matrix.androidsdk.rest.callback.SimpleApiCallback;
+import org.matrix.androidsdk.util.BingRulesManager;
 import org.matrix.androidsdk.util.Log;
 
 import org.matrix.androidsdk.HomeserverConnectionConfig;
@@ -56,6 +58,8 @@ import im.vector.store.LoginStorage;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 
 /**
@@ -112,18 +116,27 @@ public class Matrix {
                 if (mRefreshUnreadCounter) {
                     GcmRegistrationManager gcmMgr = instance.getSharedGCMRegistrationManager();
 
-                    // perform update: if the GCM is not available or if GCM registration failed
+                    // perform update: if the GCM is not yet available or if GCM registration failed
                     if ((null != gcmMgr) && (!gcmMgr.useGCM() || !gcmMgr.hasRegistrationToken())) {
-                        int unreadCount = 0;
+                        int roomCount = 0;
 
                         for (MXSession session : instance.mMXSessions) {
                             if (session.isAlive()) {
+                                BingRulesManager bingRulesManager = session.getDataHandler().getBingRulesManager();
                                 Collection<Room> rooms = session.getDataHandler().getStore().getRooms();
 
-                                if (null != rooms) {
-                                    for (Room room : rooms) {
-                                        if ((0 != room.getNotificationCount()) || (0 != room.getHighlightCount())) {
-                                            unreadCount++;
+                                for(Room room : rooms) {
+                                    if (room.isInvited()) {
+                                        roomCount++;
+                                    } else {
+                                        int notificationCount = room.getNotificationCount();
+
+                                        if (bingRulesManager.isRoomMentionOnly(room.getRoomId())) {
+                                            notificationCount = room.getHighlightCount();
+                                        }
+
+                                        if (notificationCount > 0) {
+                                            roomCount++;
                                         }
                                     }
                                 }
@@ -131,14 +144,12 @@ public class Matrix {
                         }
 
                         // update the badge counter
-                        CommonActivityUtils.updateBadgeCount(instance.mAppContext, unreadCount);
+                        CommonActivityUtils.updateBadgeCount(instance.mAppContext, roomCount);
                     }
                 }
 
                 // TODO find a way to detect which session is synced
-                for (MXSession session : instance.mMXSessions) {
-                    VectorApp.removeSyncingSession(session);
-                }
+                VectorApp.clearSyncingSessions();
             }
 
             mRefreshUnreadCounter = false;
@@ -377,6 +388,8 @@ public class Matrix {
             return null;
         }
 
+        boolean appDidCrash = VectorApp.getInstance().didAppCrash();
+
         ArrayList<String> matrixIds = new ArrayList<>();
         sessions = new ArrayList<>();
 
@@ -384,6 +397,15 @@ public class Matrix {
             // avoid duplicated accounts.
             if (config.getCredentials() != null && matrixIds.indexOf(config.getCredentials().userId) < 0) {
                 MXSession session = createSession(config);
+
+                // if the application crashed
+                if (appDidCrash) {
+                    // clear the session data
+                    session.clear(VectorApp.getInstance());
+                    // and open it again
+                    session = createSession(config);
+                }
+
                 sessions.add(session);
                 matrixIds.add(config.getCredentials().userId);
             }
@@ -528,7 +550,14 @@ public class Matrix {
      * @param session the session to clear.
      * @param clearCredentials true to clear the credentials.
      */
-    public synchronized void clearSession(Context context, MXSession session, boolean clearCredentials) {
+    public synchronized void clearSession(final Context context, final MXSession session, final boolean clearCredentials, final SimpleApiCallback<Void> aCallback) {
+        if (!session.isAlive()) {
+            Log.e(LOG_TAG, "## clearSession() " + session.getMyUserId() + " is already released");
+            return;
+        }
+
+        Log.d(LOG_TAG, "## clearSession() " + session.getMyUserId() + " clearCredentials " + clearCredentials);
+
         if (clearCredentials) {
             mLoginStorage.removeCredentials(session.getHomeserverConfig());
         }
@@ -536,16 +565,25 @@ public class Matrix {
         session.getDataHandler().removeListener(mLiveEventListener);
         session.mCallsManager.removeListener(mCallsManagerListener);
 
+        SimpleApiCallback<Void> callback = new SimpleApiCallback<Void>() {
+            @Override
+            public void onSuccess(Void info) {
+                VectorApp.removeSyncingSession(session);
+
+                synchronized (LOG_TAG) {
+                    mMXSessions.remove(session);
+                }
+
+                if (null != aCallback) {
+                    aCallback.onSuccess(null);
+                }
+            }
+        };
+
         if (clearCredentials) {
-            session.logout(context, null);
+            session.logout(context, callback);
         } else {
-            session.clear(context);
-        }
-
-        VectorApp.removeSyncingSession(session);
-
-        synchronized (LOG_TAG) {
-            mMXSessions.remove(session);
+            session.clear(context, callback);
         }
     }
 
@@ -554,12 +592,39 @@ public class Matrix {
      * @param context the context.
      * @param clearCredentials  true to clear the credentials.
      */
-    public synchronized void clearSessions(Context context, boolean clearCredentials) {
+    public synchronized void clearSessions(Context context, boolean clearCredentials, ApiCallback<Void> callback) {
+        List<MXSession> sessions;
+
         synchronized (LOG_TAG) {
-            while (mMXSessions.size() > 0) {
-                clearSession(context, mMXSessions.get(0), clearCredentials);
-            }
+            sessions = new ArrayList<>(mMXSessions);
         }
+
+        clearSessions(context, sessions.iterator(), clearCredentials, callback);
+    }
+
+    /**
+     * Internal routine to clear the sessions data
+     *
+     * @param context the context
+     * @param iterator the sessions iterator
+     * @param clearCredentials true to clear the credentials.
+     * @param callback the asynchronous callback
+     */
+    private synchronized void clearSessions(final Context context, final Iterator<MXSession> iterator, final boolean clearCredentials, final ApiCallback<Void> callback) {
+        if (!iterator.hasNext()) {
+            if (null != callback) {
+                callback.onSuccess(null);
+            }
+            return;
+        }
+
+        clearSession(context, iterator.next(), clearCredentials, new SimpleApiCallback<Void>() {
+            @Override
+            public void onSuccess(Void info) {
+                clearSessions(context, iterator, clearCredentials, callback);
+            }
+        });
+
     }
 
     /**
@@ -603,6 +668,7 @@ public class Matrix {
             @Override
             public void onTokenCorrupted() {
                 if (null != VectorApp.getCurrentActivity()) {
+                    Log.e(LOG_TAG, "## createSession() : onTokenCorrupted");
                     CommonActivityUtils.logout(VectorApp.getCurrentActivity());
                 }
             }
@@ -625,36 +691,35 @@ public class Matrix {
      * @param context the context
      */
     public void reloadSessions(final Context context) {
-        ArrayList<MXSession> sessions = getMXSessions(context);
+        Log.e(LOG_TAG, "## reloadSessions");
 
-        for(MXSession session : sessions) {
-            CommonActivityUtils.logout(context, session, false);
-        }
-
-        clearSessions(context, false);
-
-        synchronized (LOG_TAG) {
-            // build a new sessions list
-            ArrayList<HomeserverConnectionConfig> configs = mLoginStorage.getCredentialsList();
-
-            for(HomeserverConnectionConfig config : configs) {
-                MXSession session = createSession(config);
-                mMXSessions.add(session);
-            }
-        }
-
-        // clear GCM token before launching the splash screen
-        Matrix.getInstance(context).getSharedGCMRegistrationManager().clearGCMData(new SimpleApiCallback<Void>() {
+        CommonActivityUtils.logout(context, getMXSessions(context), false, new SimpleApiCallback<Void>() {
             @Override
-            public void onSuccess(final Void anything) {
-                Intent intent = new Intent(context.getApplicationContext(), SplashActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                context.getApplicationContext().startActivity(intent);
+            public void onSuccess(Void info) {
+                synchronized (LOG_TAG) {
+                    // build a new sessions list
+                    ArrayList<HomeserverConnectionConfig> configs = mLoginStorage.getCredentialsList();
 
-                if (null != VectorApp.getCurrentActivity()) {
-                    VectorApp.getCurrentActivity().finish();
+                    for(HomeserverConnectionConfig config : configs) {
+                        MXSession session = createSession(config);
+                        mMXSessions.add(session);
+                    }
                 }
-            }});
+
+                // clear GCM token before launching the splash screen
+                Matrix.getInstance(context).getSharedGCMRegistrationManager().clearGCMData(false, new SimpleApiCallback<Void>() {
+                    @Override
+                    public void onSuccess(final Void anything) {
+                        Intent intent = new Intent(context.getApplicationContext(), SplashActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        context.getApplicationContext().startActivity(intent);
+
+                        if (null != VectorApp.getCurrentActivity()) {
+                            VectorApp.getCurrentActivity().finish();
+                        }
+                    }});
+            }
+        });
     }
 
     /**

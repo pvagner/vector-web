@@ -1,6 +1,7 @@
 /*
  * Copyright 2014 OpenMarket Ltd
- *
+ * Copyright 2017 Vector Creations Ltd
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,20 +22,29 @@ import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 
 import org.matrix.androidsdk.MXSession;
 import org.matrix.androidsdk.util.Log;
 
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -46,6 +56,7 @@ import im.vector.ga.GAHelper;
 import im.vector.gcm.GcmRegistrationManager;
 import im.vector.receiver.HeadsetConnectionReceiver;
 import im.vector.services.EventStreamService;
+import im.vector.util.BugReporter;
 import im.vector.util.RageShake;
 import im.vector.util.VectorCallSoundManager;
 import im.vector.util.VectorMarkdownParser;
@@ -55,6 +66,9 @@ import im.vector.util.VectorMarkdownParser;
  */
 public class VectorApp extends Application {
     private static final String LOG_TAG = "VectorApp";
+
+    // key to save the crash status
+    private static final String PREFS_CRASH_KEY = "PREFS_CRASH_KEY";
 
     /**
      * The current instance.
@@ -156,6 +170,7 @@ public class VectorApp extends Application {
         Log.d(LOG_TAG, "----------------------------------------------------------------");
         Log.d(LOG_TAG, " Application version: " + VECTOR_VERSION_STRING);
         Log.d(LOG_TAG, " SDK version: " + SDK_VERSION_STRING);
+        Log.d(LOG_TAG, " Local time: " + (new SimpleDateFormat("MM-dd HH:mm:ss.SSSZ", Locale.US)).format(new Date()));
         Log.d(LOG_TAG, "----------------------------------------------------------------");
         Log.d(LOG_TAG, "----------------------------------------------------------------\n\n\n\n");
 
@@ -264,9 +279,14 @@ public class VectorApp extends Application {
                 session.setIsOnline(false);
                 session.setSyncDelay(gcmRegistrationManager.getBackgroundSyncDelay());
                 session.setSyncTimeout(gcmRegistrationManager.getBackgroundSyncTimeOut());
-                removeSyncingSession(session);
+
+                if (session.getDataHandler().areLeftRoomsSynced()) {
+                    session.getDataHandler().releaseLeftRooms();
+                }
             }
         }
+
+        clearSyncingSessions();
 
         PIDsRetriever.getInstance().onAppBackgrounded();
 
@@ -504,7 +524,7 @@ public class VectorApp extends Application {
     /**
      * syncing sessions
      */
-    private static ArrayList<MXSession> mSyncingSessions = new ArrayList<>();
+    private static HashSet<MXSession> mSyncingSessions = new HashSet<>();
 
     /**
      * Add a session in the syncing sessions list
@@ -512,9 +532,7 @@ public class VectorApp extends Application {
      */
     public static void addSyncingSession(MXSession session) {
         synchronized (mSyncingSessions) {
-            if ((null != session) && (mSyncingSessions.indexOf(session) < 0)) {
-                mSyncingSessions.add(session);
-            }
+            mSyncingSessions.add(session);
         }
     }
 
@@ -531,6 +549,15 @@ public class VectorApp extends Application {
     }
 
     /**
+     * Clear syncing sessions list
+     */
+    public static void clearSyncingSessions() {
+        synchronized (mSyncingSessions) {
+            mSyncingSessions.clear();
+        }
+    }
+
+    /**
      * Tell if a session is syncing
      * @param session the session
      * @return true if the session is syncing
@@ -540,7 +567,7 @@ public class VectorApp extends Application {
 
         if (null != session) {
             synchronized (mSyncingSessions) {
-                isSyncing = (mSyncingSessions.indexOf(session) >= 0);
+                isSyncing = mSyncingSessions.contains(session);
             }
         }
 
@@ -606,5 +633,97 @@ public class VectorApp extends Application {
 
         return stats;
     }
+
+    /**
+     * An uncaught exception has been triggered
+     * @param threadName the thread name
+     * @param throwable the throwable
+     * @return the exception description
+     */
+    public static String uncaughtException(String threadName, Throwable throwable) {
+        StringBuilder b = new StringBuilder();
+        String appName = Matrix.getApplicationName();
+
+        b.append(appName + " Build : " + VectorApp.VERSION_BUILD + "\n");
+        b.append(appName + " Version : " + VectorApp.VECTOR_VERSION_STRING + "\n");
+        b.append("SDK Version : " + VectorApp.SDK_VERSION_STRING + "\n");
+        b.append("Phone : " + Build.MODEL.trim() + " (" + Build.VERSION.INCREMENTAL + " " + Build.VERSION.RELEASE + " " + Build.VERSION.CODENAME + ")\n");
+
+        b.append("Memory statuses \n");
+
+        long freeSize = 0L;
+        long totalSize = 0L;
+        long usedSize = -1L;
+        try {
+            Runtime info = Runtime.getRuntime();
+            freeSize = info.freeMemory();
+            totalSize = info.totalMemory();
+            usedSize = totalSize - freeSize;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        b.append("usedSize   " + (usedSize / 1048576L) + " MB\n");
+        b.append("freeSize   " + (freeSize / 1048576L) + " MB\n");
+        b.append("totalSize   " + (totalSize / 1048576L) + " MB\n");
+
+        b.append("Thread: ");
+        b.append(threadName);
+
+        Activity a = VectorApp.getCurrentActivity();
+        if (a != null) {
+            b.append(", Activity:");
+            b.append(a.getLocalClassName());
+        }
+
+        b.append(", Exception: ");
+
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw, true);
+        throwable.printStackTrace(pw);
+        b.append(sw.getBuffer().toString());
+        Log.e("FATAL EXCEPTION", b.toString());
+
+        String bugDescription = b.toString();
+
+        if (null != VectorApp.getInstance()) {
+            VectorApp.getInstance().setAppCrashed(bugDescription);
+        }
+
+        return bugDescription;
+    }
+
+    /**
+     * Warn that the application crashed
+     * @param description the crash description
+     */
+    private void setAppCrashed(String description) {
+        final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(VectorApp.getInstance());
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean(PREFS_CRASH_KEY, true);
+        editor.commit();
+
+        BugReporter.saveCrashReport(this, description);
+    }
+
+    /**
+     * Tells if the application crashed
+     * @return true if the application crashed
+     */
+    public boolean didAppCrash() {
+        final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(VectorApp.getInstance());
+        return preferences.getBoolean(PREFS_CRASH_KEY, false);
+    }
+
+
+    /**
+     * Clear the crash status
+     */
+    public void clearAppCrashStatus() {
+        final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(VectorApp.getInstance());
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.remove(PREFS_CRASH_KEY);
+        editor.commit();
+    }
+
 }
 
