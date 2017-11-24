@@ -21,12 +21,13 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+
 import org.matrix.androidsdk.util.Log;
+
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -51,10 +52,11 @@ import im.vector.Matrix;
 import im.vector.R;
 import im.vector.adapters.RoomDirectoryAdapter;
 import im.vector.util.RoomDirectoryData;
+import im.vector.util.ThemeUtils;
 
-public class RoomDirectoryPickerActivity extends AppCompatActivity implements RoomDirectoryAdapter.OnSelectRoomDirectoryListener {
+public class RoomDirectoryPickerActivity extends RiotAppCompatActivity implements RoomDirectoryAdapter.OnSelectRoomDirectoryListener {
     // LOG TAG
-    private static final String LOG_TAG = "RoomDirPickerActivity";
+    private static final String LOG_TAG = RoomDirectoryPickerActivity.class.getSimpleName();
 
     private static final String EXTRA_SESSION_ID = "EXTRA_SESSION_ID";
     public static final String EXTRA_OUT_ROOM_DIRECTORY_DATA = "EXTRA_OUT_ROOM_DIRECTORY_DATA";
@@ -86,10 +88,12 @@ public class RoomDirectoryPickerActivity extends AppCompatActivity implements Ro
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        setTitle(R.string.select_room_directory);
         setContentView(R.layout.activity_room_directory_picker);
         ButterKnife.bind(this);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         if (toolbar != null) {
             setSupportActionBar(toolbar);
             if (getSupportActionBar() != null) {
@@ -106,7 +110,7 @@ public class RoomDirectoryPickerActivity extends AppCompatActivity implements Ro
         }
 
         // should never happen
-        if (null == mSession) {
+        if ((null == mSession) || !mSession.isAlive()) {
             this.finish();
             return;
         }
@@ -117,6 +121,7 @@ public class RoomDirectoryPickerActivity extends AppCompatActivity implements Ro
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_directory_server_picker, menu);
+        CommonActivityUtils.tintMenuIcons(menu, ThemeUtils.getColor(this, R.attr.icon_tint_on_dark_action_bar_color));
         return true;
     }
 
@@ -150,7 +155,7 @@ public class RoomDirectoryPickerActivity extends AppCompatActivity implements Ro
             private void onDone(List<RoomDirectoryData> list) {
                 mLoadingView.setVisibility(View.GONE);
                 String userHSName = mSession.getMyUserId().substring(mSession.getMyUserId().indexOf(":") + 1);
-                String userHSUrl = mSession.getHomeserverConfig().getHomeserverUri().getHost();
+                String userHSUrl = mSession.getHomeServerConfig().getHomeserverUri().getHost();
 
                 List<String> hsUrlsList = Arrays.asList(getResources().getStringArray(R.array.room_directory_servers));
 
@@ -165,7 +170,7 @@ public class RoomDirectoryPickerActivity extends AppCompatActivity implements Ro
                 }
 
                 // Add custom directory servers
-                for(String hsURL : hsUrlsList) {
+                for (String hsURL : hsUrlsList) {
                     if (!TextUtils.equals(userHSUrl, hsURL)) {
                         list.add(insertionIndex++, RoomDirectoryData.getIncludeAllServers(mSession, hsURL, hsURL));
                     }
@@ -217,7 +222,7 @@ public class RoomDirectoryPickerActivity extends AppCompatActivity implements Ro
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_directory_picker, null);
         alert.setView(dialogView);
 
-        final EditText editText = (EditText) dialogView.findViewById(R.id.directory_picker_edit_text);
+        final EditText editText = dialogView.findViewById(R.id.directory_picker_edit_text);
 
         alert.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
@@ -274,7 +279,7 @@ public class RoomDirectoryPickerActivity extends AppCompatActivity implements Ro
     */
 
     private void initViews() {
-        RecyclerView roomDirectoryRecyclerView = (RecyclerView) findViewById(R.id.room_directory_recycler_view);
+        RecyclerView roomDirectoryRecyclerView = findViewById(R.id.room_directory_recycler_view);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
         roomDirectoryRecyclerView.setLayoutManager(layoutManager);

@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- use to retrieve the supported languages list -->
+    <!-- should the same value as the file name -->
+
     <string name="resouces_language">en</string>
     <string name="resouces_country">UK</string>
+
+    <!-- theme -->
+    <string name="light_theme">Light Theme</string>
+    <string name="dark_theme">Dark Theme</string>
+    <string name="black_them">Black Theme</string>
+
+    <!-- permanent notification subtitle -->
+    <string name="notification_sync_in_progress">Synchronising</string>
+    <string name="notification_listen_for_events">Listen for events</string>
+    <string name="notification_noisy_notifications">Noisy notifications</string>
+    <string name="notification_silent_notifications">Silent notifications</string>
 
     <!-- titles -->
     <string name="title_activity_home">Messages</string>
@@ -43,6 +57,7 @@
     <string name="or">or</string>
     <string name="and">and</string>
     <string name="invite">Invite</string>
+    <string name="offline">Offline</string>
 
     <!-- actions -->
     <string name="action_sign_out">Sign out</string>
@@ -81,10 +96,9 @@
     <!-- People fragment -->
     <string name="direct_chats_header">Conversations</string>
     <string name="local_address_book_header">Local address book</string>
-    <string name="known_contacts_header">Known contacts</string>
+    <string name="user_directory_header">User directory</string>
     <string name="matrix_only_filter">Matrix contacts only</string>
     <string name="no_conversation_placeholder">No conversations</string>
-    <string name="no_local_contact_placeholder">No local contacts</string>
     <string name="no_contact_access_placeholder">You didn\'t allow Riot to access your local contacts</string>
     <string name="no_result_placeholder">No results</string>
 
@@ -132,6 +146,8 @@
 
     <string name="option_send_files">Send files</string>
     <string name="option_take_photo_video">Take photo or video</string>
+    <string name="option_take_photo">Take photo</string>
+    <string name="option_take_video">Take video</string>
 
     <!-- Authentication -->
     <string name="auth_login">Log in</string>
@@ -190,6 +206,7 @@
     <string name="login_error_unable_register">Unable to register</string>
     <string name="login_error_unable_register_mail_ownership">Unable to register : email ownership failure</string>
     <string name="login_error_invalid_home_server">Enter valid URL</string>
+    <string name="login_mobile_device">Mobile</string>
 
     <string name="login_error_forbidden">Invalid username/password</string>
     <string name="login_error_unknown_token">The access token specified was not recognised</string>
@@ -205,8 +222,10 @@
     <!-- read receipts list Screen -->
     <string name="read_receipts_list">Read Receipts List</string>
 
+    <!-- Mels -->
+    <string name="membership_changes">%d membership changes</string>
+
     <!-- accounts list Screen -->
-    <string name="choose_account">Choose account</string>
 
     <!-- image size selection -->
     <string name="compression_options">Send as </string>
@@ -234,6 +253,7 @@
     <string name="settings_key_use_rage_shake">settings_key_use_rage_shake</string>
 
     <!-- call string -->
+    <string name="call">Call</string>
     <string name="call_connected">Call connected</string>
     <string name="call_connecting">Call connecting…</string>
     <string name="call_ended">Call ended</string>
@@ -297,7 +317,6 @@
     <string name="room_creation_title">New Chat</string>
     <string name="room_creation_add_member">Add member</string>
     <string name="room_header_active_members">%1$d/%2$d active members</string>
-    <string name="room_header_invite_members">Invite members</string>
     <string name="room_title_members">%1$d members</string>
     <string name="room_title_one_member">1 member</string>
     <string name="room_e2e_alert_title">Warning!</string>
@@ -346,9 +365,8 @@
     <!-- invitation -->
     <string name="people_search_invite_by_id"><u>Invite by ID</u></string>
     <string name="people_search_local_contacts">LOCAL CONTACTS (%d)</string>
-    <string name="people_search_known_contacts">KNOWN CONTACTS (%s)</string>
+    <string name="people_search_user_directory">USER DIRECTORY (%s)</string>
     <string name="people_search_filter_text">Matrix users only</string>
-    <string name="people_search_too_many_contacts">Too many contacts, please use the search field</string>
 
     <string name="people_search_invite_by_id_dialog_title">Invite user by ID</string>
     <string name="people_search_invite_by_id_dialog_description">Please enter one or more email address or Matrix ID</string>
@@ -468,17 +486,20 @@
     <string name="settings_summary_app_info_link">Application system info screen</string>
     <string name="settings_title_app_info_link">Application info</string>
 
+    <string name="settings_notification_ringtone">Notification sound</string>
     <string name="settings_enable_all_notif">Enable notifications for this account</string>
     <string name="settings_enable_this_device">Enable notifications for this device</string>
     <string name="settings_turn_screen_on">Turn the screen on for 3 seconds</string>
 
-    <string name="settings_containing_my_name">Msgs containing my name</string>
+    <string name="settings_containing_my_display_name">Msgs containing my display name</string>
+    <string name="settings_containing_my_user_name">Msgs containing my user name</string>
     <string name="settings_messages_in_one_to_one">Msgs in one-to-one chats</string>
     <string name="settings_messages_in_group_chat">Msgs in group chats</string>
     <string name="settings_invited_to_room">When i\'m invited to a room</string>
     <string name="settings_call_invitations">Call invitations</string>
     <string name="settings_messages_sent_by_bot">Messages sent by bot</string>
 
+    <string name="settings_start_on_boot">Start on boot</string>
     <string name="settings_background_sync">Background synchronization</string>
     <string name="settings_enable_background_sync">Enable background sync</string>
     <string name="settings_set_sync_timeout">Sync request timeout</string>
@@ -493,8 +514,8 @@
     <string name="settings_copyright">Copyright</string>
     <string name="settings_privacy_policy">Privacy policy</string>
     <string name="settings_clear_cache">Clear cache</string>
-    <!--string name="settings_room_privacy_label">Privacy</string-->
-
+    <string name="settings_clear_medias_cache">Clear media cache</string>
+    <string name="settings_keep_media">Keep media</string>
 
     <string name="settings_user_settings">User settings</string>
     <string name="settings_notifications">Notifications</string>
@@ -510,6 +531,22 @@
     <string name="settings_pin_missed_notifications">Pin rooms with missed notifications</string>
     <string name="settings_pin_unread_messages">Pin rooms with unread messages</string>
     <string name="settings_devices_list">Devices</string>
+    <string name="settings_hide_read_receipts">Hide read receipts</string>
+    <string name="settings_dont_send_typings_notifs">Don\'t send typing notifications</string>
+    <string name="settings_always_show_timestamps">Always show message timestamps</string>
+    <string name="settings_12_24_timestamps">Show timestamps in 12 hour format (e.g. 2:30pm)</string>
+    <string name="settings_hide_join_leave_messages">Hide join/leave messages (invites/kicks/bans unaffected)</string>
+    <string name="settings_hide_avatar_display_name_changes_messages">Hide avatar and display name changes</string>
+
+    <!-- analytics -->
+    <string name="settings_analytics">Analytics</string>
+    <string name="settings_opt_out_of_analytics">Opt out of analytics</string>
+    <string name="settings_opt_out_of_analytics_summary">Riot collects anonymous analytics to allow us to improve the application.</string>
+
+
+    <string name="settings_disable_markdown">Disable markdown formatting</string>
+    <string name="settings_data_save_mode">Data save mode</string>
+
     <string name="devices_details_dialog_title">Device details</string>
     <string name="devices_details_id_title">ID</string>
     <string name="devices_details_name_title">Name</string>
@@ -526,9 +563,16 @@
     <string name="settings_home_server">Home Server</string>
     <string name="settings_identity_server">Identity Server</string>
 
+    <string name="settings_user_interface">User interface</string>
+    <string name="settings_interface_language">Interface Language</string>
+    <string name="settings_select_language">Choose a language</string>
+
     <string name="account_email_validation_title">Verification Pending</string>
     <string name="account_email_validation_message">Please check your email and click on the link it contains. Once this is done, click continue.</string>
     <string name="account_email_validation_error">Unable to verify email address. Please check your email and click on the link it contains. Once this is done, click continue</string>
+    <string name="account_email_already_used_error">This email address is already in use</string>
+    <string name="account_email_not_found_error">Failed to send email: This email address was not found</string>
+    <string name="account_phone_number_already_used_error">This phone number is already in use</string>
 
     <string name="settings_change_password">Change password</string>
     <string name="settings_old_password">old password</string>
@@ -553,6 +597,12 @@
     <string name="settings_phone_number_verification_error_empty_code">Enter an activation code</string>
     <string name="settings_phone_number_verification_error">Error while validating your phone number</string>
     <string name="settings_phone_number_code">Code</string>
+
+    <!-- medias saving settings -->
+    <string name="media_saving_period_3_days">3 days</string>
+    <string name="media_saving_period_1_week">1 week</string>
+    <string name="media_saving_period_1_month">1 month</string>
+    <string name="media_saving_period_forever">Forever</string>
 
     <!-- Room Settings -->
 
@@ -630,15 +680,15 @@
 
     <!-- Directory -->
     <string name="directory_title">Directory</string>
+    <string name="settings_theme">Theme</string>
 
     <!-- GA use -->
-    <string name="ga_use_alert_message">Do you accept to help us to improve the application behaviour and to send crash reports ?</string>
+    <string name="ga_use_alert_message">Do you want to help improve the application by automatically sending reports of any crashes?</string>
     <string name="ga_use_settings">Automatically send crash reports</string>
     <string name="ga_use_disable_alert_message">You need to restart the application to disable the crash reports.</string>
 
     <!-- matrix error -->
     <string name="failed_to_load_timeline_position">%s was trying to load a specific point in this room\'s timeline but was unable to find it.</string>
-
 
     <!-- encryption dialog -->
     <string name="encryption_information_title">End-to-end encryption information</string>
@@ -735,4 +785,48 @@
     <string name="desc_room_avatar">Room avatar</string>
     <string name="desc_chat">Chat</string>
     <string name="desc_back">Back</string>
+
+    <!-- text size selection -->
+    <string name="font_size">Font size</string>
+    <string name="tiny">Tiny</string>
+    <string name="small">Small</string>
+    <string name="normal">Normal</string>
+    <string name="large">Large</string>
+    <string name="larger">Larger</string>
+    <string name="largest">Largest</string>
+    <string name="huge">Huge</string>
+
+    <!-- Widget-->
+    <string name="widget_no_power_to_manage">You need permission to manage widgets in this room</string>
+    <string name="widget_creation_failure">Widget creation has failed</string>
+    <string name="event_formatter_widget_added">%1$s added by %2$s</string>
+    <string name="event_formatter_widget_removed">%1$s removed by %2$s</string>
+    <string name="settings_labs_create_conference_with_jitsi">Create conference calls with jitsi</string>
+    <string name="widget_delete_message_confirmation">Are you sure you want to delete the widget?</string>
+    <string name="active_widgets">%1$d active widgets</string>
+
+    // Widget Integration Manager
+    <string name="widget_integration_need_to_be_able_to_invite">You need to be able to invite users to do that.</string>
+    <string name="widget_integration_unable_to_create">Unable to create widget.</string>
+    <string name="widget_integration_failed_to_send_request">Failed to send request.</string>
+    <string name="widget_integration_room_not_recognised">This room is not recognised.</string>
+    <string name="widget_integration_positive_power_level">Power level must be positive integer.</string>
+    <string name="widget_integration_must_be_in_room">You are not in this room.</string>
+    <string name="widget_integration_no_permission_in_room">You do not have permission to do that in this room.</string>
+    <string name="widget_integration_missing_room_id">Missing room_id in request.</string>
+    <string name="widget_integration_missing_user_id">Missing user_id in request.</string>
+    <string name="widget_integration_room_not_visible">Room %s is not visible.</string>
+    <string name="settings_labs_matrix_apps">Matrix Apps</string>
+    <string name="room_add_matrix_apps">Add Matrix apps</string>
+    <string name="add_matrix_apps_not_supported">Not supported on this device</string>
+    <string name="settings_labs_native_camera">Use native camera</string>
+
+    // share keys
+    <string name="you_added_a_new_device">You added a new device \'%s\', which is requesting encryption keys.</string>
+    <string name="your_unverified_device_requesting">Your unverified device  \'%s\' is requesting encryption keys.</string>
+    <string name="start_verification">Start verification</string>
+    <string name="share_without_verifying">Share without verifying</string>
+    <string name="ignore_request">Ignore request</string>
+
+>>>>>>> develop
 </resources>

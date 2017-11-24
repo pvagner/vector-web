@@ -44,9 +44,9 @@ import im.vector.util.RoomDirectoryData;
 
 public class RoomDirectoryAdapter extends RecyclerView.Adapter<RoomDirectoryAdapter.RoomDirectoryViewHolder> {
 
-    private static final String LOG_TAG = "RoomDirectoryAdapter";
+    private static final String LOG_TAG = RoomDirectoryAdapter.class.getSimpleName();
 
-    private List<RoomDirectoryData> mList;
+    private final List<RoomDirectoryData> mList;
 
     private final OnSelectRoomDirectoryListener mListener;
 
@@ -87,7 +87,9 @@ public class RoomDirectoryAdapter extends RecyclerView.Adapter<RoomDirectoryAdap
 
     @Override
     public void onBindViewHolder(RoomDirectoryAdapter.RoomDirectoryViewHolder viewHolder, int position) {
-        viewHolder.populateViews(mList.get(position));
+        if (position < mList.size()) {
+            viewHolder.populateViews(mList.get(position));
+        }
     }
 
     @Override
@@ -110,9 +112,9 @@ public class RoomDirectoryAdapter extends RecyclerView.Adapter<RoomDirectoryAdap
         private RoomDirectoryViewHolder(final View itemView) {
             super(itemView);
             vMainView = itemView;
-            vAvatarView = (ImageView) itemView.findViewById(R.id.room_directory_avatar);
-            vServerTextView = (TextView) itemView.findViewById(R.id.room_directory_display_name);
-            vDescriptionTextView = (TextView) itemView.findViewById(R.id.room_directory_description);
+            vAvatarView = itemView.findViewById(R.id.room_directory_avatar);
+            vServerTextView = itemView.findViewById(R.id.room_directory_display_name);
+            vDescriptionTextView = itemView.findViewById(R.id.room_directory_description);
         }
 
         private void populateViews(final RoomDirectoryData server) {
@@ -122,7 +124,7 @@ public class RoomDirectoryAdapter extends RecyclerView.Adapter<RoomDirectoryAdap
 
             if (server.isIncludedAllNetworks()) {
                 description = vServerTextView.getContext().getString(R.string.directory_server_all_rooms_on_server, server.getDisplayName());
-            } else if (TextUtils.equals("Matrix",server.getDisplayName())) {
+            } else if (TextUtils.equals("Matrix", server.getDisplayName())) {
                 description = vServerTextView.getContext().getString(R.string.directory_server_native_rooms, server.getDisplayName());
             }
 
@@ -194,7 +196,7 @@ public class RoomDirectoryAdapter extends RecyclerView.Adapter<RoomDirectoryAdap
 
         mPendingDownloadByUrl.put(avatarURL, new ArrayList<>(Arrays.asList(weakImageView)));
 
-        new AsyncTask<Void, Void, Bitmap>() {
+        AsyncTask<Void, Void, Bitmap> task = new AsyncTask<Void, Void, Bitmap>() {
             @Override
             protected Bitmap doInBackground(Void... params) {
                 Bitmap bitmap = null;
@@ -226,7 +228,14 @@ public class RoomDirectoryAdapter extends RecyclerView.Adapter<RoomDirectoryAdap
                     }
                 }
             }
-        }.execute();
+        };
+
+        try {
+            task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "## downloadAvatar() failed " + e.getMessage());
+            task.cancel(true);
+        }
     }
 
     /*

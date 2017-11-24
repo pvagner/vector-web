@@ -1,5 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <resources>
+    <!-- use to retrieve the supported languages list -->
+    <!-- should the same value as the file name -->
     <string name="resouces_language">pt</string>
     <string name="resouces_country">BR</string>
 
@@ -81,10 +83,8 @@
     <!-- People fragment -->
     <string name="direct_chats_header">Conversations</string>
     <string name="local_address_book_header">Local address book</string>
-    <string name="known_contacts_header">Known contacts</string>
     <string name="matrix_only_filter">Matrix contacts only</string>
     <string name="no_conversation_placeholder">No conversations</string>
-    <string name="no_local_contact_placeholder">No local contacts</string>
     <string name="no_contact_access_placeholder">You didn\'t allow Riot to access your local contacts</string>
     <string name="no_result_placeholder">No results</string>
 
@@ -204,8 +204,10 @@
     <!-- read receipts list Screen -->
     <string name="read_receipts_list">Ler lista de recipientes</string>
 
+    <!-- Mels -->
+    <string name="membership_changes">%d membership changes</string>
+
     <!-- accounts list Screen -->
-    <string name="choose_account">Escolher conta</string>
 
     <!-- image size selection -->
     <string name="compression_options">Enviar como </string>
@@ -296,7 +298,6 @@
     <string name="room_creation_title">Nova conversa</string>
     <string name="room_creation_add_member">Adicionar uma pessoa</string>
     <string name="room_header_active_members">%1$d/%2$d integrantes ativos</string>
-    <string name="room_header_invite_members">Convidar novos integrantes</string>
     <string name="room_title_members">%1$d integrantes</string>
     <string name="room_title_one_member">1 integrante</string>
     <string name="room_e2e_alert_title">Atenção!</string>
@@ -345,9 +346,7 @@
     <!-- invitation -->
     <string name="people_search_invite_by_id"><u>Invite by ID</u></string>
     <string name="people_search_local_contacts">CONTATOS LOCAIS (%d)</string>
-    <string name="people_search_known_contacts">CONTATOS CONHECIDOS (%s)</string>
     <string name="people_search_filter_text">Apenas usuários Matrix</string>
-    <string name="people_search_too_many_contacts">Há contatos demais. Por favor, use o campo de busca</string>
 
     <string name="people_search_invite_by_id_dialog_title">Invite user by ID</string>
     <string name="people_search_invite_by_id_dialog_description">Please enter one or more email address or Matrix ID</string>
@@ -356,8 +355,8 @@
     <!--  Chat -->
     <string name="room_menu_search">Buscar</string>
     <string name="room_one_user_is_typing">%s está digitando…</string>
-    <string name="room_two_users_are_typing">%1$s &#038; %2$s estão digitando…</string>
-    <string name="room_many_users_are_typing">%1$s &#038; %2$s &#038; outros estão digitando…</string>
+    <string name="room_two_users_are_typing">%1$s &amp; %2$s estão digitando…</string>
+    <string name="room_many_users_are_typing">%1$s &amp; %2$s &amp; outros estão digitando…</string>
     <string name="room_message_placeholder_encrypted">Enviar mensagem criptografada…</string>
     <string name="room_message_placeholder_not_encrypted">Enviar uma mensagem (não criptografada)…</string>
     <string name="room_offline_notification">A conexão com o servidor se perdeu.</string>
@@ -471,7 +470,6 @@
     <string name="settings_enable_this_device">Habilitar notificações para este dispositivo</string>
     <string name="settings_turn_screen_on">Acender a tela por 3 segundos</string>
 
-    <string name="settings_containing_my_name">Msgs contendo meu nome</string>
     <string name="settings_messages_in_one_to_one">Msgs em conversas diretas</string>
     <string name="settings_messages_in_group_chat">Msgs em salas</string>
     <string name="settings_invited_to_room">Quando eu sou convidado a uma sala</string>
@@ -528,6 +526,10 @@
     <string name="account_email_validation_title">Verificação pendente</string>
     <string name="account_email_validation_message">Por favor verifique o seu email e clique no link que está lá. Feito isso, clique em continuar.</string>
     <string name="account_email_validation_error">Não consegui averiguar o seu endereço de email. Favor verificar seu email e clicar no link que ele contém. Quando tiver feito isso, clique em continuar.</string>
+
+    <string name="account_email_already_used_error">This email address is already in use</string>
+    <string name="account_email_not_found_error">Failed to send email: This email address was not found</string>
+    <string name="account_phone_number_already_used_error">This phone number is already in use</string>
 
     <string name="settings_change_password">Mudar a senha</string>
     <string name="settings_old_password">senha antiga</string>
@@ -631,7 +633,7 @@
     <string name="directory_title">Diretório</string>
 
     <!-- GA use -->
-    <string name="ga_use_alert_message">Você aceita ajudar-nos a melhorar o comportamento deste aplicativo e enviar relatórios de erros?</string>
+    <string name="ga_use_alert_message">Você quer nos ajudar a melhorar este aplicativo autorizando o envio de relatórios de erros?</string>
     <string name="ga_use_settings">Automaticamente enviar relatórios de erros</string>
     <string name="ga_use_disable_alert_message">Você precisa reiniciar o aplicativo para desabilitar o envio de relatórios de erros.</string>
 
@@ -710,4 +712,37 @@
 
     <!-- historical -->
     <string name="historical_placeholder">Search for historical</string>
+<string name="offline">Desconectada(o)</string>
+
+    <string name="user_directory_header">Lista de usuárias(os)</string>
+    <string name="people_search_user_directory">LISTA DE USUÁRIAS(OS) (%s)</string>
+    <string name="settings_start_on_boot">Iniciar na inicialização do celular</string>
+    <string name="settings_clear_medias_cache">Esvaziar o cache de mídia</string>
+    <string name="settings_keep_media">Manter mídia</string>
+
+    <string name="settings_hide_read_receipts">Ocultar recibos de leitura</string>
+    <string name="settings_dont_send_typings_notifs">Não enviar notificações de digitação</string>
+    <string name="settings_always_show_timestamps">Sempre mostrar a hora das mensagens</string>
+    <string name="settings_disable_markdown">Desabilitar formatação Markdown</string>
+    <string name="settings_data_save_mode">Modo de economia de dados</string>
+
+    <string name="settings_user_interface">Interface de usuária(o)</string>
+    <string name="settings_interface_language">Idioma de interface</string>
+    <string name="settings_select_language">Escolha o idioma</string>
+
+    <string name="media_saving_period_3_days">3 dias</string>
+    <string name="media_saving_period_1_week">1 semana</string>
+    <string name="media_saving_period_1_month">1 mês</string>
+    <string name="media_saving_period_forever">Para sempre</string>
+
+    <string name="settings_theme">Tema</string>
+
+    <string name="font_size">Tamanho da fonte</string>
+    <string name="tiny">Minúsculo</string>
+    <string name="small">Pequeno</string>
+    <string name="normal">Normal</string>
+    <string name="large">Grande</string>
+    <string name="larger">Maior</string>
+    <string name="largest">Ainda maior</string>
+    <string name="huge">Gigantesco</string>
 </resources>

@@ -21,51 +21,50 @@ import android.text.TextUtils;
 import org.matrix.androidsdk.MXSession;
 
 import java.io.Serializable;
-import java.util.regex.Pattern;
 
 /**
  * This class describes a directory server.
  */
 public class RoomDirectoryData implements Serializable {
 
-    public static final String DEFAULT_HOME_SERVER_NAME = "Matrix";
+    private static final String DEFAULT_HOME_SERVER_NAME = "Matrix";
 
     /**
      * The display name
      */
-    final String mDisplayName;
+    private final String mDisplayName;
 
     /**
      * The directory server URL (might be null)
      */
-    final String mServerUrl;
+    private final String mServerUrl;
 
     /**
      * The third party server identifier
      */
-    final String mThirdPartyInstanceId;
+    private final String mThirdPartyInstanceId;
 
     /**
      * Tell if all the federated servers must be included
      */
-    final boolean mIncludeAllNetworks;
+    private final boolean mIncludeAllNetworks;
 
     /**
      * the avatar url
      */
-    final String mAvatarUrl;
+    private final String mAvatarUrl;
 
     /**
      * Creator
      *
-     * @param session the session
-     * @param serverUrl the home server url
+     * @param session    the session
+     * @param serverUrl  the home server url
      * @param serverName the home server displayname
      * @return a new instance
      */
     public static RoomDirectoryData getIncludeAllServers(MXSession session, String serverUrl, String serverName) {
         // the self server url should be null
-        if (TextUtils.equals(session.getHomeserverConfig().getHomeserverUri().getHost(), serverUrl)) {
+        if (TextUtils.equals(session.getHomeServerConfig().getHomeserverUri().getHost(), serverUrl)) {
             return new RoomDirectoryData(null, serverName, null, null, true);
         } else {
             return new RoomDirectoryData(serverUrl, serverName, null, null, true);
@@ -74,6 +73,7 @@ public class RoomDirectoryData implements Serializable {
 
     /**
      * Provides the default value
+     *
      * @return the default value
      */
     public static RoomDirectoryData getDefault() {

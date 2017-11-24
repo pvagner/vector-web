@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <resources>
+    <!-- use to retrieve the supported languages list -->
+    <!-- should the same value as the file name -->
     <string name="resouces_language">de</string>
     <string name="resouces_country">DE</string>
 
@@ -18,14 +20,14 @@
     <string name="send">Senden</string>
     <string name="copy">Kopieren</string>
     <string name="resend">Erneut senden</string>
-    <string name="redact">Verbergen</string>
+    <string name="redact">Entfernen</string>
     <string name="quote">Zitieren</string>
     <string name="share">Teilen</string>
     <string name="later">Später</string>
     <string name="forward">Weiterleiten</string>
     <string name="permalink">Permalink</string>
-    <string name="view_source">Zeige Quellcode</string>
-    <string name="view_decrypted_source">View Decrypted Source</string>
+    <string name="view_source">Quellcode anzeigen</string>
+    <string name="view_decrypted_source">Entschlüsselten Quellcode anzeigen</string>
     <string name="delete">Löschen</string>
     <string name="rename">Umbenennen</string>
     <string name="report_content">Inhalt melden</string>
@@ -33,8 +35,8 @@
     <string name="ongoing_conference_call">" Konferenzgespräch läuft. Per Sprach-Chat oder per Video-Chat beitreten."</string>
     <string name="ongoing_conference_call_voice">Sprache</string>
     <string name="ongoing_conference_call_video">Video</string>
-    <string name="cannot_start_call">Kann Gespräch nicht starten. Bitte später erneut probieren</string>
-    <string name="missing_permissions_warning">Aufgrund fehlender Berechtigungen stehen eventuell einige Funktionen nicht zur Verfügung…</string>
+    <string name="cannot_start_call">Das Gespräch kann nicht gestartet werden, bitte später erneut versuchen</string>
+    <string name="missing_permissions_warning">Aufgrund fehlender Berechtigungen stehen eventuell einige Funktionen nicht zur Verfügung..</string>
     <string name="missing_permissions_to_start_conf_call">Dir fehlt das Recht ein Konferenzgespräch in diesem Raum zu starten</string>
     <string name="missing_permissions_title_to_start_conf_call">Kann Gespräch nicht starten</string>
     <string name="device_information">Geräteinformationen</string>
@@ -81,10 +83,8 @@
     <!-- People fragment -->
     <string name="direct_chats_header">Konversationen</string>
     <string name="local_address_book_header">Lokales Adressbuch</string>
-    <string name="known_contacts_header">Bekannte Kontakte</string>
     <string name="matrix_only_filter">Nur Matrix-Kontakte</string>
     <string name="no_conversation_placeholder">Keine Konversationen</string>
-    <string name="no_local_contact_placeholder">No local contacts</string>
     <string name="no_contact_access_placeholder">Du hast Riot nicht erlaubt auf deine lokalen Kontakte zuzugreifen</string>
     <string name="no_result_placeholder">Keine Ergebnisse</string>
 
@@ -94,28 +94,28 @@
     <string name="no_room_placeholder">Keine Räume</string>
     <string name="no_public_room_placeholder">Keine öffentl. Räume verfügbar</string>
     <plurals name="public_room_nb_users">
-	<item quantity="one">1 Nutzer</item>
-	<item quantity="other">%d Nutzer</item>
+	<item quantity="one">1 Benutzer</item>
+	<item quantity="other">%d Benutzer</item>
 </plurals>
 
-    <string name="send_bug_report_include_logs">Sende Bericht</string>
-    <string name="send_bug_report_include_crash_logs">Sende Absturzbericht</string>
+    <string name="send_bug_report_include_logs">Logdateien übermitteln</string>
+    <string name="send_bug_report_include_crash_logs">Absturzberichte übermitteln</string>
     <string name="send_bug_report_include_screenshot">Screenshot übermitteln</string>
     <string name="send_bug_report">Problem melden</string>
-    <string name="send_bug_report_description">Bitte beschreibe das Problem. Was hast du getan? Was wolltest du das passiert? Was passierte?</string>
-    <string name="send_bug_report_placeholder">Beschreibe hier dein Problem (Vorzugsweise auf Englisch)</string>
-    <string name="send_bug_report_logs_description">Um Probleme diagnostizieren zu können, werden Nutzungsprotokolle von diesem Client mit dem Fehlerbericht gesendet. Wenn du nur den obigen Text senden möchtest enferne folgenden Haken:</string>
+    <string name="send_bug_report_description">Bitte beschreibe das Problem. Was hast du genau gemacht? Was sollte passieren? Was passierte tatsächlich?</string>
+    <string name="send_bug_report_placeholder">Problembeschreibung</string>
+    <string name="send_bug_report_logs_description">Um Probleme diagnostizieren zu können, werden Logdateien dieses Matrix-Clients zusammen mit dem Fehlerbericht übermittelt. Wenn du nur den oben eingegebenen Text senden möchtest, bitte die nachfolgenden Haken entsprechend entfernen:</string>
     <string name="send_bug_report_alert_message">Du scheinst dein Telefon frustriert zu schütteln. Möchtest du einen Fehlerbericht senden?</string>
-    <string name="send_bug_report_sent">Der Fehlerbericht wurde erfolgreich gesendet</string>
-    <string name="send_bug_report_failed">Der Fehlerbericht konnte nicht gesendet werden (%s)</string>
+    <string name="send_bug_report_sent">Der Fehlerbericht wurde erfolgreich übermittelt</string>
+    <string name="send_bug_report_failed">Der Fehlerbericht konnte nicht übermittelt werden (%s)</string>
     <string name="send_bug_report_progress">Fortschritt (%s%%)</string>
     <string name="send_bug_report_app_crashed">Die Anwendung ist während der letzten Benutzung abgestürzt. Möchtest du eine Fehlermeldung übermitteln?</string>
 
     <string name="send_files_in">Sende Datei nach</string>
     <string name="read_receipt">Gelesen</string>
 
-    <string name="join_room">Trete Raum bei</string>
-    <string name="username">Nutzername</string>
+    <string name="join_room">Raum betreten</string>
+    <string name="username">Benutzername</string>
     <string name="create_account">Registrieren</string>
     <string name="login">Anmelden</string>
     <string name="logout">Abmelden</string>
@@ -126,7 +126,7 @@
     <string name="search">Suchen</string>
 
     <string name="start_new_chat">Neuen Chat starten</string>
-    <string name="start_voice_call">Sprach-Anruf starten</string>
+    <string name="start_voice_call">Sprachanruf starten</string>
     <string name="start_video_call">Video-Anruf starten</string>
 
     <string name="option_send_files">Dateien senden</string>
@@ -138,15 +138,19 @@
     <string name="auth_submit">Absenden</string>
     <string name="auth_skip">Überspringen</string>
     <string name="auth_send_reset_email">Rücksetz-E-Mail senden</string>
-    <string name="auth_return_to_login">Zur Anmeldung zurückkehren</string>
+    <string name="auth_return_to_login">Zur Anmeldemaske zurückkehren</string>
     <string name="auth_user_id_placeholder">E-Mail oder Nutzername</string>
     <string name="auth_password_placeholder">Passwort</string>
     <string name="auth_new_password_placeholder">Neues Passwort</string>
     <string name="auth_user_name_placeholder">Benutzername</string>
-    <string name="auth_add_email_message">Füge eine E-Mail-Adresse zu deinem Account hinzu, damit andere Nutzer dich finden können und du dein Passwort zurücksetzen kannst.</string>
-    <string name="auth_add_phone_message">Füge eine Telefonnummer zu deinem Account hinzu, damit andere Nutzer dich finden können.</string>
-    <string name="auth_add_email_phone_message">Füge eine E-Mail-Adresse und/oder eine Telefonnummer zu deinem Account hinzu, damit andere Nutzer dich finden können.\n\nDie E-Mail-Adresse erlaubt dir außerdem dein Passwort zurückzusetzen.</string>
-    <string name="auth_add_email_and_phone_message">Füge eine E-Mail-Adresse und eine Telefonnummer zu deinem Account hinzu, damit Nutzer dich finden können.\n\nDie E-Mail-Adresse erlaubt dir außerdem dein Passwort zurückzusetzen.</string>
+    <string name="auth_add_email_message">Füge eine E-Mail-Adresse zu deinem Account hinzu, damit andere Benutzer dich finden können und du dein Passwort zurücksetzen kannst.</string>
+    <string name="auth_add_phone_message">Füge eine Telefonnummer zu deinem Benutzerkonto hinzu, damit andere Benutzer dich finden können.</string>
+    <string name="auth_add_email_phone_message">Füge eine E-Mail-Adresse und/oder eine Telefonnummer zu deinem Benutzerkonto hinzu, damit andere Benutzer dich finden können.
+
+Das Hinzufügen einer E-Mail-Adresse erlaubt es dir außerdem, dein Passwort zurückzusetzen.</string>
+    <string name="auth_add_email_and_phone_message">Füge eine E-Mail-Adresse und eine Telefonnummer zu deinem Benutzerkonto hinzu, damit andere Benutzer dich finden können.
+
+Das Hinzufügen einer E-Mail-Adresse erlaubt es dir außerdem, dein Passwort zurückzusetzen.</string>
     <string name="auth_email_placeholder">E-Mail-Adresse</string>
     <string name="auth_opt_email_placeholder">E-Mail-Adresse (optional)</string>
     <string name="auth_phone_number_placeholder">Telefonnummer</string>
@@ -166,7 +170,7 @@
     <string name="auth_invalid_token">Ungültiges Token</string>
     <string name="auth_password_dont_match">Passwörter stimmen nicht überein</string>
     <string name="auth_forgot_password">Passwort vergessen?</string>
-    <string name="auth_use_server_options">Besondere Server-Optionen (erweitert)</string>
+    <string name="auth_use_server_options">Benutzerdefinierte Server-Optionen (erweitert)</string>
     <string name="auth_email_validation_message">Bitte überprüfe deinen E-Mail-Posteingang, um die Registrierung abzuschließen</string>
     <string name="auth_threepid_warning_message">Registrierung mit E-Mail und Telefonnummer zusammen wird zurzeit nicht unterstützt, da die zugrundeliegende Schnittstelle noch nicht existiert. Nur die Telefonnummer wird in den Account übernommen.\n\nDu kannst aber deine E-Mail-Adresse in den Einstellungen zu deinem Profil hinzufügen.</string>
     <string name="auth_recaptcha_message">Dieser Home-Server möchte sicherstellen, dass du kein Roboter bist</string>
@@ -177,7 +181,7 @@
     <string name="auth_reset_password_message">Um dein Passwort zurückzusetzen, gib deine mit deinem Account verknüpfte E-Mail-Adresse ein:</string>
     <string name="auth_reset_password_missing_email">Die E-Mail-Adresse, die mit deinem Account verknüpft ist, muss eingegeben werden.</string>
     <string name="auth_reset_password_missing_password">Ein neues Passwort muss eingegeben werden.</string>
-    <string name="auth_reset_password_email_validation_message">Eine E-Mail wurde an %s gesendet. Nachdem du den Link darin angeklickt hast, klicke unten.</string>
+    <string name="auth_reset_password_email_validation_message">Eine E-Mail wurde an %s gesendet. Bitte dem in der E-Mail enthaltenen Link folgen und anschließend unten klicken.</string>
     <string name="auth_reset_password_error_unauthorized">Verifizierung der E-Mail-Adresse ist fehlgeschlagen: Stelle sicher, dass du den Link in der E-Mail geöffnet hast</string>
     <string name="auth_reset_password_success_message">Dein Passwort wurde zurückgesetzt.
 
@@ -197,7 +201,7 @@ Du wurdest auf allen Geräten abgemeldet und wirst keine Push-Benachrichtigungen
     <string name="login_error_bad_json">Fehlerhaftes JSON</string>
     <string name="login_error_not_json">Enthielt kein gültiges JSON</string>
     <string name="login_error_limit_exceeded">Es wurden zu viele Anfragen gesendet</string>
-    <string name="login_error_user_in_use">Dieser Nutzername wird bereits verwendet</string>
+    <string name="login_error_user_in_use">Dieser Benutzername wird bereits verwendet</string>
     <string name="login_error_login_email_not_yet">Der Link in der E-Mail wurde noch nicht geöffnet</string>
 
     <!-- crypto warnings -->
@@ -206,8 +210,10 @@ Du wurdest auf allen Geräten abgemeldet und wirst keine Push-Benachrichtigungen
     <!-- read receipts list Screen -->
     <string name="read_receipts_list">Lesebestätigungsliste</string>
 
+    <!-- Mels -->
+    <string name="membership_changes">%d Änderungen der Mitgliedschaft</string>
+
     <!-- accounts list Screen -->
-    <string name="choose_account">Account wählen</string>
 
     <!-- image size selection -->
     <string name="compression_options">Sende als </string>
@@ -236,13 +242,13 @@ Du wurdest auf allen Geräten abgemeldet und wirst keine Push-Benachrichtigungen
 
     <!-- call string -->
     <string name="call_connected">Anruf verbunden</string>
-    <string name="call_connecting">Anruf verbindet…</string>
+    <string name="call_connecting">Verbindungsaufbau…</string>
     <string name="call_ended">Anruf beendet</string>
     <string name="call_ring">Es klingelt…</string>
     <string name="incoming_call">Eingehender Anruf</string>
     <string name="incoming_video_call">Eingehender Video-Anruf</string>
-    <string name="incoming_voice_call">Eingehender Sprach-Anruf</string>
-    <string name="call_in_progress">Anruf im Gange</string>
+    <string name="incoming_voice_call">Eingehender Sprachanruf</string>
+    <string name="call_in_progress">Anruf aktiv</string>
 
     <string name="call_error_user_not_responding">Die Gegenseite hat den Anruf nicht angenommen.</string>
     <string name="call_error_ice_failed">Medien-Verbindung fehlgeschlagen</string>
@@ -262,14 +268,20 @@ Du wurdest auf allen Geräten abgemeldet und wirst keine Push-Benachrichtigungen
     <string name="permissions_rationale_popup_title">Information</string>
     <string name="permissions_rationale_msg_storage">Riot benötigt die Berechtigung, auf deine Fotos und Videos zugreifen zu können, um Anhänge zu senden und zu speichern.\n\nBitte erlaube den Zugriff im nächsten Dialog, um Dateien von deinem Gerät zu versenden.</string>
     <string name="permissions_rationale_msg_camera">Riot benötigt die Berechtigung, auf deine Kamera zugreifen zu können, um Bilder aufzunehmen und Video-Anrufe durchzuführen.</string>
-    <string name="permissions_rationale_msg_camera_explanation">\n\nBitte erlaube den Zugriff im nächsten Dialog, um den Anruf zu tätigen.</string>
-    <string name="permissions_rationale_msg_record_audio">Riot benötigt die Berechtigung, auf dein Mikrofon zugreifen zu können, um (Sprach-)Anrufe tätigen zu können.</string>
-    <string name="permissions_rationale_msg_record_audio_explanation">\n\nBitte erlaube den Zugriff im nächsten Dialog, um den Anruf zu tätigen.</string>
-    <string name="permissions_rationale_msg_camera_and_audio">Riot benötigt die Berechtigung, auf deine Kamera und dein Mikrofon zugreifen zu können, um Video-Anrufe tätigen zu können.
+    <string name="permissions_rationale_msg_camera_explanation">
 
-Bitte erlaube den Zugriff im nächsten Dialog, um den Anruf zu starten.</string>
-    <string name="permissions_rationale_msg_contacts">Riot benötigt die Berechtigung, auf deine Kontakte im Adressbuch zugreifen zu können, um andere Matrix-Nutzer aufgrund ihrer E-Mail-Adresse und Telefonnummer zu finden.\n\nBitte erlaube den Zugriff im nächsten Dialog, um Kontakte im Adressbuch zu finden, die über Riot erreichbar sind.</string>
-    <string name="permissions_msg_contacts_warning_other_androids">Riot benötigt die Berechtigung, auf deine Adressbuch-Kontakte zugreifen zu dürfen, um andere Matrix-Nutzer anhand ihrer E-Mail-Adresse und/oder ihrer Telefonnummer finden zu können.
+Bitte erlaube den Zugriff im nächsten Dialog, um den Anruf zu durchzuführen.</string>
+    <string name="permissions_rationale_msg_record_audio">Riot benötigt die Berechtigung, auf dein Mikrofon zugreifen zu können, um (Sprach-)Anrufe tätigen zu können.</string>
+    <string name="permissions_rationale_msg_record_audio_explanation">
+
+Bitte erlaube den Zugriff im nächsten Dialog, um den Anruf durchzuführen.</string>
+    <string name="permissions_rationale_msg_camera_and_audio">Riot benötigt die Berechtigung, auf deine Kamera und dein Mikrofon zugreifen zu können, um Video-Anrufe durchführen zu können.
+
+Bitte erlaube den Zugriff im nächsten Dialog, um den Anruf durchzuführen.</string>
+    <string name="permissions_rationale_msg_contacts">Riot benötigt die Berechtigung, auf deine Kontakte im Adressbuch zugreifen zu können, um andere Matrix-Benutzer mit Hilfe ihrer E-Mail-Adresse oder Telefonnummer zu finden.
+
+Bitte erlaube den Zugriff im nächsten Dialog, um Kontakte im Adressbuch zu finden, die über Riot erreichbar sind.</string>
+    <string name="permissions_msg_contacts_warning_other_androids">Riot benötigt die Berechtigung, auf deine Adressbuch-Kontakte zugreifen zu dürfen, um andere Matrix-Benutzer mit Hilfe ihrer E-Mail-Adresse und/oder ihrer Telefonnummer finden zu können.
 
 Soll Riot der Zugriff auf deine Kontakte erlaubt werden?</string>
 
@@ -289,11 +301,12 @@ Soll Riot der Zugriff auf deine Kontakte erlaubt werden?</string>
     <string name="reject">Ablehnen</string>
 
     <!-- Room -->
-    <string name="room_jump_to_first_unread">Springe zur ersten ungelesenen Nachricht.</string>
+    <string name="room_jump_to_first_unread">Zur ersten ungelesenen Nachricht springen.</string>
 
     <!-- Room Preview -->
-    <string name="room_preview_invitation_format">Du wurdest von %s eingeladen, diesen Raum zu betreten</string>
-    <string name="room_preview_unlinked_email_warning">Diese Einladung wurde an %s gesendet, der nicht mit diesem Account verknüpft ist.\nDu möchtest dich evtl. mit einem anderen Account anmelden oder diese E-Mail-Adresse zu diesem Account hinzufügen.</string>
+    <string name="room_preview_invitation_format">Du wurdest von %s in diesen Raum eingeladen</string>
+    <string name="room_preview_unlinked_email_warning">Diese Einladung wurde an %s gesendet, der nicht mit diesem Account verknüpft ist.
+Du möchtest dich evtl. mit einem anderen Account anmelden oder diese E-Mail-Adresse zu diesem Account hinzufügen.</string>
     <string name="room_preview_try_join_an_unknown_room">Du möchtest auf %s zugreifen. Möchtest du den Raum betreten, um an der Diskussion teilzunehmen?</string>
     <string name="room_preview_try_join_an_unknown_room_default">einen Raum</string>
     <string name="room_preview_room_interactions_disabled">Dies ist eine Vorschau dieses Raums. Raum-Interaktionen wurden deaktiviert.</string>
@@ -302,7 +315,6 @@ Soll Riot der Zugriff auf deine Kontakte erlaubt werden?</string>
     <string name="room_creation_title">Neuer Chat</string>
     <string name="room_creation_add_member">Mitglied hinzufügen</string>
     <string name="room_header_active_members">%1$d/%2$d aktive Mitglieder</string>
-    <string name="room_header_invite_members">Mitglieder einladen</string>
     <string name="room_title_members">%1$d Mitglieder</string>
     <string name="room_title_one_member">1 Mitglied</string>
     <string name="room_e2e_alert_title">Achtung!</string>
@@ -328,34 +340,33 @@ Soll Riot der Zugriff auf deine Kontakte erlaubt werden?</string>
 
     <string name="room_participants_header_admin_tools">ADMIN-WERKZEUGE</string>
     <string name="room_participants_header_call">ANRUFE</string>
-    <string name="room_participants_header_direct_chats">DIREKTE CHATS</string>
+    <string name="room_participants_header_direct_chats">DIREKT-CHATS</string>
     <string name="room_participants_header_devices">GERÄTE</string>
 
     <string name="room_participants_action_invite">Einladen</string>
     <string name="room_participants_action_leave">Diesen Raum verlassen</string>
     <string name="room_participants_action_remove">Aus diesem Raum entfernen</string>
-    <string name="room_participants_action_ban">Bannen</string>
-    <string name="room_participants_action_unban">Entbannen</string>
-    <string name="room_participants_action_set_default_power_level">Zum normalen Nutzer machen</string>
+    <string name="room_participants_action_ban">Verbannen</string>
+    <string name="room_participants_action_unban">Verbannung aufheben</string>
+    <string name="room_participants_action_set_default_power_level">Zum normalen Benutzer herabstufen</string>
     <string name="room_participants_action_set_moderator">Zum Moderator machen</string>
     <string name="room_participants_action_set_admin">Zum Admin machen</string>
     <string name="room_participants_action_ignore">Alle Nachrichten dieses Nutzers verbergen</string>
     <string name="room_participants_action_unignore">Alle Nachrichten dieses Nutzers anzeigen</string>
-    <string name="room_participants_invite_search_another_user">Nutzer-ID, Name oder E-Mail-Adresse</string>
+    <string name="room_participants_invite_search_another_user">Benutzer-ID, Name oder E-Mail-Adresse</string>
     <string name="room_participants_action_mention">Erwähnen</string>
     <string name="room_participants_action_devices_list">Geräteliste anzeigen</string>
-    <string name="room_participants_power_level_prompt">Du wirst diese Änderung nicht zurücknehmen können, da du diesem Nutzer dasselbe Berechtigungslevel wie dir selbst gibst.\nBist du sicher?</string>
+    <string name="room_participants_power_level_prompt">Du wirst diese Änderung nicht rückgängig machen können, da der Benutzer dasselbe Berechtigungslevel wie du selbst erhalten wirst.
+Bist du sicher?</string>
 
     <string name="room_participants_invite_prompt_msg">"Bist du sicher, dass du %s in diesen Chat einladen willst?"</string>
 
     <!-- invitation -->
     <string name="people_search_invite_by_id"><u>Mit ID einladen</u></string>
     <string name="people_search_local_contacts">LOKALE KONTAKTE (%d)</string>
-    <string name="people_search_known_contacts">BEKANNTE KONTAKTE (%s)</string>
-    <string name="people_search_filter_text">Nur Matrix-Nutzer</string>
-    <string name="people_search_too_many_contacts">"Zu viele Kontakte, bitte das Suchfeld  benutzen"</string>
+    <string name="people_search_filter_text">Nur Matrix-Benutzer</string>
 
-    <string name="people_search_invite_by_id_dialog_title">Nutzer mit ID einladen</string>
+    <string name="people_search_invite_by_id_dialog_title">Benutzer per ID einladen</string>
     <string name="people_search_invite_by_id_dialog_description">Bitte gebe eine oder mehrere E-Mail-Adressen oder eine Matrix-ID ein</string>
     <string name="people_search_invite_by_id_dialog_hint">E-Mail or Matrix-ID</string>
 
@@ -370,7 +381,7 @@ Soll Riot der Zugriff auf deine Kontakte erlaubt werden?</string>
     <string name="room_unsent_messages_notification">Nachrichten konnten nicht gesendet werden. %1$s oder %2$s?</string>
     <string name="room_unknown_devices_messages_notification">Nachrichten wurden nicht gesendet, da unbekannte Geräte anwesend sind. %1$s oder %2$s?</string>
     <string name="room_prompt_resend">Alles erneut senden</string>
-    <string name="room_prompt_cancel">senden abbrechen</string>
+    <string name="room_prompt_cancel">Senden abbrechen</string>
     <string name="room_resend_unsent_messages">Nicht gesendete Nachrichten erneut senden</string>
     <string name="room_delete_unsent_messages">Nicht gesendete Nachrichten löschen</string>
     <string name="room_message_file_not_found">Datei nicht gefunden</string>
@@ -382,25 +393,25 @@ Soll Riot der Zugriff auf deine Kontakte erlaubt werden?</string>
     <string name="ssl_trust">Vertrauen</string>
     <string name="ssl_do_not_trust">Nicht vertrauen</string>
     <string name="ssl_logout_account">Abmelden</string>
-    <string name="ssl_remain_offline">Offline bleiben</string>
+    <string name="ssl_remain_offline">Ignorieren</string>
     <string name="ssl_fingerprint_hash">Fingerabdruck (%s):</string>
     <string name="ssl_could_not_verify">Konnte Identität des Remote-Servers nicht verifizieren.</string>
     <string name="ssl_cert_not_trust">Dies kann bedeuten, dass jemand böswillig deinen Internetverkehr abfängt oder dass dein Telefon dem Zertifikat, dass der Remote-Server anbietet, nicht vertraut.</string>
     <string name="ssl_cert_new_account_expl">Wenn der Server-Administrator dir mitgeteilt hat, dass dies zu erwarten sei, stelle sicher, dass der Fingerabdruck unten mit dem von deinem Administrator bereitgestellten übereinstimmt.</string>
     <string name="ssl_unexpected_existing_expl">Das Zertifikat unterscheidet sich von dem Zertifikat, dem dein Gerät ursprünglich vertraut hat. Dies ist SEHR UNGEWÖHNLICH. Es wird empfohlen, dass du dieses neue Zertifikat NICHT AKZEPTIERST.</string>
-    <string name="ssl_expected_existing_expl">Das Zertifikat hat sich von einem vertrauten zu einem nicht vertrauten Zertifikat geändert. Der Server kann sein Zertifikat erneuert haben. Bitte frage deinen Server-Administrator nach dem zu erwartenden Fingerabdruck.</string>
+    <string name="ssl_expected_existing_expl">Das Zertifikat hat sich von einem ursprünglich vertrauenswürdigem Zertifikat in ein nicht vertrauenswürdiges Zertifikat geändert. Eventuell wurde das Zertifikat des Servers erneuert. Bitte erkundige dich beim Server-Administrator, welcher Fingerprint als vertrauenswürdig gilt.</string>
     <string name="ssl_only_accept">Akzeptiere das Zertifikat NUR dann, wenn der Server-Administrator einen Fingerprint veröffentlicht hat, der mit dem obigen übereinstimmt.</string>
     <string name="ssl_fingerprint_example">00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00</string>
 
     <!-- Room Details -->
-    <string name="room_details_title">Raumdetails</string>
+    <string name="room_details_title">Raum-Details</string>
     <string name="room_details_people">Personen</string>
     <string name="room_details_files">Dateien</string>
     <string name="room_details_settings">Einstellungen</string>
     <string name="room_details_selected">ausgewählt</string>
-    <string name="malformed_id">Ungültige ID. Eine E-Mail-Adresse oder eine Matrix-ID (\'@localpart:domain\') ist erforderlich.</string>
+    <string name="malformed_id">Ungültige ID. Eine E-Mail-Adresse oder eine Matrix-ID (\'@localpart:domain\') ist erforderlich</string>
     <string name="room_details_people_invited_group_name">EINGELADEN</string>
-    <string name="room_details_people_present_group_name">EINGETRETEN</string>
+    <string name="room_details_people_present_group_name">TEILNEHMER</string>
 
     <!-- Room events -->
     <string name="room_event_action_report_prompt_reason">Grund für das Melden dieses Inhalts</string>
@@ -417,7 +428,7 @@ Soll Riot der Zugriff auf deine Kontakte erlaubt werden?</string>
 
     <!-- Search -->
     <string name="search_hint">Suchen</string>
-    <string name="search_members_hint">Raummitglieder filtern</string>
+    <string name="search_members_hint">Raum-Mitglieder filtern</string>
     <string name="search_no_results">Keine Suchergebnisse</string>
     <string name="tab_title_search_rooms">RÄUME</string>
     <string name="tab_title_search_messages">NACHRICHTEN</string>
@@ -435,7 +446,7 @@ Soll Riot der Zugriff auf deine Kontakte erlaubt werden?</string>
     <string name="room_recents_create_room">Raum erstellen</string>
     <string name="room_recents_join_room">Raum beitreten</string>
     <string name="room_recents_join_room_title">Einem Raum beitreten</string>
-    <string name="room_recents_join_room_prompt">Gebe eine Raum-ID oder einen Raum-Alias ein</string>
+    <string name="room_recents_join_room_prompt">Raum-ID oder Raum-Alias eingeben</string>
 
     <!-- Directory -->
     <string name="directory_search_results_title">Verzeichnis durchsuchen</string>
@@ -443,7 +454,7 @@ Soll Riot der Zugriff auf deine Kontakte erlaubt werden?</string>
     <string name="directory_search_rooms">%1$d Räume</string>
     <string name="directory_search_room_for">%1$d Raum gefunden für %2$s</string>
     <string name="directory_search_rooms_for">%1$s Räume gefunden für %2$s</string>
-    <string name="directory_searching_title">Verzeichnis wird durchsucht…</string>
+    <string name="directory_searching_title">Verzeichnis wird durchsucht..</string>
 
     <!-- home room settings -->
     <string name="room_settings_notifications">Benachrichtigungen</string>
@@ -457,7 +468,7 @@ Soll Riot der Zugriff auf deine Kontakte erlaubt werden?</string>
     <string name="room_sliding_menu_messages">Nachrichten</string>
     <string name="room_sliding_menu_settings">Einstellungen</string>
     <string name="room_sliding_menu_version">Version </string>
-    <string name="room_sliding_menu_term_and_conditions">Geschäftsbedingungen</string>
+    <string name="room_sliding_menu_term_and_conditions">Nutzungsbedingungen</string>
     <string name="room_sliding_menu_third_party_notices">Nutzungshinweise von Drittanbietern</string>
     <string name="room_sliding_menu_copyright">Urheberrechtserklärung</string>
     <string name="room_sliding_menu_privacy_policy">Datenschutzerklärung</string>
@@ -470,14 +481,13 @@ Soll Riot der Zugriff auf deine Kontakte erlaubt werden?</string>
     <string name="settings_add_email_address">E-Mail-Adresse hinzufügen</string>
     <string name="settings_phone_number">Telefonnummer</string>
     <string name="settings_add_phone_number">Telefonnummer hinzufügen</string>
-    <string name="settings_summary_app_info_link">App-Info-Anzeige vom System</string>
+    <string name="settings_summary_app_info_link">App-Info-Anzeige von Android</string>
     <string name="settings_title_app_info_link">App-Info</string>
 
     <string name="settings_enable_all_notif">Benachrichtigungen für diesen Account aktivieren</string>
     <string name="settings_enable_this_device">Benachrichtigungen für dieses Gerät aktivieren</string>
     <string name="settings_turn_screen_on">Bildschirm für 3 Sekunden aktivieren</string>
 
-    <string name="settings_containing_my_name">Nachrichten, die meinen Namen enthalten</string>
     <string name="settings_messages_in_one_to_one">Nachrichten in direkten Chats</string>
     <string name="settings_messages_in_group_chat">Nachrichten in Gruppen-Chats</string>
     <string name="settings_invited_to_room">Wenn ich in einen Raum eingeladen werde</string>
@@ -485,7 +495,7 @@ Soll Riot der Zugriff auf deine Kontakte erlaubt werden?</string>
     <string name="settings_messages_sent_by_bot">Nachrichten von Bots</string>
 
     <string name="settings_background_sync">Hintergrundsynchronisierung</string>
-    <string name="settings_enable_background_sync">Aktiviere Hintergrundsynchronisierung</string>
+    <string name="settings_enable_background_sync">Hintergrundsynchronisierung aktivieren</string>
     <string name="settings_set_sync_timeout">Timeout für Synchronisierungsanfragen</string>
     <string name="settings_set_sync_delay">Verzögerung zwischen zwei Synchronisierungsanfragen</string>
     <string name="settings_second">Sekunde</string>
@@ -493,7 +503,7 @@ Soll Riot der Zugriff auf deine Kontakte erlaubt werden?</string>
 
     <string name="settings_version">Version</string>
     <string name="settings_olm_version">OLM Version</string>
-    <string name="settings_app_term_conditions">Geschäftsbedingungen</string>
+    <string name="settings_app_term_conditions">Nutzungsbedingungen</string>
     <string name="settings_third_party_notices">Nutzungshinweise von Drittanbietern</string>
     <string name="settings_copyright">Urheberrechtserklärung</string>
     <string name="settings_privacy_policy">Datenschutzerklärung</string>
@@ -503,7 +513,7 @@ Soll Riot der Zugriff auf deine Kontakte erlaubt werden?</string>
 
     <string name="settings_user_settings">Nutzereinstellungen</string>
     <string name="settings_notifications">Benachrichtigungen</string>
-    <string name="settings_ignored_users">Ignorierte Nutzer</string>
+    <string name="settings_ignored_users">Ignorierte Benutzer</string>
     <string name="settings_other">Sonstiges</string>
     <string name="settings_advanced">Erweitert</string>
     <string name="settings_cryptography">Verschlüsselung</string>
@@ -535,12 +545,16 @@ Soll Riot der Zugriff auf deine Kontakte erlaubt werden?</string>
     <string name="account_email_validation_message">Bitte prüfe deinen E-Mail-Posteingang und klicke auf den in der E-Mail enthaltenen Link. Klicke anschließend auf Fortsetzen.</string>
     <string name="account_email_validation_error">Verifizieren der E-Mail-Adresse unmöglich. Bitte prüfe deine E-Mails und klicke auf den enthaltenen Link. Anschließend klicke auf "Fortsetzen"</string>
 
+    <string name="account_email_already_used_error">Diese E-Mail-Adresse wird bereits verwendet</string>
+    <string name="account_email_not_found_error">Fehler beim Senden der E-Mail: Diese E-Mail-Adresse wurde nicht gefunden</string>
+    <string name="account_phone_number_already_used_error">Diese Telefonnummer wird bereits verwendet</string>
+
     <string name="settings_change_password">Passwort ändern</string>
     <string name="settings_old_password">Altes Passwort</string>
     <string name="settings_new_password">Neues Passwort</string>
     <string name="settings_confirm_password">Neues Passwort wiederholen</string>
     <string name="settings_fail_to_update_password">Ändern des Passworts fehlgeschlagen</string>
-    <string name="settings_password_updated">Dein Passwurt wurde aktualisiert</string>
+    <string name="settings_password_updated">Dein Passwort wurde aktualisiert</string>
     <string name="settings_unignore_user">Alle Nachrichten von %s anzeigen?</string>
 
     <string name="settings_delete_notification_targets_confirmation">Bist du sicher, dass du dieses Benachrichtigungsziel entfernen möchtest?</string>
@@ -558,29 +572,28 @@ Soll Riot der Zugriff auf deine Kontakte erlaubt werden?</string>
     <string name="settings_phone_number_verification_error_empty_code">Hier Aktivierungsccode eintragen</string>
     <string name="settings_phone_number_verification_error">Fehler beim Verifizieren der Telefonnummer</string>
     <string name="settings_phone_number_code">Code</string>
-
     <!-- Room Settings -->
 
     <!-- room global settings-->
     <string name="room_settings_room_photo">Raumbild</string>
     <string name="room_settings_room_name">Raumname</string>
     <string name="room_settings_topic">Thema</string>
-    <string name="room_settings_room_tag">Raum-Tag</string>
-    <string name="room_settings_tag_pref_dialog_title">Getagged als:</string>
+    <string name="room_settings_room_tag">Raum-Markierung</string>
+    <string name="room_settings_tag_pref_dialog_title">Markiert als:</string>
     <string name="room_settings_mute_notifs">Benachrichtigungen stummschalten</string>
 
     <!-- Room settings: Room tag -->
-    <string name="room_settings_tag_pref_entry_favourite">Als Favorit setzen</string>
+    <string name="room_settings_tag_pref_entry_favourite">Favorit</string>
     <string name="room_settings_tag_pref_entry_low_priority">Niedrige Priorität</string>
     <string name="room_settings_tag_pref_entry_none">Keine</string>
     <string name="room_settings_tag_pref_no_tag">Nicht getaggt</string>
-    <string name="room_settings_tag_pref_entry_value_favourite">Als Favorit setzen</string>
+    <string name="room_settings_tag_pref_entry_value_favourite">Favorit</string>
     <string name="room_settings_tag_pref_entry_value_low_priority">niedrige Priorität</string>
     <string name="room_settings_tag_pref_entry_value_none">keine</string>
 
     <!-- room settings : access and visibility -->
     <string name="room_settings_category_access_visibility_title">Zugriff und Sichtbarkeit</string>
-    <string name="room_settings_directory_visibility">Diesen Raum im Raumverzeichnis anzeigen</string>
+    <string name="room_settings_directory_visibility">Diesen Raum im Raum-Verzeichnis anzeigen</string>
     <string name="room_settings_room_access_rules_pref_title">Raumzugriff</string>
     <string name="room_settings_room_read_history_rules_pref_title">Lesbarkeit des Chatverlaufs</string>
     <string name="room_settings_room_read_history_rules_pref_dialog_title">Wer kann den Chatverlauf lesen?</string>
@@ -595,11 +608,11 @@ Soll Riot der Zugriff auf deine Kontakte erlaubt werden?</string>
     <!-- Room settings: "Who can access this room?" (access rule) -->
     <string name="room_settings_room_access_warning">Um einen Link zu einem Raum erstellen zu können, muss dieser eine Adresse haben.</string>
     <string name="room_settings_room_access_entry_only_invited">Nur eingeladene Personen</string>
-    <string name="room_settings_room_access_entry_anyone_with_link_apart_guest">Jeder, der den Raum-Link kennt, außer Gäste</string>
-    <string name="room_settings_room_access_entry_anyone_with_link_including_guest">Jeder, der den Raum-Link kennt, auch Gäste</string>
+    <string name="room_settings_room_access_entry_anyone_with_link_apart_guest">Alle, die den Raum-Link kennen (ausgenommen Gäste)</string>
+    <string name="room_settings_room_access_entry_anyone_with_link_including_guest">Alle, die den Raum-Link kennen (auch Gäste)</string>
 
     <!-- Room settings: banned users -->
-    <string name="room_settings_banned_users_title">Gebannte Nutzer</string>
+    <string name="room_settings_banned_users_title">Verbannte Benutzer</string>
 
     <!-- advanced -->
     <string name="room_settings_category_advanced_title">Erweitert</string>
@@ -611,7 +624,7 @@ Soll Riot der Zugriff auf deine Kontakte erlaubt werden?</string>
     <string name="room_settings_labs_end_to_end_is_active">Ende-zu-Ende-Verschlüsselung ist aktiv</string>
     <string name="room_settings_labs_end_to_end_warnings">Du musst dich abmelden, um die Verschlüsselung aktivieren zu können.</string>
     <string name="room_settings_never_send_to_unverified_devices_title">Nur für verifizierte Geräte verschlüsseln</string>
-    <string name="room_settings_never_send_to_unverified_devices_summary">Von diesem Gerät keine verschlüsselten Nachrichten an unverifizierte Geräte in diesem Raum senden.</string>
+    <string name="room_settings_never_send_to_unverified_devices_summary">Niemals verschlüsselte Nachrichten an unverifizierte Geräte in diesem Raum von diesem Gerät senden.</string>
 
     <!-- Raum settings: advanced addresses -->
     <string name="room_settings_addresses_no_local_addresses">Dieser Raum hat keine lokalen Adressen</string>
@@ -645,8 +658,8 @@ Verschlüsselte Nachrichten werden auf Matrix-Clients, auf denen die Verschlüss
     <string name="directory_title">Verzeichnis</string>
 
     <!-- GA use -->
-    <string name="ga_use_alert_message">Stimmst du zu, uns zu helfen, um das Anwendungsverhalten zu verbessern und uns Absturzberichte zu senden?</string>
-    <string name="ga_use_settings">Automatisch Absturzberichte senden</string>
+    <string name="ga_use_alert_message">Stimmst du zu, uns dabei zu helfen, das Anwendungsverhalten der App zu verbessern und uns Absturzberichte zu übermitteln?</string>
+    <string name="ga_use_settings">Absturzberichte automatisch übermitteln</string>
     <string name="ga_use_disable_alert_message">Du musst die Anwendung neustarten, um Absturzberichte auszuschalten.</string>
 
     <!-- matrix error -->
@@ -657,7 +670,7 @@ Verschlüsselte Nachrichten werden auf Matrix-Clients, auf denen die Verschlüss
     <string name="encryption_information_title">Ende-zu-Ende-Verschlüsselungs-Informationen</string>
 
     <string name="encryption_information_device_info">Ereignisinformation</string>
-    <string name="encryption_information_user_id">Nutzer-ID</string>
+    <string name="encryption_information_user_id">Benutzer-ID</string>
     <string name="encryption_information_curve25519_identity_key">Curve25519-Identitätsschlüssel</string>
     <string name="encryption_information_claimed_ed25519_fingerprint_key">Beanspruchter Ed25519-Fingerabdruckschlüssel</string>
     <string name="encryption_information_algorithm">Algorithmus</string>
@@ -677,14 +690,14 @@ Verschlüsselte Nachrichten werden auf Matrix-Clients, auf denen die Verschlüss
     <string name="encryption_export_room_keys_summary">Schlüssel in lokale Datei exportieren</string>
     <string name="encryption_export_export">Exportieren</string>
     <string name="encryption_export_enter_passphrase">Passphrase eingeben</string>
-    <string name="encryption_export_confirm_passphrase">Passphrase wiederholen</string>
+    <string name="encryption_export_confirm_passphrase">Passphrase bestätigen</string>
     <string name="encryption_export_saved_as">Die Ende-zu-Ende-Raumschlüssel wurden in \'%s\' gespeichert</string>
 
     <string name="encryption_import_e2e_room_keys">Ende-zu-Ende-Raumschlüssel importieren</string>
     <string name="encryption_import_room_keys">Raumschlüssel importieren</string>
     <string name="encryption_import_room_keys_summary">Schlüssel aus lokaler Datei importieren</string>
     <string name="encryption_import_import">Importieren</string>
-    <string name="encryption_never_send_to_unverified_devices_title">Verschlüssele nur für verifizierte Geräte</string>
+    <string name="encryption_never_send_to_unverified_devices_title">Nur für verifizierte Geräte verschlüsseln</string>
     <string name="encryption_never_send_to_unverified_devices_summary">Von diesem Gerät aus keine verschlüsselten Nachrichten an unbestätigte Geräte senden</string>
 
     <string name="encryption_information_not_verified">NICHT verifiziert</string>
@@ -700,9 +713,10 @@ Verschlüsselte Nachrichten werden auf Matrix-Clients, auf denen die Verschlüss
     <string name="encryption_information_unblock">Zulassen</string>
 
     <string name="encryption_information_verify_device">Gerät verifizieren</string>
-    <string name="encryption_information_verify_device_warning">Um zu verifizieren, dass diesem Gerät vertraut werden kann, kontaktiere den Besitzer über andere Kanäle (z.B. persönlich oder telefonisch) und frage, ob der Schüssel, den er in seinen Nutzereinstellungen für dieses Gerät sieht, mit folgendem übereinstimmt:</string>
-    <string name="encryption_information_verify_device_warning2">Wenn alles stimmt, drücke unten auf den Bestätigen-Button. Wenn nicht, fängt jemand anderes dieses Gerät ab und du möchtest wohl lieber den Blockieren-Button drücken.\nIn Zukunft wird dieser Bestätigungsprozess eleganter.</string>
-    <string name="encryption_information_verify_key_match">Die Schlüssel stimmen überein</string>
+    <string name="encryption_information_verify_device_warning">" Um zu verifizieren, dass diesem Gerät vertraut werden kann, kontaktiere bitte den Besitzer des Gerätes über andere Kommunikationsmittel (z. B. persönlich oder telefonisch) und vergewissere dich, ob der Schüssel, den er in seinen Benutzereinstellungen für dieses Gerät sieht, mit folgendem übereinstimmt:"</string>
+    <string name="encryption_information_verify_device_warning2">Wenn er übereinstimmt, drücke unten den Bestätigen-Button. Stimmt er nicht überein, überwacht jemand anderes dieses Gerät und du solltest ggf. den Blockieren-Button drücken.
+In Zukunft wird dieser Bestätigungsprozess noch komfortabler gestaltet.</string>
+    <string name="encryption_information_verify_key_match">Ja, die Schlüssel stimmen überein</string>
 
     <string name="e2e_enabling_on_app_update">Riot unterstützt jetzt Ende-zu-Ende-Verschlüsselung, du musst dich jedoch erneut anmelden, um sie zu aktivieren.
 
@@ -710,13 +724,17 @@ Du kannst sie jetzt aktivieren oder später über das Einstellungsmenü.</string
 
     <!-- unknown devices management -->
     <string name="unknown_devices_alert_title">Raum enthält unbekannte Geräte</string>
-    <string name="unknown_devices_alert_message">Dieser Raum enthält unbekannte Geräte, die noch nicht verifiziert wurden.\nEs gibt also keine Garantie, dass diese Geräte wirklich zu dem angegebenen Nutzer gehören.\nWir empfehlen, den Verifizierungsprozess für jedes Gerät zu durchlaufen bevor du fortfährst. Du kannst die Nachricht aber auch ohne Verifizierung senden, wenn du das vorziehst.\n\nUnbekannte Geräte:</string>
+    <string name="unknown_devices_alert_message">Dieser Raum enthält unbekannte Geräte, die noch nicht verifiziert wurden.
+Es gibt also keine Garantie, dass diese Geräte wirklich dem angegebenen Benutzer gehören.
+Wir empfehlen, den Verifizierungsprozess für jedes Gerät zu durchlaufen, bevor du fortfährst. Du kannst die Nachricht aber auch ohne Verifizierung senden, wenn du das vorziehst.
+
+Unbekannte Geräte:</string>
 
     <!-- directory activity  -->
-    <string name="select_room_directory">Wähle Raum-Verzeichnis</string>
+    <string name="select_room_directory">Raum-Verzeichnis auswählen</string>
     <string name="directory_server_fail_to_retrieve_server">Der Server kann nicht verfügbar oder überlastet sein</string>
     <string name="directory_server_type_homeserver">Gebe einen Heimserver ein um seine öffentlichen Räume aufzulisten</string>
-    <string name="directory_server_placeholder">Heimserver-URL</string>
+    <string name="directory_server_placeholder">Home-Server-URL</string>
     <string name="directory_server_all_rooms_on_server">Alle Räume auf dem %s-Server</string>
     <string name="directory_server_native_rooms">Alle nativen %s-Räume</string>
 
@@ -727,4 +745,80 @@ Du kannst sie jetzt aktivieren oder später über das Einstellungsmenü.</string
     <!-- historical -->
     <string name="historical_placeholder">Suche nach historischen</string>
 
-</resources>
+<string name="settings_user_interface">Benutzer-Oberfläche</string>
+    <string name="settings_interface_language">Oberflächen-Sprache</string>
+    <string name="settings_select_language">Wähle eine Sprache</string>
+
+    <string name="settings_start_on_boot">Starte beim Systemstart</string>
+    <string name="settings_clear_medias_cache">Medien-Cache leeren</string>
+    <string name="settings_keep_media">Medien behalten</string>
+
+    <string name="settings_hide_read_receipts">Lesebestätigungen verbergen</string>
+    <string name="settings_dont_send_typings_notifs">Sende nicht, dass ich tippe</string>
+    <string name="settings_always_show_timestamps">Nachrichten-Zeitstempel immer anzeigen</string>
+    <string name="settings_disable_markdown">Markdown-Formatierung deaktivieren</string>
+
+    <string name="media_saving_period_3_days">3 Tage</string>
+    <string name="media_saving_period_1_week">1 Woche</string>
+    <string name="media_saving_period_1_month">1 Monat</string>
+    <string name="media_saving_period_forever">Für immer</string>
+
+    <string name="offline">Offline</string>
+
+    <string name="user_directory_header">Benutzer-Verzeichnis</string>
+    <string name="people_search_user_directory">BENUTZER-VERZEICHNIS (%s)</string>
+    <string name="settings_data_save_mode">Datensparsamer Modus</string>
+
+    <string name="font_size">Schriftgröße</string>
+    <string name="small">Klein</string>
+    <string name="normal">Normal</string>
+    <string name="large">Groß</string>
+    <string name="largest">Extra groß</string>
+<string name="larger">Größer</string>
+    <string name="tiny">Sehr klein</string>
+    <string name="huge">Riesig</string>
+<string name="settings_theme">Thema</string>
+
+    <string name="settings_12_24_timestamps">Zeitstempel im 12-Stunden-Format anzeigen (z. B. 2:30 p. m.)</string>
+    <string name="settings_hide_join_leave_messages">Betreten-/Verlassen-Meldungen verbergen (gilt nicht für Einladungen/Kicks/Bans)</string>
+    <string name="settings_hide_avatar_display_name_changes_messages">Profilbild- und Anzeigenamen-Änderungen verbergen</string>
+
+    <string name="widget_no_power_to_manage">Für das Verwalten von Widgets in diesem Raum ist eine Berechtigung erforderlich</string>
+    <string name="widget_creation_failure">Widget konnte nicht erstellt werden</string>
+    <string name="event_formatter_widget_added">%1$s hinzugefügt von %2$s</string>
+    <string name="event_formatter_widget_removed">%1$s entfernt von %2$s</string>
+    <string name="settings_labs_create_conference_with_jitsi">Konferenzgespräche mit jitsi aufbauen</string>
+    <string name="widget_delete_message_confirmation">Soll das Widget wirklich gelöscht werden?</string>
+    <string name="active_widgets">%1$d aktive Widgets</string>
+
+    // Widget Integration Manager
+    <string name="widget_integration_need_to_be_able_to_invite">Du benötigst die Berechtigung, Benutzer einzuladen, um diese Aktion ausführen zu können.</string>
+    <string name="widget_integration_unable_to_create">Widget konnte nicht erstellt werden.</string>
+    <string name="widget_integration_room_not_recognised">Dieser Raum wurde nicht erkannt.</string>
+    <string name="widget_integration_positive_power_level">Berechtigungslevel muss eine positive ganze Zahl sein.</string>
+    <string name="widget_integration_must_be_in_room">Du bist nicht Mitglied in diesem Raum.</string>
+    <string name="widget_integration_no_permission_in_room">Du hast keine Berechtigung, diese Aktion in diesem Raum auszuführen.</string>
+    <string name="widget_integration_missing_room_id">Anfrage beinhaltet keine room_id.</string>
+    <string name="widget_integration_room_not_visible">Raum %s ist nicht sichtbar.</string>
+    <string name="settings_labs_matrix_apps">Matrix-Apps</string>
+    <string name="room_add_matrix_apps">Matrix-Apps hinzufügen</string>
+    <string name="add_matrix_apps_not_supported">Wird auf diesem Gerät nicht unterstützt</string>
+<string name="settings_notification_ringtone">Benachrichtigungston</string>
+    <string name="widget_integration_failed_to_send_request">Anfrage konnte nicht gesendet werden.</string>
+    <string name="widget_integration_missing_user_id">Anfrage enthält keine user_id.</string>
+    <string name="light_theme">Helles Thema</string>
+    <string name="dark_theme">Dunkles Thema</string>
+    <string name="black_them">Schwarzes Thema</string>
+
+    <string name="login_mobile_device">Mobilgerät</string>
+
+    <string name="notification_sync_in_progress">Synchronisiere</string>
+    <string name="notification_listen_for_events">Nach Ereignissen lauschen</string>
+
+    <string name="settings_containing_my_display_name">Nachrichten, die meinen Anzeigenamen enthalten</string>
+    <string name="settings_containing_my_user_name">Nachrichten, die meinen Benutzernamen enthalten</string>
+    <string name="you_added_a_new_device">Du hast das neue Gerät \'%s\' hinzugefügt, das jetzt Verschlüsselungs-Schlüssel anfordert.</string>
+    <string name="your_unverified_device_requesting">Dein bislang nicht verifiziertes Gerät \'%s\' fordert Verschlüsselungs-Schlüssel an.</string>
+    <string name="start_verification">Verifizierung starten</string>
+    <string name="call">Anruf</string>
+    </resources>

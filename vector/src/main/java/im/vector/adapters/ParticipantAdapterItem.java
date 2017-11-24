@@ -68,10 +68,6 @@ public class ParticipantAdapterItem implements java.io.Serializable {
     private String mComparisonDisplayName;
     private static final String mTrimRegEx = "[_!~`@#$%^&*\\-+();:=\\{\\}\\[\\],.<>?]";
 
-    // auto reference fields to speed up search
-    public int mReferenceGroupPosition = -1;
-    public int mReferenceChildPosition = -1;
-
     /**
      * Constructor from a room member.
      *
@@ -170,7 +166,7 @@ public class ParticipantAdapterItem implements java.io.Serializable {
     }
 
     // Comparator to order members alphabetically
-    public static Comparator<ParticipantAdapterItem> alphaComparator = new Comparator<ParticipantAdapterItem>() {
+    public static final Comparator<ParticipantAdapterItem> alphaComparator = new Comparator<ParticipantAdapterItem>() {
         @Override
         public int compare(ParticipantAdapterItem part1, ParticipantAdapterItem part2) {
             String lhs = part1.getComparisonDisplayName();
@@ -214,8 +210,8 @@ public class ParticipantAdapterItem implements java.io.Serializable {
 
             // use a local users cache to avoid crashes while sorting
             // eg the user presence is updated during the search
-            Map<String, User> mUsersMap = new HashMap<>();
-            HashSet<String> mUnknownUsers = new HashSet<>();
+            final Map<String, User> mUsersMap = new HashMap<>();
+            final HashSet<String> mUnknownUsers = new HashSet<>();
 
             private User getUser(String userId) {
                 if (mUsersMap.containsKey(userId)) {
@@ -368,7 +364,7 @@ public class ParticipantAdapterItem implements java.io.Serializable {
                 }
             }
         }
-        
+
         // test user id
         if (!TextUtils.isEmpty(mLowerCaseMatrixId) && mLowerCaseMatrixId.startsWith((prefix.startsWith("@") ? "" : "@") + prefix)) {
             return true;
@@ -479,6 +475,7 @@ public class ParticipantAdapterItem implements java.io.Serializable {
 
     /**
      * Tries to retrieve the PIDs.
+     *
      * @return true if they are retrieved.
      */
     public boolean retrievePids() {

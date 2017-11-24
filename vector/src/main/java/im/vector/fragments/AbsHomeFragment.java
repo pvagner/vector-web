@@ -19,10 +19,8 @@ package im.vector.fragments;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
-import android.support.annotation.ColorRes;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.MenuItem;
@@ -63,15 +61,15 @@ public abstract class AbsHomeFragment extends Fragment implements AbsAdapter.Inv
     // Butterknife unbinder
     private Unbinder mUnBinder;
 
-    protected VectorHomeActivity mActivity;
+    VectorHomeActivity mActivity;
 
-    protected String mCurrentFilter;
+    String mCurrentFilter;
 
-    protected MXSession mSession;
+    MXSession mSession;
 
-    protected OnRoomChangedListener mOnRoomChangedListener;
+    OnRoomChangedListener mOnRoomChangedListener;
 
-    protected final RecyclerView.OnScrollListener mScrollListener = new RecyclerView.OnScrollListener() {
+    final RecyclerView.OnScrollListener mScrollListener = new RecyclerView.OnScrollListener() {
         @Override
         public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
             // warn only if there is dy i.e the list has been really scrolled not refreshed
@@ -81,8 +79,8 @@ public abstract class AbsHomeFragment extends Fragment implements AbsAdapter.Inv
         }
     };
 
-    protected int mPrimaryColor = -1;
-    protected int mSecondaryColor = -1;
+    int mPrimaryColor = -1;
+    int mSecondaryColor = -1;
 
     /*
      * *********************************************************************************************
@@ -298,7 +296,7 @@ public abstract class AbsHomeFragment extends Fragment implements AbsAdapter.Inv
      *
      * @param room
      */
-    public void openRoom(final Room room) {
+    void openRoom(final Room room) {
         // sanity checks
         // reported by GA
         if ((null == mSession.getDataHandler()) || (null == mSession.getDataHandler().getStore())) {
@@ -330,17 +328,6 @@ public abstract class AbsHomeFragment extends Fragment implements AbsAdapter.Inv
 
             CommonActivityUtils.goToRoomPage(getActivity(), mSession, params);
         }
-    }
-
-    /**
-     * Define colors of the fragment
-     *
-     * @param primaryColorId   color for header, floating button
-     * @param secondaryColorId color for status bar
-     */
-    public void setFragmentColors(@ColorRes final int primaryColorId, @ColorRes final int secondaryColorId) {
-        mPrimaryColor = ContextCompat.getColor(mActivity, primaryColorId);
-        mSecondaryColor = ContextCompat.getColor(mActivity, secondaryColorId);
     }
 
     /*
@@ -409,9 +396,20 @@ public abstract class AbsHomeFragment extends Fragment implements AbsAdapter.Inv
         mSession.markRoomsAsRead(getRooms(), new ApiCallback<Void>() {
             @Override
             public void onSuccess(Void info) {
-                mActivity.stopWaitingView();
-                mActivity.refreshUnreadBadges();
-                onSummariesUpdate();
+                // check if the activity is still attached
+                if ((null != mActivity) && !mActivity.isFinishing()) {
+                    mActivity.stopWaitingView();
+                    mActivity.refreshUnreadBadges();
+
+                    // if the fragment is still the active one
+                    if (isResumed()) {
+                        // refresh it
+                        onSummariesUpdate();
+                    } else {
+                        // refresh the displayed one
+                        mActivity.dispatchOnSummariesUpdate();
+                    }
+                }
             }
 
             private void onError(String errorMessage) {

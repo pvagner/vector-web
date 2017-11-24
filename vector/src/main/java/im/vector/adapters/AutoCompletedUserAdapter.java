@@ -31,7 +31,6 @@ import im.vector.activity.VectorRoomActivity;
 import im.vector.util.VectorUtils;
 import im.vector.view.VectorCircularImageView;
 
-import org.matrix.androidsdk.data.RoomSummary;
 import org.matrix.androidsdk.rest.model.User;
 
 import java.util.ArrayList;
@@ -45,16 +44,16 @@ import java.util.List;
  */
 public class AutoCompletedUserAdapter extends ArrayAdapter<User> {
     // the context
-    protected Context mContext;
+    private final Context mContext;
 
     // the layout inflater
-    private LayoutInflater mLayoutInflater;
+    private final LayoutInflater mLayoutInflater;
 
     // the layout to draw items
-    private int mLayoutResourceId;
+    private final int mLayoutResourceId;
 
     // the session
-    private MXSession mSession;
+    private final MXSession mSession;
 
     // the filter
     private android.widget.Filter mFilter;
@@ -78,7 +77,7 @@ public class AutoCompletedUserAdapter extends ArrayAdapter<User> {
         }
     };
 
-    private static final Comparator<User> mUserComparatorByDisplayname =  new Comparator<User>() {
+    private static final Comparator<User> mUserComparatorByDisplayname = new Comparator<User>() {
         @Override
         public int compare(User user1, User user2) {
             String displayName1 = TextUtils.isEmpty(user1.displayname) ? user1.user_id : user1.displayname;
@@ -109,6 +108,7 @@ public class AutoCompletedUserAdapter extends ArrayAdapter<User> {
     /**
      * Tells if the pasted text is always the user matrix id
      * even if the matched pattern is a display name.
+     *
      * @param provideMatrixIdOnly true to always paste an user Id.
      */
     public void setProvideMatrixIdOnly(boolean provideMatrixIdOnly) {
@@ -124,8 +124,8 @@ public class AutoCompletedUserAdapter extends ArrayAdapter<User> {
 
         User user = getItem(position);
 
-        VectorCircularImageView avatarView = (VectorCircularImageView) convertView.findViewById(R.id.item_user_auto_complete_avatar);
-        TextView userNameTextView = (TextView) convertView.findViewById(R.id.item_user_auto_complete_name);
+        VectorCircularImageView avatarView = convertView.findViewById(R.id.item_user_auto_complete_avatar);
+        TextView userNameTextView = convertView.findViewById(R.id.item_user_auto_complete_name);
 
         VectorUtils.loadUserAvatar(mContext, mSession, avatarView, user.getAvatarUrl(), user.user_id, user.displayname);
 

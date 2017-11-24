@@ -72,7 +72,7 @@ import im.vector.Matrix;
  * BugReporter creates and sends the bug reports.
  */
 public class BugReporter {
-    private static final String LOG_TAG = "BugReporter";
+    private static final String LOG_TAG = BugReporter.class.getSimpleName();
 
     /**
      * Bug report upload listener
@@ -123,18 +123,29 @@ public class BugReporter {
     /**
      * Send a bug report.
      *
-     * @param context the application context
-     * @param withDevicesLogs true to include the device log
-     * @param withCrashLogs true to include the crash logs
-     * @param withScreenshot true to include the screenshot
-     * @param bugDescription the bug description
-     * @param listener the listener
+     * @param context           the application context
+     * @param withDevicesLogs   true to include the device log
+     * @param withCrashLogs     true to include the crash logs
+     * @param withScreenshot    true to include the screenshot
+     * @param theBugDescription the bug description
+     * @param listener          the listener
      */
-    private static void sendBugReport(final Context context, final boolean withDevicesLogs, final boolean withCrashLogs, final boolean withScreenshot, final String bugDescription, final IMXBugReportListener listener) {
+    private static void sendBugReport(final Context context, final boolean withDevicesLogs, final boolean withCrashLogs, final boolean withScreenshot, final String theBugDescription, final IMXBugReportListener listener) {
         new AsyncTask<Void, Integer, String>() {
+
+            // enumerate files to delete
+            final List<File> mBugReportFiles = new ArrayList<>();
+
             @Override
             protected String doInBackground(Void... voids) {
+                String bugDescription = theBugDescription;
                 String serverError = null;
+                String crashCallStack = getCrashDescription(context);
+
+                if (null != crashCallStack) {
+                    bugDescription += "\n\n\n\n--------------------------------- crash call stack ---------------------------------\n";
+                    bugDescription += crashCallStack;
+                }
 
                 List<File> gzippedFiles = new ArrayList<>();
 
@@ -156,7 +167,11 @@ public class BugReporter {
                     File gzippedLogcat = saveLogCat(context, false);
 
                     if (null != gzippedLogcat) {
-                        gzippedFiles.add(gzippedLogcat);
+                        if (gzippedFiles.size() == 0) {
+                            gzippedFiles.add(gzippedLogcat);
+                        } else {
+                            gzippedFiles.add(0, gzippedLogcat);
+                        }
                     }
 
                     File crashDescription = getCrashFile(context);
@@ -164,7 +179,11 @@ public class BugReporter {
                         File compressedCrashDescription = compressFile(crashDescription);
 
                         if (null != compressedCrashDescription) {
-                            gzippedFiles.add(compressedCrashDescription);
+                            if (gzippedFiles.size() == 0) {
+                                gzippedFiles.add(compressedCrashDescription);
+                            } else {
+                                gzippedFiles.add(0, compressedCrashDescription);
+                            }
                         }
                     }
                 }
@@ -174,7 +193,7 @@ public class BugReporter {
                 String deviceId = "undefined";
                 String userId = "undefined";
                 String matrixSdkVersion = "undefined";
-                String olmVersion =  "undefined";
+                String olmVersion = "undefined";
 
 
                 if (null != session) {
@@ -192,19 +211,27 @@ public class BugReporter {
                             .addFormDataPart("user_agent", "Android")
                             .addFormDataPart("user_id", userId)
                             .addFormDataPart("device_id", deviceId)
-                            .addFormDataPart("version", Matrix.getInstance(context).getVersion(true))
+                            .addFormDataPart("version", Matrix.getInstance(context).getVersion(true, false))
                             .addFormDataPart("branch_name", context.getString(R.string.git_branch_name))
                             .addFormDataPart("matrix_sdk_version", matrixSdkVersion)
-                            .addFormDataPart("olm_version",olmVersion)
+                            .addFormDataPart("olm_version", olmVersion)
                             .addFormDataPart("device", Build.MODEL.trim())
                             .addFormDataPart("os", Build.VERSION.INCREMENTAL + " " + Build.VERSION.RELEASE + " " + Build.VERSION.CODENAME)
                             .addFormDataPart("locale", Locale.getDefault().toString())
-                            .addFormDataPart("app_language", context.getString(R.string.resouces_language) + "_" + context.getString(R.string.resouces_country));
+                            .addFormDataPart("app_language", VectorApp.getApplicationLocale().toString())
+                            .addFormDataPart("default_app_language", VectorApp.getDeviceLocale().toString());
+
+                    String buildNumber = context.getString(R.string.build_number);
+                    if (!TextUtils.isEmpty(buildNumber) && !buildNumber.equals("0")) {
+                        builder.addFormDataPart("build_number", buildNumber);
+                    }
 
                     // add the gzipped files
                     for (File file : gzippedFiles) {
                         builder.addFormDataPart("compressed-log", file.getName(), RequestBody.create(MediaType.parse("application/octet-stream"), file));
                     }
+
+                    mBugReportFiles.addAll(gzippedFiles);
 
                     if (withScreenshot) {
                         Bitmap bitmap = takeScreenshot();
@@ -353,6 +380,11 @@ public class BugReporter {
             protected void onPostExecute(String reason) {
                 mBugReportCall = null;
 
+                // delete when the bug report has been successfully sent
+                for (File file : mBugReportFiles) {
+                    file.delete();
+                }
+
                 if (null != listener) {
                     try {
                         if (mIsCancelled) {
@@ -390,13 +422,13 @@ public class BugReporter {
         dialog.setTitle(R.string.send_bug_report);
         dialog.setView(dialogLayout);
 
-        final EditText bugReportText = (EditText) dialogLayout.findViewById(R.id.bug_report_edit_text);
-        final CheckBox includeLogsButton = (CheckBox) dialogLayout.findViewById(R.id.bug_report_button_include_logs);
-        final CheckBox includeCrashLogsButton = (CheckBox) dialogLayout.findViewById(R.id.bug_report_button_include_crash_logs);
-        final CheckBox includeScreenShotButton = (CheckBox) dialogLayout.findViewById(R.id.bug_report_button_include_screenshot);
+        final EditText bugReportText = dialogLayout.findViewById(R.id.bug_report_edit_text);
+        final CheckBox includeLogsButton = dialogLayout.findViewById(R.id.bug_report_button_include_logs);
+        final CheckBox includeCrashLogsButton = dialogLayout.findViewById(R.id.bug_report_button_include_crash_logs);
+        final CheckBox includeScreenShotButton = dialogLayout.findViewById(R.id.bug_report_button_include_screenshot);
 
-        final ProgressBar progressBar = (ProgressBar) dialogLayout.findViewById(R.id.bug_report_progress_view);
-        final TextView progressTextView = (TextView) dialogLayout.findViewById(R.id.bug_report_progress_text_view);
+        final ProgressBar progressBar = dialogLayout.findViewById(R.id.bug_report_progress_view);
+        final TextView progressTextView = dialogLayout.findViewById(R.id.bug_report_progress_text_view);
 
         dialog.setPositiveButton(R.string.send, new DialogInterface.OnClickListener() {
             @Override
@@ -551,6 +583,7 @@ public class BugReporter {
 
     /**
      * Provides the crash file
+     *
      * @param context the context
      * @return the crash file
      */
@@ -560,6 +593,7 @@ public class BugReporter {
 
     /**
      * Remove the crash file
+     *
      * @param context
      */
     public static void deleteCrashFile(Context context) {
@@ -573,7 +607,7 @@ public class BugReporter {
     /**
      * Save the crash report
      *
-     * @param context       the context
+     * @param context          the context
      * @param crashDescription teh crash description
      */
     public static void saveCrashReport(Context context, String crashDescription) {
@@ -596,6 +630,34 @@ public class BugReporter {
                 Log.e(LOG_TAG, "## saveCrashReport() : fail to write " + e.toString());
             }
         }
+    }
+
+    /**
+     * Read the crash description file and return its content.
+     *
+     * @param context teh context
+     * @return the crash description
+     */
+    private static String getCrashDescription(Context context) {
+        String crashDescription = null;
+        File crashFile = getCrashFile(context);
+
+        if (crashFile.exists()) {
+            try {
+                FileInputStream fis = new FileInputStream(crashFile);
+                InputStreamReader isr = new InputStreamReader(fis);
+
+                char[] buffer = new char[fis.available()];
+                int len = isr.read(buffer, 0, fis.available());
+                crashDescription = String.valueOf(buffer, 0, len);
+                isr.close();
+                fis.close();
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "## getCrashDescription() : fail to read " + e.toString());
+            }
+        }
+
+        return crashDescription;
     }
 
     //==============================================================================================================
@@ -676,7 +738,7 @@ public class BugReporter {
         return null;
     }
 
-    private static final int BUFFER_SIZE = 1024 * 1024 * 5;
+    private static final int BUFFER_SIZE = 1024 * 1024 * 50;
 
     private static final String[] LOGCAT_CMD_ERROR = new String[]{
             "logcat", ///< Run 'logcat' command
@@ -694,102 +756,6 @@ public class BugReporter {
             "-d",
             "-v",
             "threadtime",
-            "Retrofit:S",
-            "ProgressBar:S",
-            "AbsListView:S",
-            "dalvikvm:S",
-            "OpenGLRenderer:S",
-            "NativeCrypto:S",
-            "VelocityTracker:S",
-            "MaliEGL:S",
-            "GraphicBuffer:S",
-            "WifiStateMachine:S",
-            "ActivityThread:S",
-            "PowerManagerService:S",
-            "BufferQueue:S",
-            "KeyguardUpdateMonitor:S",
-            "wpa_supplicant:S",
-            "ANRManager:S",
-            "InputReader:S",
-            "PowerUI:S",
-            "BatteryService:S",
-            "qdhwcomposer:S",
-            "ServiceDumpSys:S",
-            "DisplayPowerController:S",
-            "View:S",
-            "ListView:S",
-            "Posix:S",
-            "chatty:S",
-            "ViewRootImpl:S",
-            "TextView:S",
-            "MotionRecognitionManager:S",
-            "DisplayListCanvas:S",
-            "AudioManager:S",
-            "irsc_util:S",
-            "QCamera2HWI:S",
-            "audio_hw_primary:S",
-            "msm8974_platform:S",
-            "ACDB-LOADER:S",
-            "platform_parser:S",
-            "audio_hw_ssr:S",
-            "audio_hw_spkr_prot:S",
-            "Thermal-Lib:S",
-            "AudioFlinger:S",
-            "EffectDiracSound:S",
-            "BufferProvider:S",
-            "MonoPipe:S",
-            "bt_a2dp_hw:S",
-            "r_submix:S",
-            "AudioPolicyManagerCustom:S",
-            "RadioService:S",
-            "mediaserver:S",
-            "ListenService:S",
-            "InstallerConnection:S",
-            "SystemServer:S",
-            "SystemServiceManager:S",
-            "BaseMiuiBroadcastManager:S",
-            "BatteryStatsImpl:S",
-            "IntentFirewall:S",
-            "ServiceThread:S",
-            "AppOps:S",
-            "DisplayManagerService:S",
-            "SELinuxMMAC:S",
-            "PackageManager:S",
-            "PackageParser:S",
-            "PreinstallApp:S",
-            "VoldConnector:S",
-            "SoundTriggerHelper:S",
-            "AutomaticBrightnessController:S",
-            "KeyguardServiceDelegate:S",
-            "VoiceInteractionManagerService:S",
-            "SystemServer:S",
-            "UsbAlsaManager:S",
-            "Telecom:S",
-            "LocationManagerInjector:S",
-            "LocationPolicy:S",
-            "MmsServiceBroker:S",
-            "MountService:S",
-            "ACodec:S",
-            "OMXNodeInstance:S",
-            "MM_OSAL:S",
-            "OMXNodeInstance:S",
-            "SoftMPEG4Encoder:S",
-            "audio_hw_extn:S",
-            "audio_hw_fm:S",
-            "ContextImpl:S",
-            "ActiveAndroid:S",
-            "bt_a2dp_hw:S",
-            "BroadcastQueueInjector:S",
-            "AutoStartManagerService:S",
-            "Ext4Crypt:S",
-            "MccTable:S",
-            "DiracAPI:S",
-            "skia:S",
-            "libc-netbsd:S",
-            "chromium:S",
-            "v8:S",
-            "PreferenceGroup:S",
-            "Preference:S",
             "*:*"
     };
 

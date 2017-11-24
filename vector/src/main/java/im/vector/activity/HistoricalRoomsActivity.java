@@ -22,7 +22,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -56,14 +55,14 @@ import im.vector.R;
 import im.vector.adapters.AbsAdapter;
 import im.vector.adapters.HomeRoomAdapter;
 import im.vector.util.RoomUtils;
+import im.vector.util.ThemeUtils;
 import im.vector.view.EmptyViewItemDecoration;
 import im.vector.view.SimpleDividerItemDecoration;
 
 /**
  * Displays the historical rooms list
  */
-public class HistoricalRoomsActivity extends AppCompatActivity implements SearchView.OnQueryTextListener, HomeRoomAdapter.OnSelectRoomListener, AbsAdapter.MoreRoomActionListener, RoomUtils.HistoricalRoomActionListener {
-
+public class HistoricalRoomsActivity extends RiotAppCompatActivity implements SearchView.OnQueryTextListener, HomeRoomAdapter.OnSelectRoomListener, AbsAdapter.MoreRoomActionListener, RoomUtils.HistoricalRoomActionListener {
     private static final String LOG_TAG = HistoricalRoomsActivity.class.getSimpleName();
 
     @BindView(R.id.search_view)
@@ -85,7 +84,7 @@ public class HistoricalRoomsActivity extends AppCompatActivity implements Search
     private HomeRoomAdapter mHistoricalAdapter;
 
     // pending tasks
-    private List<AsyncTask> mSortingAsyncTasks = new ArrayList<>();
+    private final List<AsyncTask> mSortingAsyncTasks = new ArrayList<>();
 
     // sessions
     private MXSession mSession;
@@ -99,6 +98,9 @@ public class HistoricalRoomsActivity extends AppCompatActivity implements Search
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // required to have the right translated title
+        setTitle(R.string.title_activity_historical);
         setContentView(R.layout.activity_historical);
         ButterKnife.bind(this);
 
@@ -170,13 +172,13 @@ public class HistoricalRoomsActivity extends AppCompatActivity implements Search
 
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         // Remove unwanted left margin
-        LinearLayout searchEditFrame = (LinearLayout) mSearchView.findViewById(R.id.search_edit_frame);
+        LinearLayout searchEditFrame = mSearchView.findViewById(R.id.search_edit_frame);
         if (searchEditFrame != null) {
             ViewGroup.MarginLayoutParams searchEditFrameParams = (ViewGroup.MarginLayoutParams) searchEditFrame.getLayoutParams();
             searchEditFrameParams.leftMargin = 0;
             searchEditFrame.setLayoutParams(searchEditFrameParams);
         }
-        ImageView searchIcon = (ImageView) mSearchView.findViewById(R.id.search_mag_icon);
+        ImageView searchIcon = mSearchView.findViewById(R.id.search_mag_icon);
         if (searchIcon != null) {
             ViewGroup.MarginLayoutParams searchIconParams = (ViewGroup.MarginLayoutParams) searchIcon.getLayoutParams();
             searchIconParams.leftMargin = 0;
@@ -190,6 +192,9 @@ public class HistoricalRoomsActivity extends AppCompatActivity implements Search
         mSearchView.setIconifiedByDefault(false);
         mSearchView.setOnQueryTextListener(this);
         mSearchView.setQueryHint(getString(R.string.historical_placeholder));
+
+        SearchView.SearchAutoComplete searchAutoComplete = mSearchView.findViewById(android.support.v7.appcompat.R.id.search_src_text);
+        searchAutoComplete.setHintTextColor(ThemeUtils.getColor(this, R.attr.default_text_hint_color));
     }
 
     /*
@@ -266,8 +271,14 @@ public class HistoricalRoomsActivity extends AppCompatActivity implements Search
                 mHistoricalAdapter.setRooms(historicalRooms);
             }
         };
-        mSortingAsyncTasks.add(task);
-        task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
+        try {
+            task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            mSortingAsyncTasks.add(task);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "## initHistoricalRoomsData() failed " + e.getMessage());
+            task.cancel(true);
+        }
     }
 
     /*
@@ -328,7 +339,7 @@ public class HistoricalRoomsActivity extends AppCompatActivity implements Search
      *
      * @param errorMessage the localized error message
      */
-    protected void onRequestDone(final String errorMessage) {
+    private void onRequestDone(final String errorMessage) {
         if (!this.isFinishing()) {
             runOnUiThread(new Runnable() {
                 @Override

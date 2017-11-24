@@ -50,8 +50,8 @@ public class RoomAdapter extends AbsAdapter {
 
     private static final int TYPE_PUBLIC_ROOM = 1;
 
-    private AdapterSection<Room> mRoomsSection;
-    private PublicRoomsAdapterSection mPublicRoomsSection;
+    private final AdapterSection<Room> mRoomsSection;
+    private final PublicRoomsAdapterSection mPublicRoomsSection;
 
     private final OnSelectItemListener mListener;
 
@@ -172,8 +172,8 @@ public class RoomAdapter extends AbsAdapter {
         updateSections();
     }
 
-    public void setEstimatedPublicRoomsCount(int estimatedCtunt) {
-        mPublicRoomsSection.setEstimatedPublicRoomsCount(estimatedCtunt);
+    public void setEstimatedPublicRoomsCount(int estimatedCount) {
+        mPublicRoomsSection.setEstimatedPublicRoomsCount(estimatedCount);
     }
 
     public void setNoMorePublicRooms(boolean noMore) {

@@ -25,27 +25,30 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import im.vector.R;
+import im.vector.VectorApp;
+import im.vector.util.ThemeUtils;
+
 public class AdapterSection<T> {
 
-    protected final String mTitle;
-    protected SpannableString mTitleFormatted;
+    final String mTitle;
+    private SpannableString mTitleFormatted;
     // Place holder if no item for the section
     private String mNoItemPlaceholder;
     // Place holder if no result after search
     private String mNoResultPlaceholder;
 
-    private int mHeaderSubView;
-    private int mContentView;
-    private int mHeaderViewType;
-    private int mContentViewType;
+    private final int mHeaderSubView;
+    private final int mHeaderViewType;
+    private final int mContentViewType;
 
-    private List<T> mItems;
+    private final List<T> mItems;
 
-    private List<T> mFilteredItems;
+    private final List<T> mFilteredItems;
 
-    private Comparator<T> mComparator;
+    private final Comparator<T> mComparator;
 
-    protected CharSequence mCurrentFilterPattern;
+    CharSequence mCurrentFilterPattern;
 
     private boolean mIsHiddenWhenEmpty;
     private boolean mIsHiddenWhenNoFilter;
@@ -56,7 +59,6 @@ public class AdapterSection<T> {
         mItems = items;
         mFilteredItems = new ArrayList<>(items);
         mHeaderSubView = headerSubViewResId;
-        mContentView = contentResId;
 
         mHeaderViewType = headerViewType;
         mContentViewType = contentViewType;
@@ -98,7 +100,7 @@ public class AdapterSection<T> {
     /**
      * Update the title depending on the number of items
      */
-    protected void updateTitle() {
+    void updateTitle() {
         String newTitle;
         if (getNbItems() > 0) {
             newTitle = mTitle.concat("   " + getNbItems());
@@ -114,9 +116,9 @@ public class AdapterSection<T> {
      *
      * @param titleToFormat
      */
-    protected void formatTitle(final String titleToFormat) {
+    void formatTitle(final String titleToFormat) {
         SpannableString spannableString = new SpannableString(titleToFormat.toUpperCase());
-        spannableString.setSpan(new ForegroundColorSpan(0x4D3C3C3C),
+        spannableString.setSpan(new ForegroundColorSpan(ThemeUtils.getColor(VectorApp.getInstance(), R.attr.list_header_subtext_color)),
                 mTitle.length(), titleToFormat.length(), 0);
         mTitleFormatted = spannableString;
     }
@@ -234,30 +236,12 @@ public class AdapterSection<T> {
     }
 
     /**
-     * Get whether the section should be hidden when it has no item
-     *
-     * @return
-     */
-    public boolean hideWhenEmpty() {
-        return mIsHiddenWhenEmpty;
-    }
-
-    /**
      * Set whether the section should be hidden when there is no filter
      *
      * @return
      */
     public void setIsHiddenWhenNoFilter(final boolean isHiddenWhenNoFilter) {
         mIsHiddenWhenNoFilter = isHiddenWhenNoFilter;
-    }
-
-    /**
-     * Get whether the section should be hidden when there is no filter
-     *
-     * @return
-     */
-    public boolean hideWhenNoFilter() {
-        return mIsHiddenWhenNoFilter;
     }
 
     /**

@@ -1,13 +1,13 @@
-/* 
+/*
  * Copyright 2014 OpenMarket Ltd
  * Copyright 2017 Vector Creations Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,11 +18,13 @@ package im.vector.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+
 import org.matrix.androidsdk.util.Log;
 
 import org.matrix.androidsdk.MXSession;
 import org.matrix.androidsdk.listeners.IMXEventListener;
 import org.matrix.androidsdk.listeners.MXEventListener;
+
 import im.vector.ErrorListener;
 import im.vector.Matrix;
 import im.vector.R;
@@ -35,19 +37,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 /**
  * SplashActivity displays a splash while loading and inittializing the client.
  */
 public class SplashActivity extends MXCActionBarActivity {
-
-    private static final String LOG_TAG = "SplashActivity";
+    private static final String LOG_TAG = SplashActivity.class.getSimpleName();
 
     public static final String EXTRA_MATRIX_ID = "EXTRA_MATRIX_ID";
     public static final String EXTRA_ROOM_ID = "EXTRA_ROOM_ID";
-
-    private Collection<MXSession> mSessions;
 
     private HashMap<MXSession, IMXEventListener> mListeners;
     private HashMap<MXSession, IMXEventListener> mDoneListeners;
@@ -61,7 +59,7 @@ public class SplashActivity extends MXCActionBarActivity {
         boolean hasCorruptedStore = false;
         ArrayList<MXSession> sessions = Matrix.getMXSessions(this);
 
-        for(MXSession session : sessions) {
+        for (MXSession session : sessions) {
             if (session.isAlive()) {
                 hasCorruptedStore |= session.getDataHandler().getStore().isCorrupted();
             }
@@ -123,13 +121,13 @@ public class SplashActivity extends MXCActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Log.e(LOG_TAG, "onCreate");
+        Log.d(LOG_TAG, "onCreate");
 
         setContentView(R.layout.vector_activity_splash);
 
-        mSessions =  Matrix.getInstance(getApplicationContext()).getSessions();
+        Collection<MXSession> sessions = Matrix.getInstance(getApplicationContext()).getSessions();
 
-        if (mSessions == null) {
+        if (sessions == null) {
             Log.e(LOG_TAG, "onCreate no Sessions");
             finish();
             return;
@@ -140,7 +138,7 @@ public class SplashActivity extends MXCActionBarActivity {
 
         ArrayList<String> matrixIds = new ArrayList<>();
 
-        for(final MXSession session : mSessions) {
+        for (final MXSession session : sessions) {
             final MXSession fSession = session;
 
             final IMXEventListener eventListener = new MXEventListener() {
@@ -255,7 +253,7 @@ public class SplashActivity extends MXCActionBarActivity {
         if (Matrix.getInstance(this).mHasBeenDisconnected) {
             matrixIds = new ArrayList<>();
 
-            for(MXSession session : mSessions) {
+            for (MXSession session : sessions) {
                 matrixIds.add(session.getCredentials().userId);
             }
 
@@ -283,7 +281,7 @@ public class SplashActivity extends MXCActionBarActivity {
 
         boolean noUpdate;
 
-        synchronized(LOG_TAG) {
+        synchronized (LOG_TAG) {
             noUpdate = (mListeners.size() == 0);
         }
 
@@ -302,7 +300,7 @@ public class SplashActivity extends MXCActionBarActivity {
 
         Collection<MXSession> sessions = mDoneListeners.keySet();
 
-        for(MXSession session : sessions) {
+        for (MXSession session : sessions) {
             if (session.isAlive()) {
                 session.getDataHandler().removeListener(mDoneListeners.get(session));
                 session.setFailureCallback(null);

@@ -21,8 +21,10 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -39,12 +41,16 @@ import org.matrix.androidsdk.data.Room;
 import org.matrix.androidsdk.data.RoomTag;
 import org.matrix.androidsdk.data.store.IMXStore;
 import org.matrix.androidsdk.listeners.MXEventListener;
+import org.matrix.androidsdk.rest.callback.ApiCallback;
 import org.matrix.androidsdk.rest.model.Event;
+import org.matrix.androidsdk.rest.model.MatrixError;
+import org.matrix.androidsdk.rest.model.Search.SearchUsersResponse;
 import org.matrix.androidsdk.rest.model.User;
 import org.matrix.androidsdk.util.Log;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -67,17 +73,19 @@ public class PeopleFragment extends AbsHomeFragment implements ContactsManager.C
 
     private static final String MATRIX_USER_ONLY_PREF_KEY = "MATRIX_USER_ONLY_PREF_KEY";
 
+    private static final int MAX_KNOWN_CONTACTS_FILTER_COUNT = 50;
+
     @BindView(R.id.recyclerview)
     RecyclerView mRecycler;
 
-    CheckBox mMatrixUserOnlyCheckbox;
+    private CheckBox mMatrixUserOnlyCheckbox;
 
     private PeopleAdapter mAdapter;
 
-    private List<Room> mDirectChats = new ArrayList<>();
-    private List<ParticipantAdapterItem> mLocalContacts = new ArrayList<>();
+    private final List<Room> mDirectChats = new ArrayList<>();
+    private final List<ParticipantAdapterItem> mLocalContacts = new ArrayList<>();
     // the known contacts are not sorted
-    private List<ParticipantAdapterItem> mKnownContacts = new ArrayList<>();
+    private final List<ParticipantAdapterItem> mKnownContacts = new ArrayList<>();
 
     // way to detect that the contacts list has been updated
     private int mContactsSnapshotSession = -1;
@@ -115,7 +123,8 @@ public class PeopleFragment extends AbsHomeFragment implements ContactsManager.C
             }
         };
 
-        setFragmentColors(R.color.tab_people, R.color.tab_people_secondary);
+        mPrimaryColor = ContextCompat.getColor(getActivity(), R.color.tab_people);
+        mSecondaryColor = ContextCompat.getColor(getActivity(), R.color.tab_people_secondary);
 
         initViews();
 
@@ -160,6 +169,9 @@ public class PeopleFragment extends AbsHomeFragment implements ContactsManager.C
         ContactsManager.getInstance().removeListener(this);
 
         mRecycler.removeOnScrollListener(mScrollListener);
+
+        // cancel any search
+        mSession.cancelUsersSearch();
     }
 
     @Override
@@ -193,10 +205,14 @@ public class PeopleFragment extends AbsHomeFragment implements ContactsManager.C
         mAdapter.getFilter().filter(pattern, new Filter.FilterListener() {
             @Override
             public void onFilterComplete(int count) {
+                boolean newSearch = TextUtils.isEmpty(mCurrentFilter) && !TextUtils.isEmpty(pattern);
+
                 Log.i(LOG_TAG, "onFilterComplete " + count);
                 if (listener != null) {
                     listener.onFilterDone(count);
                 }
+
+                startRemoteKnownContactsSearch(newSearch);
             }
         });
     }
@@ -228,7 +244,7 @@ public class PeopleFragment extends AbsHomeFragment implements ContactsManager.C
         mAdapter = new PeopleAdapter(getActivity(), new PeopleAdapter.OnSelectItemListener() {
             @Override
             public void onSelectItem(Room room, int position) {
-               openRoom(room);
+                openRoom(room);
             }
 
             @Override
@@ -265,10 +281,13 @@ public class PeopleFragment extends AbsHomeFragment implements ContactsManager.C
      * Fill the direct chats adapter with data
      */
     private void initDirectChatsData() {
+        if ((null == mSession) || (null == mSession.getDataHandler())) {
+            Log.e(LOG_TAG, "## initDirectChatsData() : null session");
+        }
+
         final List<String> directChatIds = mSession.getDirectChatRoomIdsList();
         final MXDataHandler dataHandler = mSession.getDataHandler();
         final IMXStore store = dataHandler.getStore();
-
 
         mDirectChats.clear();
         if (directChatIds != null && !directChatIds.isEmpty()) {
@@ -276,9 +295,14 @@ public class PeopleFragment extends AbsHomeFragment implements ContactsManager.C
                 Room room = store.getRoom(roomId);
 
                 if ((null != room) && !room.isConferenceUserRoom()) {
-                    final Set<String> tags = room.getAccountData().getKeys();
-                    if ((null == tags) || !tags.contains(RoomTag.ROOM_TAG_LOW_PRIORITY)) {
-                        mDirectChats.add(dataHandler.getRoom(roomId));
+                    // it seems that the server syncs some left rooms
+                    if (null == room.getMember(mSession.getMyUserId())) {
+                        Log.e(LOG_TAG, "## initDirectChatsData(): invalid room " + room.getRoomId() + ", the user is not anymore member of it");
+                    } else {
+                        final Set<String> tags = room.getAccountData().getKeys();
+                        if ((null == tags) || !tags.contains(RoomTag.ROOM_TAG_LOW_PRIORITY)) {
+                            mDirectChats.add(dataHandler.getRoom(roomId));
+                        }
                     }
                 }
             }
@@ -310,8 +334,7 @@ public class PeopleFragment extends AbsHomeFragment implements ContactsManager.C
      * Get the known contacts list, sort it by presence and give it to adapter
      */
     private void initKnownContacts() {
-        new AsyncTask<Void, Void, Void>() {
-
+        final AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... params) {
                 // do not sort anymore the full known participants list
@@ -329,7 +352,99 @@ public class PeopleFragment extends AbsHomeFragment implements ContactsManager.C
             protected void onPostExecute(Void args) {
                 mAdapter.setKnownContacts(mKnownContacts);
             }
-        }.execute();
+        };
+
+        try {
+            asyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        } catch (final Exception e) {
+            Log.e(LOG_TAG, "## initKnownContacts() failed " + e.getMessage());
+            asyncTask.cancel(true);
+
+            (new android.os.Handler(Looper.getMainLooper())).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    initKnownContacts();
+                }
+            }, 1000);
+        }
+    }
+
+    /**
+     * Display the public rooms loading view
+     */
+    private void showKnownContactLoadingView() {
+        mAdapter.getSectionViewForSectionIndex(mAdapter.getSectionsCount() - 1).showLoadingView();
+    }
+
+    /**
+     * Hide the public rooms loading view
+     */
+    private void hideKnownContactLoadingView() {
+        mAdapter.getSectionViewForSectionIndex(mAdapter.getSectionsCount() - 1).hideLoadingView();
+    }
+
+    /**
+     * Trigger a request to search known contacts.
+     *
+     * @param isNewSearch true if the search is a new one
+     */
+    private void startRemoteKnownContactsSearch(boolean isNewSearch) {
+        if (!TextUtils.isEmpty(mCurrentFilter)) {
+
+            // display the known contacts section
+            if (isNewSearch) {
+                mAdapter.setFilteredKnownContacts(new ArrayList<ParticipantAdapterItem>(), mCurrentFilter);
+                showKnownContactLoadingView();
+            }
+
+            final String fPattern = mCurrentFilter;
+
+            mSession.searchUsers(mCurrentFilter, MAX_KNOWN_CONTACTS_FILTER_COUNT, new HashSet<String>(), new ApiCallback<SearchUsersResponse>() {
+                @Override
+                public void onSuccess(SearchUsersResponse searchUsersResponse) {
+                    if (TextUtils.equals(fPattern, mCurrentFilter)) {
+                        hideKnownContactLoadingView();
+
+                        List<ParticipantAdapterItem> list = new ArrayList<>();
+
+                        if (null != searchUsersResponse.results) {
+                            for (User user : searchUsersResponse.results) {
+                                list.add(new ParticipantAdapterItem(user));
+                            }
+                        }
+
+                        mAdapter.setKnownContactsExtraTitle(null);
+                        mAdapter.setKnownContactsLimited((null != searchUsersResponse.limited) ? searchUsersResponse.limited : false);
+                        mAdapter.setFilteredKnownContacts(list, mCurrentFilter);
+                    }
+                }
+
+                private void onError(String errorMessage) {
+                    Log.e(LOG_TAG, "## startRemoteKnownContactsSearch() : failed " + errorMessage);
+                    //
+                    if (TextUtils.equals(fPattern, mCurrentFilter)) {
+                        hideKnownContactLoadingView();
+                        mAdapter.setKnownContactsExtraTitle(PeopleFragment.this.getContext().getString(R.string.offline));
+                        mAdapter.filterAccountKnownContacts(mCurrentFilter);
+                    }
+                }
+
+                @Override
+                public void onNetworkError(Exception e) {
+                    onError(e.getMessage());
+                }
+
+                @Override
+                public void onMatrixError(MatrixError e) {
+                    onError(e.getMessage());
+                }
+
+                @Override
+                public void onUnexpectedError(Exception e) {
+                    onError(e.getMessage());
+                }
+            });
+        }
     }
 
     /*
@@ -347,6 +462,15 @@ public class PeopleFragment extends AbsHomeFragment implements ContactsManager.C
         if (item.mIsValid) {
             Intent startRoomInfoIntent = new Intent(getActivity(), VectorMemberDetailsActivity.class);
             startRoomInfoIntent.putExtra(VectorMemberDetailsActivity.EXTRA_MEMBER_ID, item.mUserId);
+
+            if (!TextUtils.isEmpty(item.mAvatarUrl)) {
+                startRoomInfoIntent.putExtra(VectorMemberDetailsActivity.EXTRA_MEMBER_AVATAR_URL, item.mAvatarUrl);
+            }
+
+            if (!TextUtils.isEmpty(item.mDisplayName)) {
+                startRoomInfoIntent.putExtra(VectorMemberDetailsActivity.EXTRA_MEMBER_DISPLAY_NAME, item.mDisplayName);
+            }
+
             startRoomInfoIntent.putExtra(VectorMemberDetailsActivity.EXTRA_MATRIX_ID, mSession.getCredentials().userId);
             startActivity(startRoomInfoIntent);
         }
@@ -445,10 +569,13 @@ public class PeopleFragment extends AbsHomeFragment implements ContactsManager.C
     @Override
     public void onSummariesUpdate() {
         super.onSummariesUpdate();
-        mAdapter.setInvitation(mActivity.getRoomInvitations());
 
-        initDirectChatsData();
-        initDirectChatsViews();
+        if (isResumed()) {
+            mAdapter.setInvitation(mActivity.getRoomInvitations());
+
+            initDirectChatsData();
+            initDirectChatsViews();
+        }
     }
 
     @Override
@@ -474,8 +601,8 @@ public class PeopleFragment extends AbsHomeFragment implements ContactsManager.C
 
     @Override
     public void onToggleDirectChat(String roomId, boolean isDirectChat) {
-        if(!isDirectChat){
-           mAdapter.removeDirectChat(roomId);
+        if (!isDirectChat) {
+            mAdapter.removeDirectChat(roomId);
         }
     }
 

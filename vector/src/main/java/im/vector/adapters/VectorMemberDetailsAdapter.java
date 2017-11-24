@@ -33,7 +33,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import im.vector.R;
+import im.vector.activity.CommonActivityUtils;
 import im.vector.activity.VectorMemberDetailsActivity;
+import im.vector.util.ThemeUtils;
 import im.vector.util.VectorUtils;
 import im.vector.view.VectorCircularImageView;
 
@@ -100,9 +102,9 @@ public class VectorMemberDetailsAdapter extends BaseExpandableListAdapter {
         final View mRoomAvatarLayout;
 
         MemberDetailsViewHolder(View aParentView) {
-            mActionImageView = (ImageView) aParentView.findViewById(R.id.adapter_member_details_icon);
-            mActionDescTextView = (TextView) aParentView.findViewById(R.id.adapter_member_details_action_text);
-            mVectorCircularImageView = (VectorCircularImageView) aParentView.findViewById(R.id.room_avatar_image_view);
+            mActionImageView = aParentView.findViewById(R.id.adapter_member_details_icon);
+            mActionDescTextView = aParentView.findViewById(R.id.adapter_member_details_action_text);
+            mVectorCircularImageView = aParentView.findViewById(R.id.room_avatar_image_view);
             mRoomAvatarLayout = aParentView.findViewById(R.id.room_avatar_layout);
         }
     }
@@ -309,8 +311,8 @@ public class VectorMemberDetailsAdapter extends BaseExpandableListAdapter {
             convertView = this.mLayoutInflater.inflate(this.mHeaderLayoutResourceId, null);
         }
 
-        ((TextView) convertView.findViewById(org.matrix.androidsdk.R.id.heading)).setText(getGroupTitle(groupPosition));
-        convertView.findViewById(org.matrix.androidsdk.R.id.heading_image).setVisibility(View.GONE);
+        ((TextView) convertView.findViewById(R.id.heading)).setText(getGroupTitle(groupPosition));
+        convertView.findViewById(R.id.heading_image).setVisibility(View.GONE);
 
         // mUncategorizedGroupPosition has no header
         convertView.findViewById(R.id.heading_layout).setVisibility((groupPosition == mUncategorizedGroupPosition) ? View.GONE : View.VISIBLE);
@@ -363,7 +365,7 @@ public class VectorMemberDetailsAdapter extends BaseExpandableListAdapter {
         // room selection
         if (null != currentItem.mRoom) {
             // room name
-            viewHolder.mActionDescTextView.setTextColor(ContextCompat.getColor(mContext, R.color.material_grey_900));
+            viewHolder.mActionDescTextView.setTextColor(ThemeUtils.getColor(mContext, R.attr.riot_primary_text_color));
             viewHolder.mActionDescTextView.setText(VectorUtils.getRoomDisplayName(mContext, mSession, currentItem.mRoom));
 
             // room avatar
@@ -389,8 +391,12 @@ public class VectorMemberDetailsAdapter extends BaseExpandableListAdapter {
 
             viewHolder.mActionImageView.setImageResource(currentItem.mIconResourceId);
 
+            if (currentItem.mIconResourceId != R.drawable.ic_remove_circle_outline_red) {
+                viewHolder.mActionImageView.setImageDrawable(CommonActivityUtils.tintDrawable(mContext, viewHolder.mActionImageView.getDrawable(), R.attr.settings_icon_tint_color));
+            }
+
             // update the text colour: specific colour is required for the remove action
-            int colourTxt = ContextCompat.getColor(mContext, R.color.material_grey_900);
+            int colourTxt = ThemeUtils.getColor(mContext, R.attr.riot_primary_text_color);
 
             if (VectorMemberDetailsActivity.ITEM_ACTION_KICK == currentItem.mActionType) {
                 colourTxt = ContextCompat.getColor(mContext, R.color.vector_fuchsia_color);

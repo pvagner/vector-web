@@ -22,7 +22,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.MenuItem;
@@ -53,6 +52,7 @@ import java.util.regex.Pattern;
 
 import im.vector.Matrix;
 import im.vector.R;
+import im.vector.activity.CommonActivityUtils;
 import im.vector.adapters.AdapterUtils;
 
 public class RoomUtils {
@@ -87,7 +87,7 @@ public class RoomUtils {
     public static Comparator<Room> getRoomsDateComparator(final MXSession session, final boolean reverseOrder) {
         return new Comparator<Room>() {
             private Comparator<RoomSummary> mRoomSummaryComparator;
-            private HashMap<String, RoomSummary> mSummaryByRoomIdMap = new HashMap<>();
+            private final HashMap<String, RoomSummary> mSummaryByRoomIdMap = new HashMap<>();
 
             /**
              * Retrieve the room summary comparator
@@ -147,7 +147,7 @@ public class RoomUtils {
     public static Comparator<Room> getNotifCountRoomsComparator(final MXSession session, final boolean pinMissedNotifications, final boolean pinUnreadMessages) {
         return new Comparator<Room>() {
             private Comparator<RoomSummary> mRoomSummaryComparator;
-            private HashMap<String, RoomSummary> mSummaryByRoomIdMap = new HashMap<>();
+            private final HashMap<String, RoomSummary> mSummaryByRoomIdMap = new HashMap<>();
 
             /**
              * Retrieve the room summary comparator
@@ -217,7 +217,7 @@ public class RoomUtils {
      * @param reverseOrder
      * @return ordered list
      */
-    public static Comparator<RoomSummary> getRoomSummaryComparator(final boolean reverseOrder) {
+    private static Comparator<RoomSummary> getRoomSummaryComparator(final boolean reverseOrder) {
         return new Comparator<RoomSummary>() {
             public int compare(RoomSummary leftRoomSummary, RoomSummary rightRoomSummary) {
                 int retValue;
@@ -253,9 +253,9 @@ public class RoomUtils {
      * @param pinUnreadMessages      whether unread messages should be pinned
      * @return comparator
      */
-    public static Comparator<RoomSummary> getNotifCountRoomSummaryComparator(final BingRulesManager bingRulesManager,
-                                                                             final boolean pinMissedNotifications,
-                                                                             final boolean pinUnreadMessages) {
+    private static Comparator<RoomSummary> getNotifCountRoomSummaryComparator(final BingRulesManager bingRulesManager,
+                                                                              final boolean pinMissedNotifications,
+                                                                              final boolean pinUnreadMessages) {
         return new Comparator<RoomSummary>() {
             public int compare(RoomSummary leftRoomSummary, RoomSummary rightRoomSummary) {
                 int retValue;
@@ -296,11 +296,11 @@ public class RoomUtils {
                     retValue = 1;
                 } else if (pinMissedNotifications && (rightNotificationCount == 0) && (leftNotificationCount > 0)) {
                     retValue = -1;
-                } else if(pinUnreadMessages && (rightUnreadCount > 0) && (leftUnreadCount == 0)) {
+                } else if (pinUnreadMessages && (rightUnreadCount > 0) && (leftUnreadCount == 0)) {
                     retValue = 1;
-                } else if(pinUnreadMessages && (rightUnreadCount == 0) && (leftUnreadCount > 0)) {
+                } else if (pinUnreadMessages && (rightUnreadCount == 0) && (leftUnreadCount > 0)) {
                     retValue = -1;
-                } else if ( (deltaTimestamp = rightRoomSummary.getLatestReceivedEvent().getOriginServerTs()
+                } else if ((deltaTimestamp = rightRoomSummary.getLatestReceivedEvent().getOriginServerTs()
                         - leftRoomSummary.getLatestReceivedEvent().getOriginServerTs()) > 0) {
                     retValue = 1;
                 } else if (deltaTimestamp < 0) {
@@ -310,20 +310,6 @@ public class RoomUtils {
                 }
 
                 return retValue;
-            }
-        };
-    }
-
-    /**
-     * Get a comparator to sort tagged rooms
-     *
-     * @param taggedRoomsById
-     * @return comparator
-     */
-    public static Comparator<Room> getTaggedRoomComparator(final List<String> taggedRoomsById) {
-        return new Comparator<Room>() {
-            public int compare(Room r1, Room r2) {
-                return taggedRoomsById.indexOf(r1.getRoomId()) - taggedRoomsById.indexOf(r2.getRoomId());
             }
         };
     }
@@ -364,7 +350,7 @@ public class RoomUtils {
             if (roomSummary.getLatestReceivedEvent() != null) {
                 eventDisplay = new EventDisplay(context, roomSummary.getLatestReceivedEvent(), roomSummary.getLatestRoomState());
                 eventDisplay.setPrependMessagesWithAuthor(true);
-                messageToDisplay = eventDisplay.getTextualDisplay(ContextCompat.getColor(context, R.color.vector_text_gray_color));
+                messageToDisplay = eventDisplay.getTextualDisplay(ThemeUtils.getColor(context, R.attr.room_notification_text_color));
             }
 
             // check if this is an invite
@@ -472,6 +458,7 @@ public class RoomUtils {
             popup = new PopupMenu(context, actionView);
         }
         popup.getMenuInflater().inflate(R.menu.vector_home_room_settings, popup.getMenu());
+        CommonActivityUtils.tintMenuIcons(popup.getMenu(), ThemeUtils.getColor(context, R.attr.settings_icon_tint_color));
 
         if (room.isLeft()) {
             popup.getMenu().setGroupVisible(R.id.active_room_actions, false);
@@ -607,10 +594,10 @@ public class RoomUtils {
     /**
      * Update a room Tag
      *
-     * @param session the session
-     * @param roomId the room Id
-     * @param aTagOrder the new tag order
-     * @param newTag the new Tag
+     * @param session     the session
+     * @param roomId      the room Id
+     * @param aTagOrder   the new tag order
+     * @param newTag      the new Tag
      * @param apiCallback the asynchronous callback
      */
     public static void updateRoomTag(final MXSession session, final String roomId, final Double aTagOrder, final String newTag, final ApiCallback<Void> apiCallback) {

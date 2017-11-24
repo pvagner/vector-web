@@ -1,12 +1,12 @@
-/* 
+/*
  * Copyright 2017 Vector Creations Ltd
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -62,7 +62,7 @@ public class UnreadCounterBadgeView extends RelativeLayout {
 
     private void init() {
         inflate(getContext(), R.layout.unread_counter_badge, this);
-        mCounterTextView = (TextView) findViewById(R.id.unread_counter_badge_text_view);
+        mCounterTextView = findViewById(R.id.unread_counter_badge_text_view);
         mParentView = findViewById(R.id.unread_counter_badge_layout);
     }
 
@@ -79,7 +79,7 @@ public class UnreadCounterBadgeView extends RelativeLayout {
     /**
      * Update the badge value and its status
      *
-     * @param text  the new text value
+     * @param text   the new text value
      * @param status the new status
      */
     public void updateText(String text, @Status int status) {

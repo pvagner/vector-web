@@ -19,9 +19,7 @@ package im.vector.util;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Build;
-import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 
@@ -35,9 +33,10 @@ import android.webkit.WebView;
  * This class uses a webview.
  */
 public class VectorMarkdownParser extends WebView {
-    private static final String LOG_TAG = "VMarkdownParser";
+    private static final String LOG_TAG = VectorMarkdownParser.class.getSimpleName();
 
-    private static final String MARKDOWN_PREFERENCE_KEY = "MARKDOWN_PREFERENCE_KEY";
+    // tell if the parser is properly initialised
+    private boolean mIsInitialised = false;
 
     public interface IVectorMarkdownParserListener {
         /**
@@ -52,7 +51,7 @@ public class VectorMarkdownParser extends WebView {
     /**
      * Java <-> JS interface
      **/
-    private MarkDownWebAppInterface mMarkDownWebAppInterface = new MarkDownWebAppInterface();
+    private final MarkDownWebAppInterface mMarkDownWebAppInterface = new MarkDownWebAppInterface();
 
     public VectorMarkdownParser(Context context) {
         this(context, null);
@@ -69,35 +68,21 @@ public class VectorMarkdownParser extends WebView {
 
     @SuppressLint("SetJavaScriptEnabled")
     private void initialize() {
-        loadUrl("file:///android_asset/html/markdown.html");
+        try {
+            loadUrl("file:///android_asset/html/markdown.html");
 
-        // allow java script
-        getSettings().setJavaScriptEnabled(true);
+            // allow java script
+            getSettings().setJavaScriptEnabled(true);
 
-        // java <-> web interface
-        addJavascriptInterface(mMarkDownWebAppInterface, "Android");
+            // java <-> web interface
+            addJavascriptInterface(mMarkDownWebAppInterface, "Android");
 
-        getSettings().setAllowUniversalAccessFromFileURLs(true);
-    }
+            getSettings().setAllowUniversalAccessFromFileURLs(true);
 
-    /**
-     * @return true if the markdown parsing is enabled
-     */
-    public boolean isEnabled() {
-        return PreferenceManager.getDefaultSharedPreferences(getContext()).getBoolean(MARKDOWN_PREFERENCE_KEY, true);
-    }
-
-    /**
-     * Enable / disable the markdown parser
-     *
-     * @param enable true to enable the parser
-     */
-    public void setEnable(boolean enable) {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putBoolean(MARKDOWN_PREFERENCE_KEY, enable);
-        editor.commit();
+            mIsInitialised = true;
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "## initialize() failed " + e.getMessage());
+        }
     }
 
     /**
@@ -119,7 +104,7 @@ public class VectorMarkdownParser extends WebView {
         }
 
         // empty text or disabled
-        if (TextUtils.isEmpty(text) || !isEnabled()) {
+        if (!mIsInitialised || TextUtils.isEmpty(text) || !PreferencesManager.isMarkdownEnabled(getContext())) {
             // nothing to do
             listener.onMarkdownParsed(markdownText, text);
             return;

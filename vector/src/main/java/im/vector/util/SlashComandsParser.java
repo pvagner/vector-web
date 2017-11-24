@@ -39,7 +39,7 @@ import im.vector.activity.VectorRoomActivity;
 
 public class SlashComandsParser {
 
-    private static final String LOG_TAG = "SlashComandsParser";
+    private static final String LOG_TAG = SlashComandsParser.class.getSimpleName();
 
     // defines the command line operations
     // the user can write theses messages to perform some room events
@@ -249,9 +249,9 @@ public class SlashComandsParser {
 
                 if (messageParts.length >= 2) {
                     if (TextUtils.equals(messageParts[1], "on")) {
-                        VectorApp.getInstance().mMarkdownParser.setEnable(true);
+                        PreferencesManager.setMarkdownEnabled(VectorApp.getInstance(), true);
                     } else if (TextUtils.equals(messageParts[1], "off")) {
-                        VectorApp.getInstance().mMarkdownParser.setEnable(false);
+                        PreferencesManager.setMarkdownEnabled(VectorApp.getInstance(), false);
                     }
                 }
             }

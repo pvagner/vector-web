@@ -18,7 +18,9 @@ package im.vector.util;
 
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+
 import org.matrix.androidsdk.util.Log;
+
 import android.util.Pair;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,10 +36,10 @@ public class StickySectionHelper extends RecyclerView.OnScrollListener implement
 
     private final String LOG_TAG = StickySectionHelper.class.getSimpleName();
 
-    private RecyclerView mRecyclerView;
-    private LinearLayoutManager mLayoutManager;
+    private final RecyclerView mRecyclerView;
+    private final LinearLayoutManager mLayoutManager;
 
-    private List<Pair<Integer, SectionView>> mSectionViews = new ArrayList<>();
+    private final List<Pair<Integer, SectionView>> mSectionViews = new ArrayList<>();
 
     private int mHeaderBottom = 0;
 
@@ -73,7 +75,7 @@ public class StickySectionHelper extends RecyclerView.OnScrollListener implement
 
     @Override
     public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
-        Log.i(LOG_TAG, "onLayoutChange bottom " + bottom + " oldBottom " + oldBottom);
+        //Log.i(LOG_TAG, "onLayoutChange bottom " + bottom + " oldBottom " + oldBottom);
 
         if (bottom != oldBottom && bottom > mFooterBottom) {
             // Calculate the coordinates (header/footer) of section views
@@ -85,7 +87,7 @@ public class StickySectionHelper extends RecyclerView.OnScrollListener implement
 
     @Override
     public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-        Log.d(LOG_TAG, "onScrolled dy " + dy);
+        //Log.d(LOG_TAG, "onScrolled dy " + dy);
 
         if (dy != 0) {
             updateStickySection(dy);
@@ -133,7 +135,7 @@ public class StickySectionHelper extends RecyclerView.OnScrollListener implement
      *
      * @param bottom new bottom
      */
-    public void setBottom(int bottom) {
+    private void setBottom(int bottom) {
         mFooterTop = bottom;
         mFooterBottom = bottom;
     }
@@ -213,7 +215,7 @@ public class StickySectionHelper extends RecyclerView.OnScrollListener implement
                 int sectionHeight = current.getStickyHeaderHeight();
                 current.setFooterTop(mFooterTop - current.getStickyHeaderHeight());
                 current.setFooterBottom(mFooterTop);
-                if(!current.getSection().shouldBeHidden()){
+                if (!current.getSection().shouldBeHidden()) {
                     mFooterTop -= sectionHeight;
                 }
             }
@@ -232,7 +234,7 @@ public class StickySectionHelper extends RecyclerView.OnScrollListener implement
      * @param dy scroll value
      */
     private void updateStickySection(int dy) {
-        Log.d(LOG_TAG, "updateStickySection " + dy);
+        //Log.d(LOG_TAG, "updateStickySection " + dy);
 
         // header is out of screen, check if header or footer
         int firstVisiblePos = mLayoutManager.findFirstVisibleItemPosition();
@@ -244,7 +246,7 @@ public class StickySectionHelper extends RecyclerView.OnScrollListener implement
             SectionView current = mSectionViews.get(i).second;
 
             RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForLayoutPosition(currentPos);
-            Log.d(LOG_TAG, "updateStickySection holder for " + current.getSection().getTitle() + " is " + holder);
+            //Log.d(LOG_TAG, "updateStickySection holder for " + current.getSection().getTitle() + " is " + holder);
             if (holder != null) {
                 Log.d(LOG_TAG, "updateStickySection holder top " + holder.itemView.getTop() + " bottom " + holder.itemView.getBottom());
                 current.updatePosition(holder.itemView.getTop());
@@ -281,13 +283,11 @@ public class StickySectionHelper extends RecyclerView.OnScrollListener implement
      * Remove the given view from its parent
      *
      * @param view to remove from its parent
-     * @return parent
      */
-    private static ViewGroup removeViewFromParent(final View view) {
+    private static void removeViewFromParent(final View view) {
         final ViewParent parent = view.getParent();
         if (parent instanceof ViewGroup) {
             ((ViewGroup) parent).removeView(view);
         }
-        return ((ViewGroup) parent);
     }
 }

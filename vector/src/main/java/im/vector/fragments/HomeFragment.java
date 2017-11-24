@@ -16,13 +16,14 @@
 
 package im.vector.fragments;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.widget.LinearLayoutManager;
+
 import org.matrix.androidsdk.util.Log;
+
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -46,6 +47,7 @@ import java.util.Set;
 import butterknife.BindView;
 import im.vector.R;
 import im.vector.adapters.HomeRoomAdapter;
+import im.vector.util.PreferencesManager;
 import im.vector.util.RoomUtils;
 import im.vector.view.HomeSectionView;
 
@@ -101,7 +103,8 @@ public class HomeFragment extends AbsHomeFragment implements HomeRoomAdapter.OnS
     public void onActivityCreated(final Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        setFragmentColors(R.color.tab_home, R.color.tab_home_secondary);
+        mPrimaryColor = ContextCompat.getColor(getActivity(), R.color.tab_home);
+        mSecondaryColor = ContextCompat.getColor(getActivity(), R.color.tab_home_secondary);
 
         initViews();
 
@@ -219,8 +222,12 @@ public class HomeFragment extends AbsHomeFragment implements HomeRoomAdapter.OnS
 
         mNestedScrollView.setOnTouchListener(new View.OnTouchListener() {
             public boolean onTouch(View v, MotionEvent event) {
-                gestureDetector.onTouchEvent(event);
-                return mNestedScrollView.onTouchEvent(event);
+                if (null != mNestedScrollView) {
+                    gestureDetector.onTouchEvent(event);
+                    return mNestedScrollView.onTouchEvent(event);
+                } else {
+                    return false;
+                }
             }
         });
         mNestedScrollView.setOnScrollChangeListener(new NestedScrollView.OnScrollChangeListener() {
@@ -233,8 +240,12 @@ public class HomeFragment extends AbsHomeFragment implements HomeRoomAdapter.OnS
 
     @Override
     public void onSummariesUpdate() {
-        if (!mActivity.isWaitingViewVisible()) {
-            initData();
+        super.onSummariesUpdate();
+
+        if (isResumed()) {
+            if (!mActivity.isWaitingViewVisible()) {
+                initData();
+            }
         }
     }
 
@@ -248,6 +259,10 @@ public class HomeFragment extends AbsHomeFragment implements HomeRoomAdapter.OnS
      * Init the rooms data
      */
     private void initData() {
+        if ((null == mSession) || (null == mSession.getDataHandler())) {
+            Log.e(LOG_TAG, "## initData() : null session");
+        }
+
         final List<Room> favourites = new ArrayList<>();
         final List<Room> directChats = new ArrayList<>();
         final List<Room> lowPriorities = new ArrayList<>();
@@ -261,29 +276,34 @@ public class HomeFragment extends AbsHomeFragment implements HomeRoomAdapter.OnS
         final List<String> directChatIds = mSession.getDirectChatRoomIdsList();
 
         for (Room room : roomCollection) {
-            if (!room.isConferenceUserRoom() && !room.isInvited() &&!room.isDirectChatInvitation()) {
-                final RoomAccountData accountData = room.getAccountData();
-                final Set<String> tags = new HashSet<>();
-
-                if (accountData != null && accountData.hasTags()) {
-                    tags.addAll(accountData.getKeys());
-                }
-
-                if (tags.contains(RoomTag.ROOM_TAG_FAVOURITE)) {
-                    favourites.add(room);
-                } else if (tags.contains(RoomTag.ROOM_TAG_LOW_PRIORITY)) {
-                    lowPriorities.add(room);
-                } else if (directChatIds.contains(room.getRoomId())) {
-                    directChats.add(room);
+            if (!room.isConferenceUserRoom() && !room.isInvited() && !room.isDirectChatInvitation()) {
+                // it seems that the server syncs some left rooms
+                if (null == room.getMember(mSession.getMyUserId())) {
+                    Log.e(LOG_TAG, "## initData(): invalid room " + room.getRoomId() + ", the user is not anymore member of it");
                 } else {
-                    otherRooms.add(room);
+                    final RoomAccountData accountData = room.getAccountData();
+                    final Set<String> tags = new HashSet<>();
+
+                    if (accountData != null && accountData.hasTags()) {
+                        tags.addAll(accountData.getKeys());
+                    }
+
+                    if (tags.contains(RoomTag.ROOM_TAG_FAVOURITE)) {
+                        favourites.add(room);
+                    } else if (tags.contains(RoomTag.ROOM_TAG_LOW_PRIORITY)) {
+                        lowPriorities.add(room);
+                    } else if (directChatIds.contains(room.getRoomId())) {
+                        directChats.add(room);
+                    } else {
+                        otherRooms.add(room);
+                    }
                 }
             }
         }
 
-        final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        final boolean pinMissedNotifications = preferences.getBoolean(getString(R.string.settings_pin_missed_notifications), false);
-        final boolean pinUnreadMessages = preferences.getBoolean(getString(R.string.settings_pin_unread_messages), false);
+        final boolean pinMissedNotifications = PreferencesManager.pinMissedNotifications(getActivity());
+        final boolean pinUnreadMessages = PreferencesManager.pinUnreadMessages(getActivity());
+
         Comparator<Room> notificationComparator = RoomUtils.getNotifCountRoomsComparator(mSession, pinMissedNotifications, pinUnreadMessages);
 
         sortAndDisplay(favourites, notificationComparator, mFavouritesSection);
@@ -303,7 +323,7 @@ public class HomeFragment extends AbsHomeFragment implements HomeRoomAdapter.OnS
      * @param comparator
      * @param section
      */
-    public void sortAndDisplay(final List<Room> rooms, final Comparator comparator, final HomeSectionView section) {
+    private void sortAndDisplay(final List<Room> rooms, final Comparator comparator, final HomeSectionView section) {
         try {
             Collections.sort(rooms, comparator);
         } catch (Exception e) {
