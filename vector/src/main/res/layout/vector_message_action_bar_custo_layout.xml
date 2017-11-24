@@ -42,6 +42,6 @@
         android:layout_centerVertical="true"
         android:layout_marginLeft="5dp"
         android:src="@drawable/ic_arrow_drop_down_white"
-        android:contentDescription="@string/desc_more_info" />
+        android:contentDescription="@string/desc_expand" />
 
 </RelativeLayout>

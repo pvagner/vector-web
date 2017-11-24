@@ -2800,10 +2800,10 @@ public class VectorRoomActivity extends MXCActionBarActivity implements MatrixMe
             public void onClick(View view) {
                 if (null != mRoomHeaderView) {
                     if (View.GONE == mRoomHeaderView.getVisibility()) {
-                        mActionBarCustomArrowImageView.setContentDescription(getString(R.string.desc_less_info));
+                        mActionBarCustomArrowImageView.setContentDescription(getString(R.string.desc_collapse));
                         enableActionBarHeader(SHOW_ACTION_BAR_HEADER);
                     } else {
-                        mActionBarCustomArrowImageView.setContentDescription(getString(R.string.desc_more_info));
+                        mActionBarCustomArrowImageView.setContentDescription(getString(R.string.desc_expand));
                         enableActionBarHeader(HIDE_ACTION_BAR_HEADER);
                     }
                 }

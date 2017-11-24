@@ -780,8 +780,8 @@
     <string name="desc_clear">Clear</string>
     <string name="desc_add">Add</string>
     <string name="desc_done">Done</string>
-    <string name="desc_more_info">More info</string>
-    <string name="desc_less_info">Less info</string>
+    <string name="desc_expand">Expand</string>
+    <string name="desc_collapse">Collapse</string>
     <string name="desc_encrypted_room">Encrypted room</string>
     <string name="desc_unencrypted_room">Unenncrypted room</string>
     <string name="desc_open_gallery">Open gallery</string>
