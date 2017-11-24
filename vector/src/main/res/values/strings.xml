@@ -768,11 +768,14 @@
     <string name="desc_speaker_phone">Loud speaker</string>
     <string name="desc_earpiece">Ear speaker</string>
     <string name="desc_hangup">End call</string>
+    <string name="desc_enable_video">Enable video</string>
     <string name="desc_mute_camera">Mute camera</string>
     <string name="desc_unmute_camera">Unmute camera</string>
     <string name="desc_mute_microphone">Mute microphone</string>
     <string name="desc_unmute_microphone">Unmute microphone</string>
     <string name="desc_start_call">Start call</string>
+    <string name="desc_accept_call">Accept</string>
+    <string name="desc_reject_call">Reject</string>
     <string name="desc_play">Play</string>
     <string name="desc_clear">Clear</string>
     <string name="desc_add">Add</string>

@@ -76,7 +76,8 @@
                 android:layout_height="24dp"
                 android:layout_weight="14"
                 android:src="@drawable/ic_material_videocam_grey"
-                android:visibility="invisible" />
+                android:visibility="invisible"
+                android:contentDescription="@string/desc_enable_video" />
 
             <ImageView
                 android:id="@+id/mute_local_camera"
@@ -111,14 +112,16 @@
                 android:layout_width="0dp"
                 android:layout_height="48dp"
                 android:layout_weight="50"
-                android:src="@drawable/voice_call_end_fushia"/>
+                android:src="@drawable/voice_call_end_fushia"
+                android:contentDescription="@string/desc_reject_call"/>
 
             <ImageView
                 android:id="@+id/accept_incoming_call"
                 android:layout_width="0dp"
                 android:layout_height="48dp"
                 android:layout_weight="50"
-                android:src="@drawable/voice_call_start_green"/>
+                android:src="@drawable/voice_call_start_green"
+                android:contentDescription="@string/desc_accept_call"/>
 
         </LinearLayout>
 
