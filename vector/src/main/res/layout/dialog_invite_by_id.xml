@@ -12,6 +12,7 @@
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         android:layout_marginTop="10dp"
+        android:labelFor="@+id/invite_by_id_edit_text"
         android:text="@string/people_search_invite_by_id_dialog_description" />
 
     <ScrollView

@@ -20,7 +20,9 @@
             android:id="@+id/phone_number_country"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp">
+            android:layout_marginBottom="12dp"
+            android:labelFor="@+id/phone_number_country_value"
+            android:contentDescription="@string/settings_phone_number_country_label">
 
             <android.support.design.widget.TextInputEditText
                 android:id="@+id/phone_number_country_value"
@@ -40,7 +42,9 @@
             android:id="@+id/phone_number"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/phone_number_country">
+            android:layout_below="@+id/phone_number_country"
+            android:labelFor="@+id/phone_number_value"
+            android:contentDescription="@string/settings_phone_number_label">
 
             <android.support.design.widget.TextInputEditText
                 android:id="@+id/phone_number_value"

@@ -9,7 +9,9 @@
     <android.support.design.widget.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColorHint="?attr/default_text_hint_color">
+        android:textColorHint="?attr/default_text_hint_color"
+        android:labelFor="@+id/dialog_e2e_keys_passphrase_edit_text"
+        android:contentDescription="@string/encryption_export_enter_passphrase">
 
         <android.support.design.widget.TextInputEditText
             android:id="@+id/dialog_e2e_keys_passphrase_edit_text"
