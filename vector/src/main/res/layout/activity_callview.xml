@@ -113,7 +113,7 @@
                 android:layout_height="48dp"
                 android:layout_weight="50"
                 android:src="@drawable/voice_call_end_fushia"
-                android:contentDescription="@string/desc_reject_call"/>
+                android:contentDescription="@string/action_ignore"/>
 
             <ImageView
                 android:id="@+id/accept_incoming_call"
@@ -121,7 +121,7 @@
                 android:layout_height="48dp"
                 android:layout_weight="50"
                 android:src="@drawable/voice_call_start_green"
-                android:contentDescription="@string/desc_accept_call"/>
+                android:contentDescription="@string/action_accept"/>
 
         </LinearLayout>
 
