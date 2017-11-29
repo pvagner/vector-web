@@ -178,6 +178,12 @@ public class EventStreamService extends Service {
     private boolean mSuspendWhenStarted = false;
 
     /**
+     * Tells if the service self destroyed.
+     * Use to restart the service is killed by the OS.
+     */
+    private boolean mIsSelfDestroyed = false;
+
+    /**
      * @return the event stream instance
      */
     public static EventStreamService getInstance() {
@@ -393,6 +399,7 @@ public class EventStreamService extends Service {
             }
             case STOP:
                 Log.d(LOG_TAG, "## onStartCommand(): service stopped");
+                mIsSelfDestroyed = true;
                 stopSelf();
                 break;
             case PAUSE:
@@ -411,14 +418,12 @@ public class EventStreamService extends Service {
     }
 
     /**
-     * onTaskRemoved is called when the user swipes the application from the active applications.
-     * On some devices, the service is not automatically restarted.
+     * Restart the service
      */
-    @Override
-    public void onTaskRemoved(Intent rootIntent) {
+    private void autoRestart() {
         int delay = 3000 + (new Random()).nextInt(5000);
 
-        Log.d(LOG_TAG, "## onTaskRemoved() : restarts after " + delay + " ms");
+        Log.d(LOG_TAG, "## autoRestart() : restarts after " + delay + " ms");
 
         // reset the service identifier
         mForegroundServiceIdentifier = -1;
@@ -435,14 +440,33 @@ public class EventStreamService extends Service {
                 // use a random part to avoid matching to system auto restart value
                 SystemClock.elapsedRealtime() + delay,
                 restartPendingIntent);
+    }
 
+    /**
+     * onTaskRemoved is called when the user swipes the application from the active applications.
+     * On some devices, the service is not automatically restarted.
+     */
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        Log.d(LOG_TAG, "## onTaskRemoved");
+
+        autoRestart();
         super.onTaskRemoved(rootIntent);
     }
 
     @Override
     public void onDestroy() {
-        Log.d(LOG_TAG, "the service is destroyed");
-        stop();
+        if (!mIsSelfDestroyed) {
+            Log.d(LOG_TAG, "## onDestroy() : restart it");
+            setServiceState(StreamAction.STOP);
+            autoRestart();
+        } else {
+            Log.d(LOG_TAG, "## onDestroy()");
+            stop();
+            super.onDestroy();
+        }
+
+        mIsSelfDestroyed = false;
     }
 
     @Override
@@ -477,6 +501,15 @@ public class EventStreamService extends Service {
     private void setServiceState(StreamAction newState) {
         Log.d(LOG_TAG, "setState from " + mServiceState + " to " + newState);
         mServiceState = newState;
+    }
+
+    /**
+     * Tells if the service stopped.
+     *
+     * @return true if the service is stopped.
+     */
+    public static boolean isStopped() {
+        return (null == getInstance()) || (getInstance().mServiceState == StreamAction.STOP);
     }
 
     /**
@@ -765,7 +798,7 @@ public class EventStreamService extends Service {
             // fdroid
                 (!mGcmRegistrationManager.useGCM() ||
                         // the GCM registration was not done
-                        TextUtils.isEmpty(mGcmRegistrationManager.getGCMRegistrationToken()) && !mGcmRegistrationManager.isServerRegistred()) && mGcmRegistrationManager.isBackgroundSyncAllowed() && mGcmRegistrationManager.areDeviceNotificationsAllowed()) {
+                        TextUtils.isEmpty(mGcmRegistrationManager.getCurrentRegistrationToken()) && !mGcmRegistrationManager.isServerRegistred()) && mGcmRegistrationManager.isBackgroundSyncAllowed() && mGcmRegistrationManager.areDeviceNotificationsAllowed()) {
             Log.d(LOG_TAG, "## updateServiceForegroundState : put the service in foreground because of GCM registration");
 
             if (FOREGROUND_LISTENING_FOR_EVENTS != mForegroundServiceIdentifier) {
